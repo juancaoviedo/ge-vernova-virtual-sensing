@@ -24,9 +24,9 @@
 
 ### Director's Patents (PAT) — Gap 3 (highest differentiation)
 
-- [ ] **PAT-01**: Deep-read summary of each of the three patents — the WO 2023/064623 family: adaptive power (parent), asset portfolio, data management (note: patent_ocr.pdf is the OCR'd duplicate of data-management, not a 4th patent)
-- [ ] **PAT-02**: One concrete connection per patent linking it to Juan's OSED/HEMS/SI-MAPPER work
-- [ ] **PAT-03**: One sharp question per patent Juan can ask the director that demonstrates understanding
+- [x] **PAT-01**: Deep-read summary of each of the three patents — the WO 2023/064623 family: adaptive power (parent), asset portfolio, data management (note: patent_ocr.pdf is the OCR'd duplicate of data-management, not a 4th patent)
+- [x] **PAT-02**: One concrete connection per patent linking it to Juan's OSED/HEMS/SI-MAPPER work
+- [x] **PAT-03**: One sharp question per patent Juan can ask the director that demonstrates understanding
 
 ### Stack, Protocols & Architecture (STK) — Gaps 4, 6, 7
 
@@ -90,9 +90,9 @@ Deferred — useful but not worth the runway before this interview.
 | TVS-02 | Phase 2: Transmission Virtual Sensing | Complete |
 | TVS-03 | Phase 2: Transmission Virtual Sensing | Complete |
 | TVS-04 | Phase 2: Transmission Virtual Sensing | Complete |
-| PAT-01 | Phase 3: Director's Patents Deep-Read | Pending |
-| PAT-02 | Phase 3: Director's Patents Deep-Read | Pending |
-| PAT-03 | Phase 3: Director's Patents Deep-Read | Pending |
+| PAT-01 | Phase 3: Director's Patents Deep-Read | Complete |
+| PAT-02 | Phase 3: Director's Patents Deep-Read | Complete |
+| PAT-03 | Phase 3: Director's Patents Deep-Read | Complete |
 | STK-01 | Phase 4: Protocols, Stack & Architecture | Pending |
 | STK-02 | Phase 4: Protocols, Stack & Architecture | Pending |
 | STK-03 | Phase 4: Protocols, Stack & Architecture | Pending |

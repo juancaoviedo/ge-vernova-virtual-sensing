@@ -17,7 +17,7 @@ deliverable maps to exactly one phase; no requirement is orphaned.
 - [ ] **Phase 0: Document Ingestion** - Establish the repeatable mechanism for ingesting source documents into the study set so new material can be folded in throughout the sprint
 - [ ] **Phase 1: Kalman & State Estimation** - Close Gap 1 (disqualifying): build EKF/UKF depth plus a working Python demo, anchored to the IEEE 738 DLR bridge story
 - [ ] **Phase 2: Transmission Virtual Sensing** - Close Gap 2: acquire fluent T&D vocabulary covering voltage stability, phase angles, observability, bad-data detection, and asset health
-- [ ] **Phase 3: Director's Patents Deep-Read** - Close Gap 3 (highest differentiation): deep-read all six AGMS-family patents and prepare one connection and one question per patent
+- [x] **Phase 3: Director's Patents Deep-Read** - Close Gap 3 (highest differentiation): deep-read all six AGMS-family patents and prepare one connection and one question per patent (completed 2026-06-13)
 - [ ] **Phase 4: Protocols, Stack & Architecture** - Close Gaps 4, 6, 7: grid protocol stack (SCADA/DNP3/PMU/IEC 61850) plus NATS/Kafka/K3s/Prometheus positioning
 - [ ] **Phase 5: Federated Architectures & Security** - Close Gap 5: distinguish federated from distributed, master FedAvg/FedProx/Krum, and frame edge security
 - [ ] **Phase 6: Synthesis, Drills & Mock Interview** - Convert all knowledge to deliverable interview answers: vocabulary bridges, OSED pitch, STAR stories, system-design drills, timed Q&A rehearsal
@@ -72,7 +72,7 @@ deliverable maps to exactly one phase; no requirement is orphaned.
   2. Juan can name one concrete parallel between each patent and his OSED / HEMS / SI-MAPPER work, phrased as a spoken connection — plus a closing unified "one assembly line = my stack" master narrative
   3. Juan has one prepared, director-directed, architecture-level question per patent that demonstrates understanding and invites a follow-on conversation — plus a ~90-second whole-family pitch
 **Plans**: 1 plan
-- [ ] 03-01-PLAN.md — One consolidated AGMS patent rehearsal deck (six patents in pipeline order: summary + connection + question each; ~90s family pitch; closing master narrative)
+- [x] 03-01-PLAN.md — One consolidated AGMS patent rehearsal deck (six patents in pipeline order: summary + connection + question each; ~90s family pitch; closing master narrative)
 
 ### Phase 4: Protocols, Stack & Architecture
 **Goal**: Juan can navigate the full grid protocol stack in conversation, justify stack choices (NATS vs. MQTT vs. Kafka, K3s vs. K8s, Prometheus vs. InfluxDB), and draw a four-tier reference architecture from memory
@@ -118,7 +118,7 @@ Phases execute in numeric order: 0 → 1 → 2 → 3 → 4 → 5 → 6
 | 0. Document Ingestion | 0/TBD | Not started | - |
 | 1. Kalman & State Estimation | 0/3 | Not started | - |
 | 2. Transmission Virtual Sensing | 0/3 | Not started | - |
-| 3. Director's Patents Deep-Read | 0/1 | Planned | - |
+| 3. Director's Patents Deep-Read | 1/1 | Complete   | 2026-06-13 |
 | 4. Protocols, Stack & Architecture | 0/TBD | Not started | - |
 | 5. Federated Architectures & Security | 0/TBD | Not started | - |
 | 6. Synthesis, Drills & Mock Interview | 0/TBD | Not started | - |
