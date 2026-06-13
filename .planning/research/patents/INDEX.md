@@ -16,6 +16,11 @@ Family: All files belong to the same **Adaptive Grid Management System (AGMS)** 
 
 ## Files in This Directory
 
+> **Start here for understanding:** [`AGMS-architecture.md`](AGMS-architecture.md) is the
+> extensive, conceptual end-to-end walkthrough of the *whole* pattern — what it is, how it
+> works, and how all six patents connect as one system. The per-patent files below are the
+> reference detail behind it.
+
 | File | Patent Number | Title | Role in Family |
 |------|--------------|-------|----------------|
 | `adaptive-power.md` | WO 2023/064623 A1 | Adaptive Power Grid Management System | **Parent** — full system architecture |

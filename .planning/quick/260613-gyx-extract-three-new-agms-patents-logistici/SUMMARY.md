@@ -49,6 +49,17 @@ distinct patents** (was three).
 - Three parallel extraction agents (one per patent) wrote the summaries; INDEX integration
   and cross-patent reconciliation done in the main thread.
 
+## Follow-on (same task)
+
+- Corrected the ORACS definition across the notes (it is **Observability, Reachability,
+  Adaptability, Controllability, Security** per the patents' para [0209]; the earlier
+  "Operation+Role+Asset+Context+Scouts" gloss was a Phase-1 error, not in any patent).
+- Wrote `AGMS-architecture.md` — an extensive, conceptual end-to-end walkthrough of the
+  whole six-patent pattern (the three-brain architecture, the CaCSM, the formation pipeline
+  with the data objects passed at each handoff, ORACS/DNA/meta-objects, scouts & the edge,
+  federation/island-mode, the cross-cutting systems, a concrete storm walkthrough, the
+  recurring design principles, and a consolidated Juan-bridge map). Linked from INDEX.md.
+
 ## Files
 
 - Created: `.planning/research/patents/logistician-module.md`
