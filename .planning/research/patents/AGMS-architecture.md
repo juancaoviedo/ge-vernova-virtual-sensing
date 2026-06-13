@@ -1188,6 +1188,149 @@ Grounding the JD in concrete work, by theme:
 
 ---
 
+## Appendix E — The Devices Themselves: A Field Glossary (Transmission vs. Distribution)
+
+Appendix C named many devices across its three axes — *observe*, *control*, *automatic* — without
+saying what each one actually **is**. This appendix is the field glossary: for each device, **what
+it is, what it is for, and how it looks different on the transmission (TSO) side versus the
+distribution (DSO) side.** Grouped by what the device does.
+
+### E.1 Measurement and observation
+
+| Device | What it is and its purpose | On transmission (TSO) | On distribution (DSO) |
+|---|---|---|---|
+| **Instrument transformers — CT / VT (PT)** | Current and voltage transformers that step the line's huge current and voltage down to safe, standard signals (e.g. 5 A, 120 V) that meters and relays can read — the actual *sensing element* behind almost every measurement | High-accuracy free-standing CTs and VTs at every substation; **CCVTs** (capacitor-coupled) at EHV; metering-grade for settlement | Smaller pole- or pad-mounted units, fewer of them; many points downstream have *no* instrument transformer at all — the root of low observability |
+| **RTU — Remote Terminal Unit** | The substation's data-collection box: gathers all analog and status I/O and ships it to the control center over a SCADA protocol (DNP3) | At essentially every transmission substation — dense coverage | At distribution substations; **sparse to none** out on the feeders |
+| **IED — Intelligent Electronic Device** | A microprocessor relay/meter that both *protects* and *reports* — measures, makes protection decisions, and publishes data, increasingly over **IEC 61850** | Many per substation, often on an IEC 61850 station / process bus | Growing at substations and inside smart reclosers; thin further out |
+| **PMU — Phasor Measurement Unit (+ PDC)** | Measures **synchrophasors** — voltage/current magnitude *and phase angle*, GPS-time-stamped, 30–120 times per second — streamed to a **PDC** (concentrator); standard **IEEE C37.118**. Purpose: see the grid's dynamic state and angle spread in real time | Deployed across the bulk grid for **WAMS** — wide-area stability, oscillation detection, angle separation | **Micro-PMUs / D-PMUs** emerging; harder, because feeder angle differences are tiny and need far higher precision |
+| **AMI smart meter** | The customer revenue meter, now two-way: reports consumption, **voltage at the premise**, and a "last-gasp" outage signal over mesh/cellular | None — transmission has no end customers | The biggest new distribution data source — millions of voltage/usage points, but periodic (minutes), not control-grade real-time |
+| **Faulted-circuit indicator (FCI) / line sensor** | A clamp-on device that flags when fault current passed it (and increasingly streams current/temperature) to **locate** a fault along a circuit | Some; transmission leans on relay-based and traveling-wave fault location | Widely useful — pinpoints which feeder section faulted so crews don't patrol the whole line |
+| **Dynamic line rating (DLR) sensors** | Sensors of conductor temperature/tension/sag plus weather to compute the line's *real-time* safe ampacity, instead of a fixed nameplate rating | Used to **squeeze more capacity** out of constrained corridors | Rare |
+
+*Not a device, but worth noting:* **state estimation** and **forecasts** are *software* "virtual
+instruments." Transmission state estimation reconstructs the full network state from redundant
+measurements; distribution historically cannot run it for lack of measurements — the gap **virtual
+sensing** is meant to close.
+
+### E.2 Switching and protection
+
+| Device | What it is and its purpose | On transmission | On distribution |
+|---|---|---|---|
+| **Circuit breaker** | A switch that can interrupt huge **fault** currents on command (from a relay) without destroying itself — the grid's primary "off switch" | Large SF6 or vacuum breakers at every substation, interrupting enormous fault currents | Smaller vacuum breakers at the substation feeder; downstream the job passes to reclosers |
+| **Recloser** | A breaker *plus* a controller that **auto-recloses** after tripping — because most distribution faults (a branch brushing a line) are *temporary* and clear themselves | Some transmission lines auto-reclose, but cautiously | **Central to distribution** — trip-and-reclose with overcurrent settings; modern ones are IEDs and the building block of distributed FLISR |
+| **Sectionalizer** | Not a fault interrupter — it **counts** the upstream recloser's trips and opens during a dead interval to isolate the faulted section | Not used | Distribution-specific; coordinates with reclosers and fuses |
+| **Disconnect / load-break / tie switch** | Switches that isolate equipment or **reconfigure** the network; a *tie switch* (normally open) between two feeders can transfer load from one to the other | Big air-break **disconnectors** for isolation (usually opened de-energized) | Motor-operated **tie / sectionalizing switches** are the levers for reconfiguration and FLISR |
+| **Fuse** | The simplest protection: a metal element that **melts** and clears on overcurrent — one-shot, no intelligence | Rare | Everywhere — on laterals and distribution transformers (fuse–recloser coordination) |
+| **Protective relay** | The "brain" that watches CT/VT signals and **trips the breaker** in milliseconds on a fault; types include overcurrent (50/51), **distance/impedance (21)**, and **differential (87)** | **Distance + differential + pilot** (communication-assisted) schemes protect meshed lines and large transformers/buses | Mostly **overcurrent** and recloser controls; **directional** elements increasingly needed because DER feeds fault current backward |
+
+### E.3 Voltage and reactive power
+
+| Device | What it is and its purpose | On transmission | On distribution |
+|---|---|---|---|
+| **Power transformer + on-load tap changer (OLTC / LTC)** | Steps voltage between levels; the **tap changer** adjusts the turns ratio *under load* to hold output voltage steady | Large HV / EHV transformers with LTCs | The **substation LTC** sets the whole feeder's starting voltage |
+| **Step voltage regulator** | An autotransformer with a tap changer placed *along a feeder* to boost or buck voltage as it sags with distance | Generally not needed (meshed, short electrical distances) | Distribution-specific — line regulators keep far-end customers in range |
+| **Shunt capacitor bank** | Supplies **reactive power (VARs)** to hold voltage up under load; switched in and out | Large substation banks | Pole-mounted **switched caps** along feeders plus substation banks — a primary volt/VAR tool |
+| **Shunt reactor** | The opposite — **absorbs** reactive power to pull voltage *down* on lightly-loaded long lines or cable | Common on EHV lines and long cables | Rare (occasionally with heavy underground cable) |
+| **FACTS — SVC / STATCOM** | Power-electronic devices for **fast, continuous** reactive/voltage control; SVC = thyristor-switched caps/reactors, STATCOM = inverter-based and faster | At critical buses and near inverter-heavy or electrically weak areas | Not used (cost) — the **smart inverter** is distribution's distributed equivalent |
+| **Series compensation** | Capacitors placed *in series* with a long line to cancel part of its impedance and raise transfer capability | Transmission only | Not used |
+| **Phase-shifting transformer (PST)** | Injects a phase-angle shift to **steer real-power flow** between parallel paths | Transmission only — flow control | Not used (radial feeders have one path) |
+| **Synchronous condenser** | A spinning machine (a generator with no fuel) providing reactive power, **inertia**, and short-circuit strength | Resurging near inverter-dominated regions for stability | Not used |
+
+### E.4 Power conversion and the DER interface
+
+| Device | What it is and its purpose | On transmission | On distribution |
+|---|---|---|---|
+| **HVDC converter** | Converts AC to DC and back to move bulk power over long distances or undersea, or to tie **asynchronous** grids, with precise fast power-flow control | Transmission only — point-to-point links and back-to-back ties | Not used |
+| **Smart inverter** | The grid interface for PV and batteries — far more than a DC-to-AC converter: it can do **Volt-VAR, Volt-Watt**, and fault ride-through autonomously (**IEEE 1547-2018**) | Utility-scale plants, via the market | The DER workhorse and distribution's **distributed FACTS** — thousands of small, fast reactive sources |
+
+### E.5 Generator and system control loops (mostly transmission)
+
+These are control *systems*, not discrete field devices:
+
+- **AGC (Automatic Generation Control)** — continuously nudges generators' MW output to hold system
+  frequency and net interchange. Transmission / market; no distribution analog.
+- **AVR (Automatic Voltage Regulator)** — adjusts a generator's excitation to hold its terminal
+  voltage. Generation; the smart-inverter Volt-VAR function is the distributed echo of it.
+- **Governor / primary frequency response** — a generator's built-in speed control that instantly
+  arrests a frequency change. Generation / transmission.
+- **PSS (Power System Stabilizer)** — adds a damping signal to the AVR to quell inter-area
+  oscillations. Transmission.
+
+### E.6 Controllable loads and distributed resources (mostly distribution)
+
+- **DER + DERMS** — distributed energy resources (PV, storage, EV) plus the system that forecasts,
+  dispatches, and curtails them. Distribution; only utility-scale DER shows up at transmission via
+  the market.
+- **Demand response / flexible loads / EV chargers** — loads that can be shifted or curtailed.
+  Distribution (and wholesale DR programs at the market level).
+
+### E.7 Automatic system-protection schemes
+
+- **SPS / RAS (Special Protection / Remedial Action Schemes)** — pre-engineered automatic responses
+  ("if line X trips, instantly shed generator Y") that keep the bulk system stable. Transmission;
+  rare on distribution.
+- **UFLS / UVLS (under-frequency / under-voltage load shedding)** — relays that automatically drop
+  blocks of load to arrest a frequency or voltage collapse. *Decided by the bulk system, but the
+  relays physically sit on distribution feeders* — a place where the two worlds meet.
+- **Distributed FLISR / loop schemes** — reclosers and switches with peer logic that isolate a fault
+  and restore power via an alternate path **without the control center**. Distribution; the
+  decentralized self-healing that AGMS generalizes from fixed logic into *reasoning*.
+
+### E.8 Quick visual reference (clickable — opens an image search)
+
+The device names below link to an image search so you can see the real hardware in seconds. Where the
+transmission and distribution versions look very different, both are linked.
+
+**Measurement & observation:**
+[instrument transformer (CT / VT)](https://www.google.com/search?tbm=isch&q=current+voltage+transformer+substation) ·
+[RTU](https://www.google.com/search?tbm=isch&q=remote+terminal+unit+scada) ·
+[protective relay / IED](https://www.google.com/search?tbm=isch&q=protective+relay+ied+substation) ·
+[PMU](https://www.google.com/search?tbm=isch&q=phasor+measurement+unit) ·
+[AMI smart meter](https://www.google.com/search?tbm=isch&q=smart+electricity+meter) ·
+[faulted-circuit indicator](https://www.google.com/search?tbm=isch&q=faulted+circuit+indicator) ·
+[dynamic line rating sensor](https://www.google.com/search?tbm=isch&q=dynamic+line+rating+sensor)
+
+**Switching & protection:**
+[HV circuit breaker (transmission)](https://www.google.com/search?tbm=isch&q=high+voltage+sf6+circuit+breaker+substation) ·
+[distribution recloser](https://www.google.com/search?tbm=isch&q=distribution+recloser+pole) ·
+[sectionalizer](https://www.google.com/search?tbm=isch&q=distribution+sectionalizer) ·
+[disconnect / air-break switch](https://www.google.com/search?tbm=isch&q=air+break+disconnect+switch+substation) ·
+[distribution fuse cutout](https://www.google.com/search?tbm=isch&q=distribution+fuse+cutout)
+
+**Voltage & reactive power:**
+[on-load tap changer](https://www.google.com/search?tbm=isch&q=on+load+tap+changer+transformer) ·
+[feeder voltage regulator](https://www.google.com/search?tbm=isch&q=distribution+step+voltage+regulator) ·
+[pole-mounted capacitor bank](https://www.google.com/search?tbm=isch&q=pole+mounted+capacitor+bank) ·
+[substation capacitor bank](https://www.google.com/search?tbm=isch&q=substation+capacitor+bank) ·
+[shunt reactor](https://www.google.com/search?tbm=isch&q=shunt+reactor+substation) ·
+[SVC / STATCOM](https://www.google.com/search?tbm=isch&q=static+var+compensator+statcom) ·
+[series capacitor (transmission)](https://www.google.com/search?tbm=isch&q=series+capacitor+bank+transmission) ·
+[phase-shifting transformer](https://www.google.com/search?tbm=isch&q=phase+shifting+transformer) ·
+[synchronous condenser](https://www.google.com/search?tbm=isch&q=synchronous+condenser)
+
+**Power conversion & DER:**
+[HVDC converter station](https://www.google.com/search?tbm=isch&q=hvdc+converter+station+valve+hall) ·
+[solar smart inverter](https://www.google.com/search?tbm=isch&q=solar+inverter) ·
+[EV charger](https://www.google.com/search?tbm=isch&q=ev+charging+station)
+
+For deeper reading on any of these, the **Wikipedia** articles (e.g.
+[Phasor measurement unit](https://en.wikipedia.org/wiki/Phasor_measurement_unit),
+[Recloser](https://en.wikipedia.org/wiki/Recloser),
+[Protective relay](https://en.wikipedia.org/wiki/Protective_relay),
+[Tap changer](https://en.wikipedia.org/wiki/Tap_changer),
+[Static synchronous compensator](https://en.wikipedia.org/wiki/Static_synchronous_compensator),
+[HVDC](https://en.wikipedia.org/wiki/High-voltage_direct_current)) are a fast, photo-rich next step.
+
+**▶ Juan:** map this glossary back to the job. **Virtual sensing** is about turning sparse CT/VT +
+slow AMI + a handful of D-PMUs into a full feeder picture — synthesizing the *instrument transformers
+that were never installed*. Your **edge software** is what ingests RTU / IED / PMU / DER telemetry
+(over DNP3, C37.118, IEEE 2030.5, MQTT) and runs the estimators on it. And the **controllable devices
+in E.2–E.4** — reclosers, regulators, capacitor banks, smart inverters — are exactly what an AGMS
+operation loop issues commands to. Knowing each device cold lets you talk to the power-systems
+engineers in their own language, which is half of a "bridge physics, AI, and distributed computing" role.
+
+---
+
 ## Quick links
 
 - Map of the family + pipeline diagram + glossary → `INDEX.md`
