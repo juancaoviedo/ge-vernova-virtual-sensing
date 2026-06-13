@@ -24,14 +24,13 @@ Everything else is secondary to that.
 
 <!-- Shipped and confirmed valuable. -->
 
-(None yet — ship to validate)
+- [x] Deep-read of the director's six-patent AGMS family (parent + Logistician, Asset Portfolio, Operation Loop ★GRANTED/GE Vernova, Scout Command, Data Management) → one consolidated rehearsal deck with per-patent summary + connection + architecture-level question, a ~90s family pitch, and the "one assembly line = my stack" master narrative — *Validated in Phase 3: Director's Patents Deep-Read*
 
 ### Active
 
 <!-- Current scope. Building toward these. -->
 
 - [ ] Distilled study notes for each high-priority gap area
-- [ ] Deep-dive on the director's patents (adaptive power, asset portfolio, data management, OCR)
 - [ ] Predicted interview questions with strong, personalized answers (STAR stories from Juan's CV)
 - [ ] A "reframe" map translating Juan's existing work (OSED, HEMS, DER control) into GE Vernova's virtual-sensing / decentralized-grid vocabulary
 - [ ] Kalman filter & state-estimation primer grounded in a grid virtual-sensing example
@@ -131,4 +130,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-06-13 — Phase 2 (Transmission Virtual Sensing) complete: TVS-01..04 study notes + DC power-flow bad-data demo.*
+*Last updated: 2026-06-13 — Phase 3 (Director's Patents Deep-Read) complete: consolidated six-patent AGMS rehearsal deck (summary + connection + question per patent, ~90s family pitch, master narrative).*
