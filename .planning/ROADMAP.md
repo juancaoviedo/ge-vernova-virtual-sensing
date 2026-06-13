@@ -43,7 +43,10 @@ deliverable maps to exactly one phase; no requirement is orphaned.
   2. Juan can describe the KF predict/update equations, the EKF Jacobian linearization, and UKF sigma-point strategy — and say when to choose each
   3. Juan can map the IEEE 738 conductor thermal ODE to the EKF predict step, naming Q and R, explaining the innovation sequence, and describing divergence detection
   4. The Python EKF mini-demo runs and outputs a time-series ampacity estimate from simulated current + weather telemetry
-**Plans**: TBD
+**Plans**: 3 plans
+- [ ] 01-01-PLAN.md — KAL-01 WLS/Gauss-Newton notes + KAL-02 Kalman family (KF/EKF/UKF) notes
+- [ ] 01-02-PLAN.md — KAL-03 worked IEEE 738 line-temperature EKF example + building-RC bridge
+- [ ] 01-03-PLAN.md — KAL-04 from-scratch Python EKF mini-demo + README
 
 ### Phase 2: Transmission Virtual Sensing
 **Goal**: Juan can discuss voltage stability monitoring, phase-angle inference, observability analysis, bad-data detection, and asset-health estimation in T&D vocabulary without defaulting to distribution-side analogies
@@ -108,7 +111,7 @@ Phases execute in numeric order: 0 → 1 → 2 → 3 → 4 → 5 → 6
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 0. Document Ingestion | 0/TBD | Not started | - |
-| 1. Kalman & State Estimation | 0/TBD | Not started | - |
+| 1. Kalman & State Estimation | 0/3 | Not started | - |
 | 2. Transmission Virtual Sensing | 0/TBD | Not started | - |
 | 3. Director's Patents Deep-Read | 0/TBD | Not started | - |
 | 4. Protocols, Stack & Architecture | 0/TBD | Not started | - |
