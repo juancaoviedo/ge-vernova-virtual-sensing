@@ -952,7 +952,7 @@ print(f"Ampacity: {ieee738_ampacity(75, 25):.0f} A")  # expect ~900+ A under cal
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Direct Tc measurement availability**
    - What we know: most DLR installations use current + weather to infer Tc, not direct temperature sensors.

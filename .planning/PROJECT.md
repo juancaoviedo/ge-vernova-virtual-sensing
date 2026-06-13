@@ -79,14 +79,17 @@ edge; MPC & convex optimization; IoT protocols (MQTT, Modbus, BACnet, OpenADR, Z
 K8s/gRPC/InfluxDB/TimescaleDB/Grafana; agentic AI, knowledge graphs, MCP; open-source
 culture fit.
 
-**Source material gathered** (in `docs/`): four director patents (adaptive-power,
-asset-portfolio, data-management, OCR), IEC 61850-3, IntelliGrid (PDF + crawled mirror
+**Source material gathered** (in `docs/`): the director's patent family — three distinct
+patents (WO 2023/064623 adaptive-power *parent* + asset-portfolio & data-management
+*continuations*; `patent_ocr.pdf` is the OCR'd duplicate of data-management, not a 4th).
+They describe an Autonomous Grid Management System (AGMS) with AI "scouts" — directly
+relevant to Juan's agentic-AI work. Also: IEC 61850-3, IntelliGrid (PDF + crawled mirror
 under `summaries/`), Orbit patent search export, the job description.
 
 **Gap analysis (priority order, drives the roadmap):**
 1. 🔴 Kalman filters & state estimation — named in JD; Juan has Least Squares/MPC, not Kalman by name.
 2. 🔴 Transmission-side virtual sensing — voltage stability, phase angles, line temperature, asset health (Juan's sensing is building/DER/distribution side).
-3. 🔴 Director's patents — deep-read to speak to the lab's actual work.
+3. 🔴 Director's patents (AGMS family, 3 patents) — deep-read to speak to the lab's actual work; the "scouts" architecture maps onto Juan's agentic-AI / MCP work.
 4. 🟠 SCADA, PMUs, DNP3, LoRa — grid-specific protocols Juan hasn't used (has MQTT/Modbus).
 5. 🟠 Federated architectures / federated learning — JD's "federated, no central coordination" framing.
 6. 🟠 Streaming: Kafka/NATS, Pulsar — Juan uses MQTT + Pub/Sub.

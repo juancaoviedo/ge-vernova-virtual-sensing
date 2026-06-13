@@ -24,7 +24,7 @@
 
 ### Director's Patents (PAT) — Gap 3 (highest differentiation)
 
-- [ ] **PAT-01**: Deep-read summary of each of the four patents (adaptive power, asset portfolio, data management, OCR)
+- [ ] **PAT-01**: Deep-read summary of each of the three patents — the WO 2023/064623 family: adaptive power (parent), asset portfolio, data management (note: patent_ocr.pdf is the OCR'd duplicate of data-management, not a 4th patent)
 - [ ] **PAT-02**: One concrete connection per patent linking it to Juan's OSED/HEMS/SI-MAPPER work
 - [ ] **PAT-03**: One sharp question per patent Juan can ask the director that demonstrates understanding
 
