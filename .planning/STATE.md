@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
+status: verifying
 stopped_at: Completed 02-02-PLAN.md
-last_updated: "2026-06-13T17:32:33.853Z"
+last_updated: "2026-06-13T17:37:14.807Z"
 last_activity: 2026-06-13
 progress:
   total_phases: 7
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 6
-  completed_plans: 5
-  percent: 83
+  completed_plans: 6
+  percent: 100
 ---
 
 # Project State
@@ -27,10 +27,10 @@ See: .planning/PROJECT.md (updated 2026-06-13)
 
 Phase: 02 (transmission-virtual-sensing) — EXECUTING
 Plan: 3 of 3
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-06-13
 
-Progress: [████████░░] 83%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -54,6 +54,7 @@ Progress: [████████░░] 83%
 *Updated after each plan completion*
 | Phase 02 P01 | 3 | 2 tasks | 2 files |
 | Phase 02 P02 | 6 | 2 tasks | 2 files |
+| Phase 02 P03 | 6 | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -69,6 +70,8 @@ Recent decisions affecting current work:
 - [Phase ?]: TVS notes place the <3-min say-aloud track at top; TVS-02 framed explicitly as the linear case of KAL-01 (no Gauss-Newton re-derivation)
 - [Phase ?]: Phase 2: C57.91 confirm pass — assert two-cascaded-first-order-rise structure confidently; tag exact constants 'per IEEE C57.91-2011' (Clause 7 vs Annex G placement varies); Arrhenius A=9.8e-18/B=15000 verified
 - [Phase ?]: Phase 2: TVS-03 framed as linear specialization of KAL-01 §4 (constant H, one-shot solve) — no WLS re-derivation; <3-min say-aloud at note bottom
+- [Phase ?]: Phase 2 demo: injected +15-sigma gross error on flow 2->3 measurement; chi2 (J=176.7 >> 7.8) detects, largest rN (13.2) identifies, removal recovers theta within 7e-4 rad
+- [Phase ?]: Phase 2 demo kept strictly linear DC (no AC power flow, no pandapower/PYPOWER) to show WLS math directly; one-shot normal-equations solve = linear collapse of KAL-01 Gauss-Newton
 
 ### Pending Todos
 
@@ -92,6 +95,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-06-13T17:32:33.839Z
+Last session: 2026-06-13T17:36:57.904Z
 Stopped at: Completed 02-02-PLAN.md
 Resume file: None

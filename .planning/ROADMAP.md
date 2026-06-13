@@ -60,7 +60,7 @@ deliverable maps to exactly one phase; no requirement is orphaned.
 **Plans**: 3 plans
 - [x] 02-01-PLAN.md — TVS-01 voltage-stability + TVS-02 DC power-flow angle-WLS notes
 - [x] 02-02-PLAN.md — TVS-03 observability + bad-data + TVS-04 asset-health notes
-- [ ] 02-03-PLAN.md — 3-bus DC power-flow WLS + chi-squared bad-data detection demo
+- [x] 02-03-PLAN.md — 3-bus DC power-flow WLS + chi-squared bad-data detection demo
 
 ### Phase 3: Director's Patents Deep-Read
 **Goal**: Juan has read all four director patents, can articulate what each solves, and can make one concrete connection per patent to his own work and ask one sharp question per patent in the interview
