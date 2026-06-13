@@ -1,0 +1,11 @@
+# Crawl virtualenv
+.venv-crawl/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Raw website crawl artifacts (the converted markdown/ is kept; the raw mirror is noise)
+summaries/intelligrid-architecture/mirror/
+summaries/intelligrid-architecture/wget-crawl.log
