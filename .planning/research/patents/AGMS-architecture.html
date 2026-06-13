@@ -51,7 +51,8 @@
     <a href="#p10">Part 9 — End-to-End Walkthrough (one concrete story)</a>
     <a href="#p11">Part 10 — The Recurring Design Principles (what to actually take away)</a>
     <a href="#p12">Part 11 — Where Juan&#x27;s Work Maps (the consolidated bridge map)</a>
-    <a href="#p13">Quick links</a>
+    <a href="#p13">Appendix A — How the Grid Is Run Today (the Control-Room Operator, SCADA, ADMS, DERMS)</a>
+    <a href="#p14">Quick links</a>
   </nav>
   <main>
 <section class="card">
@@ -257,7 +258,41 @@
 <p><strong>The master narrative:</strong> <em>"The patent family describes one self-organizing platform — perceive, reason, then run an assembly line (Logistician → verify → assemble+simulate → deploy) that pushes autonomous scouts onto field cells that survive losing the center. I've built the components of exactly this, independently, in buildings and DER: OSED is the edge runtime and orchestration control plane the scouts would land on, my K3s scheduler is the Scout Incubator with grid semantics, SI-MAPPER is the typed DNA-map asset model, CVXPY MPC is the simulate-before-commit gate that the granted Operation Loop patent — GE Vernova's own IP — puts in its claims, and my analytics stack is the GWM data foundation. Coming to GE Vernova means integrating those into a T&amp;D-scale version of precisely this architecture."</em></p>
 </section>
 <section class="card">
-<h2 class="sec" id="p13">Quick links</h2>
+<h2 class="sec" id="p13">Appendix A — How the Grid Is Run Today (the Control-Room Operator, SCADA, ADMS, DERMS)</h2>
+<p>Part 0 says AGMS automates "the job a distribution control-room operator does today with SCADA / ADMS / DERMS." This appendix unpacks that — the human role and the three incumbent systems AGMS is designed to decentralize.</p>
+<h3 class="sub">Who this person is</h3>
+<p>A <strong>distribution control-room operator</strong> (a.k.a. distribution dispatcher / DSO desk operator) runs the <strong>medium-voltage distribution network</strong> — the part of the grid <em>below</em> the substation, roughly 4–35 kV, that carries power the "last mile" out to neighborhoods, homes, and businesses.</p>
+<p>Do not confuse three different control rooms:</p>
+<ul><li><strong>Transmission operator</strong> — high-voltage bulk power (hundreds of kV), long-distance, balancing-authority / NERC world.</li><li><strong>Generation dispatcher</strong> — deciding which power plants run.</li><li><strong>Distribution operator</strong> — <em>this is the one AGMS is about</em> — keeping the wires that feed actual customers energized and within limits.</li></ul>
+<p>They typically watch <strong>hundreds of feeders and dozens of substations</strong> from a wall of screens showing one-line diagrams.</p>
+<h3 class="sub">What the operator actually does</h3>
+<p>At its core it is a continuous loop: <strong>monitor → detect a problem → decide a response → execute switching → verify → restore/regulate.</strong> Concretely, their responsibilities are:</p>
+<ol><li><strong>Monitoring network state.</strong> Watching voltages, currents, power flows, and the open/closed status of every breaker and switch, plus a constant stream of equipment alarms.</li><li><strong>Outage response (the firefighting).</strong> When a fault hits — tree on a line, lightning, equipment failure — they <strong>locate</strong> it, <strong>isolate</strong> it, <strong>restore</strong> as many customers as possible by <strong>reconfiguring</strong> the network (rerouting power from a healthy neighboring feeder), and <strong>dispatch field crews</strong> to the actual fault.</li><li><strong>Switching operations (safety-critical).</strong> Planning and executing <strong>switching orders</strong> — the exact sequence of opening/closing devices — for maintenance and reconfiguration. They must guarantee a line is <strong>de-energized and grounded</strong> before a crew touches it (clearances, lockout/tagout) and avoid accidentally <strong>back-feeding</strong> a supposedly-dead line.</li><li><strong>Voltage/VAR management.</strong> Keeping voltage within legal limits (in the US, ANSI C84.1 — roughly ±5%) by commanding <strong>capacitor banks, voltage regulators, and transformer tap-changers (LTCs).</strong></li><li><strong>Managing two-way flow from DERs.</strong> Rooftop solar, batteries, and EVs now push power <em>backwards</em> and make voltage rise mid-day — the operator increasingly has to coordinate or curtail them.</li><li><strong>Storm/emergency management.</strong> Mass outages: prioritize restoration (hospitals first), juggle crews, coordinate mutual aid.</li></ol>
+<p>They are judged on <strong>reliability metrics</strong> regulators track — <strong>SAIDI / SAIFI / CAIDI</strong> (how often customers lose power, and for how long).</p>
+<p><strong>A day-in-the-life snapshot:</strong> an alarm flags low voltage on Feeder 12. The operator checks the one-line, sees a recloser tripped, cross-references customer outage calls, deduces the fault is between switches B and C, writes a switching order to open B and C (isolating it), then closes a tie-switch to pick up the downstream customers from Feeder 9 — <em>after</em> checking Feeder 9 won't overload — and dispatches a crew to the faulted span. Minutes of human judgment, every time.</p>
+<h3 class="sub">The three tools they do it with</h3>
+<p>These are <strong>layers</strong>, not competitors — each sits on top of the last.</p>
+<p><strong>SCADA — Supervisory Control And Data Acquisition</strong> <em>(the senses and hands).</em> The foundation. Field devices in substations (<strong>RTUs / IEDs</strong>) send back telemetry — measurements and device status — over protocols like <strong>DNP3</strong>, and the operator can send commands the other way ("open breaker 7"). SCADA is <strong>remote eyes + remote control + alarming + a historian.</strong> Crucially, <strong>it decides nothing</strong> — it is a live window onto the grid and a remote control in the operator's hand. The screens they watch (the <strong>HMI</strong>) are the SCADA front-end.</p>
+<p><strong>ADMS — Advanced Distribution Management System</strong> <em>(the decision-support brain for the wires).</em> A software suite layered on SCADA that adds a <strong>connectivity model of the whole distribution network</strong> plus analytics and applications, including <strong>OMS</strong> (Outage Management System — predicts and locates outages from customer calls + smart-meter data + SCADA, tracks restoration, manages crews) and <strong>DMS apps</strong> — power-flow analysis, <strong>FLISR</strong> (Fault Location, Isolation, Service Restoration), <strong>Volt/VAR Optimization (VVO/CVR)</strong>, switching-order management, and "what-if" study mode. So <strong>ADMS ≈ SCADA + a network model + decision/optimization apps.</strong> This is the layer that <em>partly</em> automates the operator's job today — and <strong>FLISR and VVO inside ADMS are the centralized ancestors of what AGMS decentralizes.</strong></p>
+<p><strong>DERMS — Distributed Energy Resource Management System</strong> <em>(the manager for solar/batteries/EVs).</em> The newest layer, built because ADMS was not designed for millions of small, behind-the-meter resources. It <strong>forecasts, monitors, dispatches, and curtails DERs</strong> (smart inverters, storage, EV chargers, virtual power plants), talking to them via standards like <strong>IEEE 2030.5 / OpenADR</strong> or aggregator APIs, and ensures all that DER activity does not violate grid limits. It usually integrates with the ADMS.</p>
+<p>The stack, in one picture:</p>
+<pre class="diagram">        Human operator  ── makes the final calls
+              │
+   ┌──────────┼───────────┐
+ DERMS       ADMS        (study tools)
+ (solar,   (model + FLISR,
+  batt,     VVO, OMS —
+  EV)       the wires brain)
+   └──────────┬───────────┘
+            SCADA  ── real-time data in / control commands out
+              │
+         RTUs / IEDs in the field  (DNP3, etc.)</pre>
+<h3 class="sub">Why this connects back to AGMS</h3>
+<p>All of that intelligence today lives <strong>in the central control center</strong>, with a <strong>human in the loop</strong>, and it <strong>depends on the communications link</strong> back to that center staying up. AGMS takes the decision functions that ADMS and DERMS perform centrally — <strong>FLISR, Volt/VAR, DER coordination</strong> — and pushes them <strong>out to autonomous agents at the grid edge</strong> that act locally, in seconds, and keep working when the comms link drops. Same <strong>monitor → decide → switch → restore → regulate</strong> loop — done by distributed software instead of a person at a desk.</p>
+<div class="juan"><strong>▶ Juan:</strong> this is the <strong>T&amp;D-vocabulary</strong> layer the role expects you to speak fluently — SCADA, DNP3, RTUs/IEDs, FLISR, Volt/VAR, ADMS/DERMS, SAIDI/SAIFI. It sits directly beside the SCADA/DNP3 notes already in the project's gap analysis, and it is the incumbent-systems framing an interviewer will expect you to contrast AGMS against.</div>
+</section>
+<section class="card">
+<h2 class="sec" id="p14">Quick links</h2>
 <ul><li>Map of the family + pipeline diagram + glossary → <a href="INDEX.html"><code>INDEX.md</code></a></li><li>Parent architecture in patent detail → <code>adaptive-power.md</code></li><li>Per-stage detail → <code>logistician-module.md</code>, <code>asset-portfolio.md</code>, <code>operation-loop.md</code>, <code>scout-command.md</code>, <code>data-management.md</code></li><li>Extra OCR-only detail (gAVA, relevancy tiers, CSM validation stages) → <code>ocr.md</code></li></ul>
 </section>
     <footer>Rendered from <code>AGMS-architecture.md</code> — content unchanged.</footer>
