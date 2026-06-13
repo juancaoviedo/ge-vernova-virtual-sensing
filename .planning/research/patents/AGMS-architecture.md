@@ -950,6 +950,110 @@ operations answer #1 and #4 (push coordinated intelligence to the edge instead o
 
 ---
 
+## Appendix C — Transmission (TSO) vs. Distribution Operations: A Side-by-Side
+
+A common confusion is that transmission and distribution operations are "the same job at a
+different voltage." They are not. They share a **SCADA foundation**, but they answer different
+questions, use different tools, and worry about different physics. This appendix lays them next to
+each other across the three axes that matter — **what they observe, what they control remotely, and
+what happens automatically** — and then lists what is unique to each.
+
+### The fundamental difference (why the two jobs diverge)
+
+| | Transmission (TSO / ISO) | Distribution operations |
+|---|---|---|
+| Voltage | 69 kV – 765 kV (plus HVDC) | 4 – 35 kV primary; 120 / 240 V secondary |
+| Topology | Meshed / networked — many parallel paths | Radial — mostly one path, reconfigurable |
+| Geographic scope | Region / interconnection | Local service territory |
+| A single failure… | can cascade and black out millions | usually affects one feeder / neighborhood |
+| Defining job | Balance generation to load, hold frequency, keep the system N-1 secure, move bulk power within thermal limits, run the wholesale market | Deliver the last mile: restore outages, hold customer voltage, manage DER |
+| Manages frequency? | **Yes** — its master responsibility | **No** — frequency is inherited from the transmission system |
+| Core software | **EMS** (state estimation, contingency analysis, AGC, optimal power flow) | **ADMS / DMS** + OMS + DERMS |
+| Real-time stakes | Seconds (stability, frequency) | Minutes (restoration); continuous (voltage) |
+
+So to your framing: the TSO *is* largely about **power flow, transfer limits, thermal limits, and
+balancing** — and **yes, it heavily manages voltage too** (reactive power and voltage stability are
+core TSO functions). The distribution center is more about **restoring outages and holding local
+voltage**, and increasingly **managing DER**. Both check voltage; only the TSO manages frequency.
+
+### Axis 1 — What they OBSERVE (and with what)
+
+| What they observe | Transmission (TSO / EMS) | Distribution (control center / ADMS) |
+|---|---|---|
+| Substation SCADA telemetry (MW, MVAR, volts, amps, breaker status) | Yes — dense, at essentially every substation and line | Yes — but mostly at the substation / feeder head; sparse further out the feeder |
+| Frequency | Yes — the master system-wide signal it must regulate | No — frequency is inherited, not measured for control |
+| State estimation (full network state from redundant measurements + model) | Yes — a core EMS function; the network is observable | Historically no — too few measurements; most of the feeder is unobservable → the gap virtual sensing fills |
+| PMUs / synchrophasors (GPS-timed phasors, IEEE C37.118) feeding WAMS | Yes — wide-area visibility, oscillation and stability monitoring | Emerging only (micro-PMUs / D-PMUs); not yet standard |
+| AMI / smart meters (customer voltage + consumption) | No | Yes — a distribution-unique source; millions of endpoints, but periodic, not control-grade real-time |
+| Customer trouble calls / IVR | No | Yes — historically the primary way an outage is even detected |
+| Line sensors / fault-current indicators (FCIs) | Some | Increasingly — to pinpoint fault location along a feeder |
+| Line loadings vs. thermal ratings / congestion | Yes — continuously, drives redispatch | Yes, but informally — feeder loading vs. equipment ratings |
+| DER telemetry, solar and load forecasts | Generation side, via the market | Yes, via DERMS — behind-the-meter DER output and forecasts |
+| Tie-line / interchange metering, neighbor-control-center data (ICCP / TASE.2) | Yes — schedules power exchange between areas | Rare |
+
+### Axis 2 — What they CONTROL remotely
+
+| What they command remotely | Transmission (TSO) | Distribution (control center) |
+|---|---|---|
+| Breakers / line switches (reconfigure topology) | Yes — switch HV lines, reconfigure the mesh | Yes — feeder breakers, remote switches, and tie-switches to reroute power |
+| Generation setpoints (MW dispatch, AGC, generator voltage / AVR) | Yes — the primary balancing lever | No — distribution does not dispatch generation |
+| Transformer tap changers (OLTC / LTC) | Yes — on HV / EHV transformers | Yes — substation LTC plus feeder step voltage regulators |
+| Shunt capacitor / reactor banks | Yes — transmission-scale reactive / voltage | Yes — substation and feeder capacitor banks |
+| FACTS devices (SVC, STATCOM, series compensation, phase-shifting transformers) | Yes — continuous reactive and power-flow control | No — not used at distribution |
+| HVDC converter setpoints | Yes, where HVDC links exist | No |
+| Smart inverters / DER (curtail, power factor, reactive support) | Only utility-scale via market | Yes — via DERMS; the fast-growing new lever |
+| Flexible / demand-response loads, EV chargers | Limited (wholesale DR) | Yes — via DERMS / demand response |
+| Load shedding | Yes — emergency, system-wide | Yes — rotating outages / feeder shedding |
+
+### Axis 3 — What is AUTOMATIC (local, no operator in the loop)
+
+| Automatic mechanism | Transmission | Distribution |
+|---|---|---|
+| Protective relays trip breakers on a fault (milliseconds) | Yes — distance, differential, overcurrent | Yes — overcurrent relays |
+| Fuses (melt and clear the fault) | Rare | Yes — the simplest, ubiquitous protection |
+| Auto-reclosing after a transient fault | Sometimes | Yes — reclosers are central to distribution |
+| Sectionalizers (open after N recloser operations) | No | Yes — distribution-specific |
+| Automatic Generation Control (AGC) — continuous frequency balancing | Yes — centralized closed loop | No |
+| Generator AVR / Power System Stabilizers (voltage, oscillation damping) | Yes | No |
+| Special Protection / Remedial Action Schemes (SPS / RAS) | Yes — pre-engineered contingency responses | Rare |
+| Under-frequency / under-voltage load shedding (UFLS / UVLS) | Yes — automatic last resort | Partially (UFLS relays on some feeders) |
+| FACTS continuous voltage / VAR regulation | Yes | No |
+| Local cap-bank and voltage-regulator controls (time / temperature / voltage / VAR) | Some | Yes — long-standing local autonomy |
+| Smart-inverter autonomous Volt-VAR / Volt-Watt (IEEE 1547-2018) | No | Yes — newer, distribution-unique |
+| Distributed FLISR / loop schemes (reclosers self-isolate and restore) | No | Yes — the decentralized self-healing AGMS generalizes |
+
+### Unique to transmission (no real distribution equivalent)
+
+- **Frequency regulation / AGC / balancing** — the defining transmission responsibility; distribution never touches it.
+- **State estimation + contingency (N-1) analysis** — continuously simulating "what if any one element trips" to keep the system secure.
+- **Stability analysis and damping** — transient, voltage, and oscillatory stability; Power System Stabilizers.
+- **Wholesale market and congestion management** — Locational Marginal Pricing (LMP), interchange scheduling, transfer limits / Available Transfer Capability (ATC), transmission rights — the "contracts for how much power can flow" you intuited.
+- **Bulk-power FACTS / HVDC / phase-shifting transformers / synchronous condensers.**
+- **Black-start coordination** after a wide-area blackout.
+- **Wide-area PMU / WAMS monitoring** (migrating toward distribution, but a transmission capability today).
+
+### Unique to distribution (no real transmission equivalent)
+
+- **AMI / smart meters and customer trouble calls** as observation sources.
+- **OMS — Outage Management** at premise granularity: predicting/locating outages, crew dispatch, estimated time of restoration (ETOR).
+- **Behind-the-meter DER coordination (DERMS)** and **smart-inverter Volt-VAR (IEEE 1547)** — managing millions of small resources.
+- **Radial reconfiguration via tie-switches** and **FLISR** self-healing.
+- **Conservation Voltage Reduction (CVR)** — deliberately lowering feeder voltage to cut load and energy.
+- **The low-observability problem itself** — too many devices, too few sensors — which is precisely what creates the need for virtual sensing.
+
+**▶ Juan:** read the three tables top-to-bottom and the role jumps out. Transmission is already
+**observable** (dense SCADA + state estimation + PMUs) and **automated** (AGC, SPS/RAS, FACTS).
+Distribution is the opposite — **sparse observation** (substation head + slow AMI + phone calls) and
+**local, dumb automation** (fuses, reclosers). The job — *"Virtual Sensing and Decentralized Grid
+Operations"* — is about closing exactly that gap: **virtual sensing** brings distribution toward
+transmission-grade observability (estimate the feeder state where there is no sensor — the
+distribution state-estimation problem), and **AGMS-style decentralized operations** bring it
+coordinated, intelligent automation (distributed FLISR and Volt-VAR that *reason*, not just trip).
+You can frame your whole pitch as "making the distribution grid as observable and as smart as the
+transmission grid already is — but decentralized, so it survives losing the center."
+
+---
+
 ## Quick links
 
 - Map of the family + pipeline diagram + glossary → `INDEX.md`
