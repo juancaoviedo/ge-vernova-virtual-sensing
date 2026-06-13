@@ -14,6 +14,105 @@
 
 ---
 
+## Part 0 — What Is This Actually For?
+
+Before the machinery below, the plain-language answer to "what is AGMS *for*?"
+
+> **AGMS exists to let the electric grid run itself** — to keep power flowing safely and
+> within limits through disturbances and constant change — **by pushing sensing,
+> decision-making, and control out to autonomous software agents in the field, instead of
+> relying on human operators in a central control room** that can be overwhelmed or cut off.
+
+It is an **operations-automation system**. The job it automates is the job a distribution
+control-room operator does today with SCADA / ADMS / DERMS — but faster, at far larger scale,
+and surviving loss of communications.
+
+### It controls real equipment (it is not a data bus)
+
+A common first guess is that this is connectivity middleware — a real-time data bus like
+RTI Connext DDS, Kafka, or NATS. It is **not**. Middleware is the *wiring* that moves messages
+between components; it does not decide anything. AGMS is the opposite end of the stack: **the
+brain, the chain of command, and the field agents that decide and act.** It would *run on top
+of* a data bus — AGMS is the **autonomy/decision layer**, not the transport.
+
+So, concretely, it issues commands to physical grid equipment to achieve an operational goal:
+
+| It commands… | …to achieve |
+|---|---|
+| Switches / reclosers | reconfigure the network topology (reroute power) |
+| Breakers | isolate a fault |
+| Capacitor banks, voltage regulators, smart inverters | hold voltage / VARs within limits |
+| Batteries, DERs, EV chargers | dispatch or absorb power |
+| Microgrid controllers | island and reconnect |
+
+**It is multi-purpose and multi-platform — but bounded.** "Multi-platform" because scouts
+deploy onto heterogeneous, multi-vendor field devices; "multi-purpose" because the *same*
+architecture performs fault restoration, voltage control, DER dispatch, and more — the "what
+to do" comes from a retrieved CaCSM pattern, not from bespoke code per task. But the domain is
+**electric grid operations.** (These six patents target electric T&D specifically; the
+principles could extend to other networked infrastructure, but the IP does not claim gas or
+other utilities.)
+
+### Worked example 1 — "self-healing" after a fault
+
+The flagship use case. The value *is* the contrast between today and AGMS.
+
+**A tree falls on a distribution line on a feeder serving 3,000 homes.**
+
+*Today (SCADA + human operator):*
+
+1. The line breaker trips — 3,000 homes go dark.
+2. The control room gets an **alert storm** of hundreds of sensor alarms.
+3. An operator investigates, works out *which* segment faulted, and manually issues switching
+   orders to reroute the healthy homes onto a neighboring feeder.
+4. This takes **minutes to tens of minutes** — and if the storm took out the communications
+   link to that area, the operator is **blind** and has to send a truck.
+
+*With AGMS:*
+
+1. The field devices (running scouts) detect the fault and **correlate** it — not 300 alarms,
+   but one fact: "feeder-3, section B, fault."
+2. The local **operating cell** acts on its own: it **isolates** the faulted section (opens the
+   switches on both sides), then **reconfigures** — picking up the healthy downstream homes from
+   an adjacent feeder…
+3. …but only *after* checking the neighbor can actually carry the extra load (the **ORACS**
+   check — is that feeder observable, reachable, controllable, and does it have spare capacity?)
+   and **simulating the switch-over before throwing it** (don't fix one outage by overloading the
+   neighbor and causing a second).
+4. Restoration in **seconds**, automatically — and **if the WAN to the control center is down,
+   it still works**, because the cell decides and acts locally (**island mode**).
+
+The industry name for this capability is **FLISR** (Fault Location, Isolation, and Service
+Restoration) — "the self-healing grid." Utilities pay heavily for it today, and it is still
+mostly centralized and brittle. AGMS makes it **autonomous and survivable.**
+
+### Worked example 2 — continuous voltage control (a different job, same machinery)
+
+**A sunny, low-demand afternoon. Rooftop solar across a neighborhood pushes voltage *above* the
+legal limit**, which stresses equipment and trips inverters offline.
+
+There is no fault and no outage — just a slow, continuous control problem. The same architecture
+forms a *different* operation loop that continuously **coordinates the local resources** to hold
+voltage in band: trim the solar inverters' reactive power, dispatch a community battery to absorb
+the excess, nudge EV chargers to charge now. Same machinery, entirely different task — **because
+it is a different CaCSM pattern, not different software.** That is what "multi-purpose" means here.
+
+### Why anyone needs this (the bet)
+
+The grid is shifting from "a few large power plants, one-way predictable flow, humans in control
+rooms" to "millions of distributed solar panels, batteries, and EVs, two-way flow, events too
+fast and too numerous for a human-plus-central-computer to track — over communications that
+cannot be assumed to be there." Centralized control hits a wall. **AGMS's bet is distributed
+autonomy: make the grid edge smart enough to run itself.**
+
+**▶ Juan:** this is exactly why the role is *"Virtual Sensing **and** Decentralized Grid
+Operations."* AGMS is the decentralized-grid-operations vision; **virtual sensing fills the one
+dependency it cannot do without** — the ORACS check constantly asks "is this asset *observable*?",
+and where there is no physical sensor, ML-based virtual sensing *estimates* that state so the
+operation loop can still act. You would be building the eyes the autonomous system runs on.
+
+---
+
 ## Part 1 — The Big Idea
 
 ### The problem AGMS is built to solve
