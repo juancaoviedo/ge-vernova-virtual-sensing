@@ -1054,6 +1054,140 @@ transmission grid already is — but decentralized, so it survives losing the ce
 
 ---
 
+## Appendix D — Where the Role Fits: From Grid Problems → the Patents → Your Day-to-Day
+
+Appendices A–C explained how the grid is run today and why distribution lags. This appendix closes
+the loop: it states the underlying **problems** precisely, shows **how the AGMS patents solve each
+one**, maps the **job description** onto that architecture, and from all of it infers **what you
+would actually do day-to-day** and **what will be expected of you.**
+
+> **Context for the inference.** The role — *Senior Software Engineer & Scientist, Virtual Sensing
+> and Decentralized Grid Operations* (req R5043890), in GE Vernova's **CTO organization**, reporting
+> to the **Electrification Chief Architect** — sits in a "startup-style, fast-moving" team building
+> "the foundation for next-generation decentralized grid operations." On this project's working
+> assumption, that Chief Architect is the author of the very patents mapped in this document — which
+> means **you would be implementing this architecture alongside the person who invented it.**
+> Everything below is inferred from the job description plus the AGMS map; treat it as a well-grounded
+> prediction, not an official description.
+
+### D.1 The problems, stated precisely
+
+The grid is mid-transition, and distribution is where it hurts. Five concrete problems:
+
+1. **The feeder went blind (loss of observability).** Rooftop solar, batteries, and EVs turned the
+   once-passive feeder into an active, two-way circuit — but the utility still mostly measures it only
+   at the substation head. You cannot see voltage, flow, or what a DER is doing mid-feeder. *(Appendix
+   C, Axis 1: distribution has no state estimation because it has too few measurements.)*
+2. **Events outrun humans and the central computer.** Two-way flows, fast inverter transients, and
+   millions of devices produce situations that change in seconds — faster than an operator at a desk,
+   or a round-trip to a central control center, can react.
+3. **Centralized control is fragile.** All the intelligence lives in one control room and depends on
+   the communications link staying up — precisely the thing a storm or cyberattack takes out first.
+   The moment the link drops, the field is blind and powerless.
+4. **The physics turned bidirectional and volatile.** Reverse power flow and midday solar push voltage
+   *above* limits; protection designed for one-way flow miscoordinates; "hosting capacity" (how much
+   DER a feeder can absorb) becomes a live constraint. These need continuous local coordination, not a
+   daily switching plan.
+5. **You cannot safely deploy control you have not validated.** Acting on the physical grid is
+   irreversible and dangerous — a wrong command damages equipment or endangers crews. Any autonomous
+   control must be validated against the physics *before* it touches a breaker.
+
+### D.2 How the AGMS patents solve each problem
+
+| Problem | The AGMS mechanism that answers it | Patent / part |
+|---|---|---|
+| 1 — Feeder is blind | The **ORACS observability index** makes "can we see this asset?" a first-class gate, and **GridWideEye / POV frames** distribute situational awareness — but it presumes the state *can* be obtained, which is where **virtual sensing** comes in | Asset Portfolio + Data Management; Parts 5, 8 |
+| 2 — Events outrun central control | The **CaCSM** reasons a response and the **operating cell acts locally in seconds**, no round-trip required | Parent / Operation Loop; Parts 3, 4 |
+| 3 — Centralized control is fragile | **Operating cells run in island mode**, self-form, and **transfer authority via federated transactions** when the center is gone | Parent / Scout Command; Part 7 |
+| 4 — Bidirectional, volatile physics | **Operation loops** continuously coordinate the local resources (DER, caps, regulators) as an ORACS unit, recomputed as conditions change | Operation Loop Formation; Part 4 ③ |
+| 5 — Cannot deploy unvalidated control | **Simulate-before-commit** is in the *granted claims* — the loop is simulated and validated before it executes | Operation Loop (claim 3); Parts 3, 8 |
+
+In short: AGMS is the *answer* to those five problems — but it has one hard dependency. It can only
+act on assets it can **observe**, and on plans it can **validate**. Those two dependencies — *make the
+invisible feeder observable* and *validate control against the physics* — are exactly the two halves
+of your job.
+
+### D.3 How your role plugs into the architecture
+
+The job description has three responsibility areas. Each maps cleanly onto a layer of the AGMS map:
+
+| JD responsibility area | What it really is in AGMS terms | The layer it builds |
+|---|---|---|
+| **Edge Engineering & Data Pipelines** — edge-native components; federated pipelines with no central coordination; integrate SCADA / PMU / DER and DNP3 / Modbus / MQTT / LoRa | The **operating-cell runtime and the federated data plane** the scouts live on, plus the field-protocol ingestion that feeds observation | GWCH / operating cells + Data Management (Parts 2, 4 ⑤, 6) |
+| **Virtual Sensing & Control** — infer voltage stability, phase angles, line temperature, asset health from limited sensors; Kalman filters, state estimation; adaptive edge control with minimal latency | The **observability layer ORACS depends on** — estimating the feeder state where there is no sensor — plus the local control logic each operation loop executes | The dependency under ORACS / GWM perception (Parts 5, 8); this is why the project's **Phase 1 is Kalman & state estimation** |
+| **Simulation & Integration** — validate virtual sensors against physical models and field data; "close the loop" between simulation and the live grid; integrate digital twins | The **simulate-before-commit gate** made real, plus the calibration loop that keeps estimates honest against physics | CaCSM / operation-loop simulation (Parts 3, 8); EMT tools (PSCAD / RTDS / Opal-RT) are the "preferred" qualification here |
+
+So the role is not "a bit of everything." It is precisely the **two hard dependencies of the AGMS
+architecture** — observability (virtual sensing) and validation (close-the-loop simulation) — plus
+the **edge substrate** both run on. You would be building the parts of the platform that make
+autonomous operation *trustworthy*: it can see, and it has been checked.
+
+### D.4 What you would actually do day-to-day (inferred)
+
+Grounding the JD in concrete work, by theme:
+
+**Build edge software (the largest share, Python-first).**
+
+- Write edge-native services (Python; Go/Rust is "or", not required) that run on **K3s** at
+  substations / field nodes — the runtime an operating cell's scouts would be.
+- Stand up **federated data pipelines** with **NATS / Kafka** so nodes share state and decisions
+  without a central broker; enforce message schemas and secure them (gRPC, tokens).
+- Integrate field data: wire in **SCADA (DNP3), PMUs (C37.118), DER controllers (IEEE 2030.5),
+  Modbus, MQTT, LoRa** as the observation inputs.
+- Instrument everything with **Prometheus / Grafana**; persist time-series in **InfluxDB / TimescaleDB**.
+
+**Develop virtual-sensing algorithms (the scientific core).**
+
+- Implement estimators — **Kalman filters, state estimation, signal processing** — that infer
+  **voltage stability, phase angles, line temperature, and asset health** from sparse edge measurements.
+- Make them **adaptive and low-latency** so they run on edge hardware in real time.
+- Continuously **calibrate** them against incoming data (the predict-observe-correct loop).
+
+**Close the loop with simulation and the field (the validation core).**
+
+- Work with **power-systems engineers** to validate your virtual sensors against **physical models**
+  (EMT: PSCAD / RTDS / Opal-RT) and **real field data**.
+- Integrate **digital twins** (OpenFMB, Modelica, graph-based models) so control is tested in
+  simulation before it goes live — the literal "close the loop" the JD names.
+- Likely **field-validation work** — deploying to real edge hardware, debugging against live grid
+  behavior, iterating.
+
+**Operate startup-style inside a big company.**
+
+- Prototype fast, own components end-to-end, work directly with the architect and power engineers, and
+  turn research ideas into deployed edge software in short cycles.
+
+### D.5 What will be expected of you (the bar)
+
+- **A genuine hybrid — physics + AI + distributed systems in one person.** The role's whole reason to
+  exist is that virtual sensing needs all three: control theory to estimate state, ML to do it from
+  sparse data, and edge / distributed engineering to run it in the field. That rare combination is the bar.
+- **Hands-on senior IC ownership.** "High-impact, hands-on," "startup-style" — you own components end
+  to end and ship, not just design.
+- **Scientific rigor and production engineering together.** State estimation done right *and* deployed
+  to resilient production edge — both, not either.
+- **Comfort with ambiguity and pace** inside a CTO / advanced-development org that is building something new.
+- **The credibility gaps to close** (from the project's gap analysis): fluency in **NATS / Kafka /
+  Pulsar** (vs. your MQTT), **K3s** specifics (vs. full K8s), **DNP3 / SCADA / PMU** grid protocols
+  (vs. Modbus / MQTT), **Prometheus** (vs. Grafana-only), **federated learning**, and **IEC 61850 /
+  IEEE 2030.5** awareness. Your edge platform (OSED), SI-MAPPER asset model, HEMS edge ML, and CVXPY
+  MPC solve-before-commit already cover the *shape* of every responsibility — the work is translating
+  them into this stack and vocabulary (which is what the rest of this study set does).
+
+### D.6 The synthesis (say this in the room)
+
+> "The grid is going two-way and fast, and distribution can't see itself or react in time — and the
+> central-control model breaks exactly when it's needed most. This architecture answers that with
+> autonomous, self-healing field cells — but autonomy is only safe if the system can *see* the feeder
+> and *validate* its actions first. That is precisely my role: I build the **virtual sensing** that
+> makes the invisible feeder observable, the **close-the-loop simulation** that proves a control action
+> before it touches the grid, and the **edge runtime** both of those run on. I've built the shape of
+> all three already — an edge platform with local autonomy, an ML asset-intelligence layer, and a
+> solve-before-commit control loop — just in buildings and DER instead of T&D. This role points those
+> same skills at the architecture you patented."
+
+---
+
 ## Quick links
 
 - Map of the family + pipeline diagram + glossary → `INDEX.md`
