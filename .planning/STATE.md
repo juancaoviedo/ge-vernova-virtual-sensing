@@ -79,6 +79,12 @@ None yet.
 |----------|------|--------|-------------|
 | *(none)* | | | |
 
+## Quick Tasks Completed
+
+| Date | Quick ID | Task | Result |
+|------|----------|------|--------|
+| 2026-06-13 | 260613-gyx | Extract three new AGMS patents (Logistician Module, Operation Loop Formation, Scout Command) and integrate into patents INDEX.md | OCR'd 3 image-only PDFs; wrote `logistician-module.md`, `operation-loop.md`, `scout-command.md`; rewrote `INDEX.md` for 6 patents. Surfaced that **Operation Loop Formation (US 12,596,341 B2) is GRANTED and assigned to GE Vernova**. |
+
 ## Session Continuity
 
 Last session: 2026-06-13
