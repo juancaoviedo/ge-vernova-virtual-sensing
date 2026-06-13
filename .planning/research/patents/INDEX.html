@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Patent Summaries — Index</title>
+<style>
+  :root {
+    --bg: #0f1419;
+    --panel: #ffffff;
+    --ink: #1a2230;
+    --muted: #5c6b7a;
+    --line: #e3e8ee;
+    --accent: #0b6e4f;       /* GE Vernova green-ish */
+    --accent-soft: #e7f4ee;
+    --gold: #b8860b;
+    --code-bg: #f4f6f8;
+    --callout: #fff8e6;
+    --callout-line: #e0b84c;
+    --start-bg: #eaf3ff;
+    --start-line: #4a90d9;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: #eef1f5;
+    color: var(--ink);
+    font: 16px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 20px 80px; display: grid; grid-template-columns: 240px 1fr; gap: 36px; }
+  @media (max-width: 900px){ .wrap { grid-template-columns: 1fr; } nav.toc { position: static !important; max-height: none !important; } }
+
+  /* Masthead */
+  header.masthead {
+    grid-column: 1 / -1;
+    background: linear-gradient(135deg, #0f1f2e 0%, #11342a 100%);
+    color: #fff; border-radius: 14px; padding: 30px 36px; margin: 28px 0 6px;
+    box-shadow: 0 8px 30px rgba(15,31,46,.25);
+  }
+  header.masthead h1 { margin: 0 0 14px; font-size: 30px; letter-spacing: .2px; }
+  header.masthead .meta { font-size: 15px; line-height: 1.7; color: #d7e3dd; }
+  header.masthead .meta strong { color: #fff; }
+
+  /* TOC */
+  nav.toc { position: sticky; top: 18px; align-self: start; max-height: calc(100vh - 36px); overflow:auto;
+    font-size: 13.5px; background: var(--panel); border:1px solid var(--line); border-radius:12px; padding:16px 14px; }
+  nav.toc h2 { font-size: 11px; text-transform: uppercase; letter-spacing: 1.4px; color: var(--muted); margin:0 0 10px; }
+  nav.toc a { display:block; color: var(--muted); text-decoration:none; padding:4px 8px; border-radius:6px; border-left:2px solid transparent; }
+  nav.toc a:hover { color: var(--accent); background: var(--accent-soft); border-left-color: var(--accent); }
+
+  main { min-width: 0; }
+  section.card {
+    background: var(--panel); border:1px solid var(--line); border-radius:12px;
+    padding: 22px 28px; margin: 18px 0; box-shadow: 0 1px 3px rgba(20,30,45,.04);
+  }
+  h2.sec { font-size: 21px; margin: 4px 0 14px; padding-bottom: 10px; border-bottom: 2px solid var(--accent-soft); color: #0c2a20; }
+  p { margin: 12px 0; }
+  strong { color: #0c2233; }
+  em { color: #324; }
+  a { color: var(--accent); }
+
+  code { background: var(--code-bg); border:1px solid var(--line); border-radius:5px; padding: 1px 5px; font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; font-size: 13px; color:#33424f; }
+
+  /* ASCII diagrams */
+  pre.diagram {
+    background: #0f1722; color: #d6e3ee; border-radius: 10px; padding: 18px 20px; overflow-x:auto;
+    font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; font-size: 13px; line-height: 1.5;
+    border: 1px solid #1c2a3a;
+  }
+
+  /* Tables */
+  table { width:100%; border-collapse: collapse; margin: 14px 0; font-size: 14.5px; }
+  th, td { text-align:left; vertical-align: top; padding: 9px 12px; border-bottom: 1px solid var(--line); }
+  thead th { background: var(--accent-soft); color:#0c2a20; border-bottom: 2px solid #cfe7dc; font-size: 13px; text-transform: uppercase; letter-spacing:.4px; }
+  tbody tr:nth-child(even) { background: #fafbfc; }
+  td code { font-size:12.5px; }
+
+  /* Callouts (blockquotes) */
+  .callout { background: var(--callout); border-left: 4px solid var(--callout-line); border-radius: 0 8px 8px 0; padding: 12px 18px; margin: 16px 0; }
+  .callout.start { background: var(--start-bg); border-left-color: var(--start-line); }
+  .callout p:first-child { margin-top:0; } .callout p:last-child { margin-bottom:0; }
+
+  hr.rule { border:0; border-top:1px dashed var(--line); margin: 0; }
+
+  .narrative { background: var(--accent-soft); border-radius: 10px; padding: 14px 20px; margin-top: 16px; font-size: 15px; }
+  .badge { display:inline-block; background:#fdf2d6; color: var(--gold); border:1px solid #ecd28a; border-radius: 20px; padding: 1px 10px; font-size: 12px; font-weight:700; letter-spacing:.3px; }
+  footer { grid-column: 1 / -1; text-align:center; color: var(--muted); font-size: 12.5px; margin-top: 24px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="masthead">
+    <h1>Patent Summaries — Index</h1>
+    <div class="meta">
+      Director: <strong>Jamshid Sharif-Askary</strong> (sole inventor on every patent in this family)<br>
+      Assignee: <strong>General Electric Company / GE Infrastructure Technology LLC</strong> on the early
+      filings; the granted <strong>Operation Loop Formation</strong> patent is assigned to
+      <strong>GE Vernova Infrastructure Technology LLC</strong> — the hiring company itself.<br>
+      Family: All files belong to the same <strong>Adaptive Grid Management System (AGMS)</strong> patent family.
+    </div>
+  </header>
+
+  <nav class="toc">
+    <h2>Contents</h2>
+    <a href="#files">Files in This Directory</a>
+    <a href="#appnos">Authoritative Application Numbers</a>
+    <a href="#family">Patent Family Relationships</a>
+    <a href="#pipeline">The Formation Pipeline</a>
+    <a href="#overview">Architecture Overview</a>
+    <a href="#oneline">One-Line Summary Per Patent</a>
+    <a href="#cheat">Key Technical Terms Cheat Sheet</a>
+    <a href="#juan">How Juan Connects His Work</a>
+  </nav>
+
+  <main>
+
+    <section class="card">
+      <div class="callout">
+        <p><strong>What changed:</strong> Three new patents (Logistician Module, Operation Loop Formation,
+        Scout Command) were added to <code>docs/</code> and extracted here. The family is now <strong>six
+        distinct patents</strong>, not three. One of them — Operation Loop Formation — is a
+        <strong>granted US patent assigned to GE Vernova</strong>, making it the strongest single
+        "I read your actual IP" talking point in the set.</p>
+      </div>
+    </section>
+
+    <section class="card" id="files">
+      <h2 class="sec">Files in This Directory</h2>
+      <div class="callout start">
+        <p><strong>Start here for understanding:</strong> <a href="AGMS-architecture.md"><code>AGMS-architecture.md</code></a> is the
+        extensive, conceptual end-to-end walkthrough of the <em>whole</em> pattern — what it is, how it
+        works, and how all six patents connect as one system. The per-patent files below are the
+        reference detail behind it.</p>
+      </div>
+      <table>
+        <thead><tr><th>File</th><th>Patent Number</th><th>Title</th><th>Role in Family</th></tr></thead>
+        <tbody>
+          <tr><td><code>adaptive-power.md</code></td><td>WO 2023/064623 A1</td><td>Adaptive Power Grid Management System</td><td><strong>Parent</strong> — full system architecture</td></tr>
+          <tr><td><code>asset-portfolio.md</code></td><td>WO 2024/211758 A1</td><td>Asset Portfolio Manager for AGM</td><td>Continuation — asset verification layer (the <em>seven operational indexes</em>)</td></tr>
+          <tr><td><code>data-management.md</code></td><td>WO 2024/211800 A1</td><td>Data Management for AGM</td><td>Continuation — POV data mediation layer</td></tr>
+          <tr><td><code>logistician-module.md</code></td><td>US 2024/0337997 A1</td><td>Logistician Module for AGM</td><td>Continuation — <strong>logistics orchestration</strong> (assembles the provisional logistics list)</td></tr>
+          <tr><td><code>operation-loop.md</code></td><td><strong>US 12,596,341 B2</strong></td><td>Operation Loop Formation for AGM</td><td>Continuation — <strong>GRANTED</strong>; ORACS loop assembly (formation construct module)</td></tr>
+          <tr><td><code>scout-command.md</code></td><td>US 2024/0339835 A1</td><td>Scout Command for AGM</td><td>Continuation — scout deployment/launch onto field devices</td></tr>
+          <tr><td><code>ocr.md</code></td><td>WO 2024/211800 A1</td><td><em>(same as data-management)</em></td><td>OCR supplement — NOT a separate patent</td></tr>
+        </tbody>
+      </table>
+      <p><strong>Flag:</strong> <code>patent_ocr.pdf</code> is the OCR-processed version of <code>patent-data-management.pdf</code>.
+      Both are WO 2024/211800 A1. <code>ocr.md</code> is a supplement, not a seventh patent. See <code>ocr.md</code>
+      for additional detail from the searchable text layer.</p>
+    </section>
+
+    <section class="card" id="appnos">
+      <h2 class="sec">Authoritative Application Numbers <span style="font-weight:400;font-size:14px;color:var(--muted)">(continuation cohort, all filed 2023-04-06)</span></h2>
+      <p>The OCR cross-reference/docket lists inside the individual patents are partially garbled;
+      the numbers below are taken from each patent's own front page and are authoritative:</p>
+      <table>
+        <thead><tr><th>Patent</th><th>US Application No.</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td>Logistician Module</td><td>18/131,743</td><td>Published (US 2024/0337997 A1)</td></tr>
+          <tr><td>Asset Portfolio Manager</td><td>18/131,758</td><td>Published (WO 2024/211758)</td></tr>
+          <tr><td>Operation Loop Formation</td><td>18/131,770</td><td><strong>Granted (US 12,596,341 B2, 2026-04-07)</strong></td></tr>
+          <tr><td>Scout Command</td><td>18/131,781</td><td>Published (US 2024/0339835 A1)</td></tr>
+          <tr><td>Data Management</td><td>18/131,790</td><td>Published (WO 2024/211800)</td></tr>
+        </tbody>
+      </table>
+      <p>All five continuations relate back to <strong>PCT/US2022/046851</strong> (the WO 2023/064623 parent,
+      filed 2022-10-17; priority US 63/256,292 of 2021-10-15 + US 63/328,127 of 2022-04-06).</p>
+    </section>
+
+    <section class="card" id="family">
+      <h2 class="sec">Patent Family Relationships</h2>
+<pre class="diagram">
+WO 2023/064623 A1 (PARENT, PCT filed 2022-10-17, assignee General Electric Company)
+ADAPTIVE POWER GRID MANAGEMENT SYSTEM
+  └─ Defines the full AGMS architecture: GWM + GA + GWCH + Operating Cells + Scouts
+  └─ Priority: US 63/256,292 (2021-10-15) + US 63/328,127 (2022-04-06)
+     │
+     │  Five concurrently-filed continuations (all 2023-04-06), each specializing
+     │  one stage of the CaCSM-driven formation pipeline:
+     │
+     ├── Logistician Module ........... US 2024/0337997 A1 (App 18/131,743)
+     │   "WHICH assets to assemble" — turns a formation plan into a concrete,
+     │   audited, procured provisional logistics list; owns inter-ORACS gap files.
+     │
+     ├── Asset Portfolio Manager ...... WO 2024/211758 A1 (App 18/131,758)
+     │   "ARE the assets fit" — verifies each asset's operational indexes
+     │   (observability, reachability, adaptability, controllability, security,
+     │   sustainability, stability) → verified logistics list.
+     │
+     ├── Operation Loop Formation ..... US 12,596,341 B2 (App 18/131,770) ★ GRANTED
+     │   "HOW they wire into an ORACS loop" — formation construct module (1400):
+     │   match schema/DNA, build per-asset meta objects, simulate-before-commit,
+     │   then cause execution. Assigned to GE VERNOVA INFRASTRUCTURE TECHNOLOGY LLC.
+     │
+     ├── Scout Command ................ US 2024/0339835 A1 (App 18/131,781)
+     │   "NOW deploy the software" — instantiate role-typed scouts (Coordinator/
+     │   Messenger/Inspector/Guard) onto Field Agent Devices; build the launch plan.
+     │
+     └── Data Management .............. WO 2024/211800 A1 (App 18/131,790)
+         "WHAT each module sees" — POV files: role-filtered data views assembled
+         from a patterns database; ga-authenticationkey secures the access layer.
+         (Also available as OCR text in patent_ocr.pdf.)
+</pre>
+    </section>
+
+    <section class="card" id="pipeline">
+      <h2 class="sec">The Formation Pipeline <span style="font-weight:400;font-size:14px;color:var(--muted)">(how the six patents compose end-to-end)</span></h2>
+      <p>The single most useful mental model: the five continuations are <strong>sequential stages of
+      one assembly line</strong>, kicked off by the parent's CaCSM.</p>
+<pre class="diagram">
+Alert → GWM correlation → GA builds CaCSM (PARENT)
+   → Grid-Wide Federation Command (975) fires a preparation alert
+   → LOGISTICIAN (1023A): formation plan → provisional logistics list (assemble + procure + audit)
+   → ASSET PORTFOLIO MANAGER (1300): verify 7 operational indexes → verified logistics list
+   → OPERATION LOOP FORMATION (1400): match DNA/schema → build per-asset meta objects → simulate → ✓
+   → SCOUT COMMAND (1230/1441→1444→1445→1447): incubate + assign roles + launch plan → deploy scouts
+   → CSM Operator (1040): run the ORACS as a state-machine execution loop
+   (DATA MANAGEMENT serves POV views to every module throughout; GridWideEye builds PoV frames)
+</pre>
+      <p><strong>One-line owners:</strong> Logistician = <em>which / procure</em>; Portfolio Manager = <em>verify</em>;
+      Operation Loop Formation = <em>assemble + simulate</em>; Scout Command = <em>deploy</em>.</p>
+    </section>
+
+    <section class="card" id="overview">
+      <h2 class="sec">Architecture Overview <span style="font-weight:400;font-size:14px;color:var(--muted)">(for quick recall)</span></h2>
+      <p>The AGMS has three major modules and a distributed execution layer:</p>
+      <p><strong>GridWideMind (GWM)</strong> — alert correlation, decision support, learning engine, simulation engine<br>
+      <strong>GridArtificer (GA)</strong> — context construct engine, contextual abstraction plane (CAPs), CaCSM builder/operator<br>
+      <strong>GridWideCommandHub (GWCH)</strong> — grid-wide federation command, formation manager, foresight manager, scouts command, federated edge transaction manager</p>
+      <p><strong>Operating Cells</strong> — field agent devices running scout applications (coordinator, messenger, inspector, guard roles); self-forming, self-terminating, operable without WAN</p>
+      <p><strong>ORACS</strong> — the core execution unit (the "operation loop" / operating cell). The patents'
+      own abbreviation key (para [0209], identical in all three new patents) defines it as the
+      five <strong>operational-index dimensions</strong>: <strong>Observability, Reachability, Adaptability,
+      Controllability, Security</strong> — extended to <strong>seven</strong> for asset verification with
+      <em>sustainability</em> + <em>stability</em>. (An earlier Phase-1 note glossed it as "Operation + Role +
+      Asset + Context + Scouts" — that backronym appears in <strong>no</strong> patent and has been corrected;
+      it is not real acronym drift, just a fixed mistake.)</p>
+      <p><strong>POV Files</strong> — role-filtered data views assembled on demand by the data management module from a patterns database; no module queries the asset DB directly</p>
+      <p><strong>DNA / schema</strong> — explicitly synonymous in the Operation Loop patent: the unique
+      organized structure defining a loop/scout's cognitive processing and behavior; drives both
+      loop construction (meta objects) and scout incubation (roster + launch plan)</p>
+      <p><strong>ga-authenticationkey</strong> — security token required for all inter-module communications; validated by ga-GateKeeper before any CaCSM activation</p>
+    </section>
+
+    <section class="card" id="oneline">
+      <h2 class="sec">One-Line Summary Per Patent</h2>
+      <p><strong>adaptive-power.md:</strong> The parent patent; defines the end-to-end architecture from alert detection through contextual reasoning (CaCSM), formation planning, scout deployment, and federated autonomous operation of field agent devices.</p>
+      <p><strong>asset-portfolio.md:</strong> The "are the assets fit" patent; introduces the ORACS construct and the Asset Portfolio Manager that verifies each candidate asset's operational indexes (observability, reachability, adaptability, controllability, security, sustainability, stability) before including it in a verified logistics list.</p>
+      <p><strong>data-management.md:</strong> The "what data does each module see" patent; introduces the POV file system where the data management module serves role-appropriate, pattern-filtered views of asset data to each requesting AGMS module, with ga-authenticationkey securing the data access layer.</p>
+      <p><strong>logistician-module.md:</strong> The "which assets, assemble and procure" patent; the <strong>Logistician Module (1023A)</strong> turns a CaCSM-authorized formation plan into a concrete, audited <strong>provisional logistics list</strong> — matching a federation command template, selecting asset classes and assets, procuring them from a marketplace — then hands it downstream and stays the standing owner of unresolved inter-ORACS logistic gap files.</p>
+      <p><strong>operation-loop.md:</strong> ★ The <strong>GRANTED</strong> patent (US 12,596,341 B2, assigned to <strong>GE Vernova</strong>); the "how they wire into an ORACS loop" patent. The <strong>formation construct module (1400)</strong> takes the verified formation plan + logistics list, retrieves a matching <strong>schema (DNA)</strong> from a historical meta-object database, builds per-asset <strong>meta objects</strong>, <strong>simulates the operation loop before committing</strong> (claim 3), then causes the network of devices to execute. The simulate-before-commit limitation is in the <em>allowed claims</em>.</p>
+      <p><strong>scout-command.md:</strong> The "now deploy the software" patent; the <strong>Scout Command module</strong> (Liaison 1441 → Formation Processor 1444 → Incubator Manager 1445 → Launch Manager 1447) instantiates role-typed scouts onto Field Agent Devices, verifies scout availability (cloning / fresh-incubating to fill gaps), and builds a launch plan (time, load, origin, destination, asset-id).</p>
+      <p><strong>ocr.md:</strong> Not a separate patent — supplement file with additional detail from the data-management OCR text layer.</p>
+    </section>
+
+    <section class="card" id="cheat">
+      <h2 class="sec">Key Technical Terms Cheat Sheet</h2>
+      <table>
+        <thead><tr><th style="width:230px">Term</th><th>Meaning</th></tr></thead>
+        <tbody>
+          <tr><td>AGMS</td><td>Adaptive Grid Management System — the full platform</td></tr>
+          <tr><td>GWM</td><td>GridWideMind — the intelligence/alert correlation layer</td></tr>
+          <tr><td>GA</td><td>GridArtificer — the contextual reasoning and state machine layer</td></tr>
+          <tr><td>GWCH</td><td>GridWideCommandHub — the orchestration and execution layer</td></tr>
+          <tr><td>CaCSM</td><td>Contextual and Cognitive State Machine — the core grid reasoning engine</td></tr>
+          <tr><td>CAP</td><td>Contextual Abstraction Panel — a ranked contextual grouping that feeds CaCSM construction</td></tr>
+          <tr><td>ORACS</td><td>Operation loop / operating-cell unit. Patents (para [0209]) define it as <strong>Observability, Reachability, Adaptability, Controllability, Security</strong> — the 5 operational indexes (extended to 7 for verification with sustainability + stability). ("Operation+Role+Asset+Context+Scouts" was a Phase-1 note error, now corrected — not in any patent.)</td></tr>
+          <tr><td>Operation loop (ol)</td><td>The ORACS as executed; <code>oft</code> = operation formation type (e.g. <code>ioc.cc</code>, <code>ioc.sc</code>, <code>ioc.coc</code>, <code>ioc.fm</code>)</td></tr>
+          <tr><td>Logistician Module (1023A)</td><td>Logistics orchestrator; builds + procures + audits the provisional logistics list; owns inter-ORACS gap files</td></tr>
+          <tr><td>gWFCll / gWFClf</td><td>gridWideFederationCommand Logistics <strong>List</strong> / <strong>File</strong>; <code>.p</code> suffix = provisional</td></tr>
+          <tr><td>Federation command template</td><td>The object the Logistician matches a context meta-object against (tasks + class requirements)</td></tr>
+          <tr><td>Asset Portfolio Manager (1300)</td><td>Verifies the 7 operational indexes per asset → verified <code>ORACS(id).lf</code></td></tr>
+          <tr><td>Formation Construct Module (1400)</td><td>(Operation Loop patent) matches schema/DNA, builds per-asset meta objects, simulates loop, causes execution</td></tr>
+          <tr><td>Meta object (OC-meta-object)</td><td>Per-loop/per-asset object that "causes an asset to execute a task"; carries DNA.map, logistics, scout roster + launch plan</td></tr>
+          <tr><td>Scout Command (1230 / 1441→1444→1445→1447)</td><td>Incubates + role-assigns + launches scouts onto FADs</td></tr>
+          <tr><td>Scout Incubator Manager (1445)</td><td>Checks scout availability for <code>DNA.role(s_c,s_m,s_i,s_g)</code>; clones / self-forms to fill gaps</td></tr>
+          <tr><td>Launch plan</td><td>time + load + origin + destination + asset(id) — per host and per participant scout</td></tr>
+          <tr><td>POV file</td><td>Point of View file — role-filtered data view served by the data management module</td></tr>
+          <tr><td>Scout</td><td>Lightweight edge agent (meta-object + operation module) deployed to a field agent device</td></tr>
+          <tr><td>Roles</td><td>Coordinator (s_c, cell authority), Messenger (s_m, data-in-motion), Inspector (s_i, monitoring), Guard (s_g, security)</td></tr>
+          <tr><td>Operating cell</td><td>A cluster of FADs executing scouts + apps; can operate autonomously without WAN (island-mode)</td></tr>
+          <tr><td>DNA / schema</td><td>Synonyms (per Operation Loop patent): unique organized structure defining a loop/scout's cognitive behavior</td></tr>
+          <tr><td>DNA map / iO-DNA.map</td><td>Host-ORACS / inter-ORACS DNA mapping that drives scout incubation and launch</td></tr>
+          <tr><td>gwapd</td><td>gridWide asset portfolio database (1274) — multi-dimensional operational indexes per asset</td></tr>
+          <tr><td>gAVA</td><td>Grid Artificer Virtual Agent — inter-module message schema enforcer</td></tr>
+          <tr><td>ga-authenticationkey</td><td>Security token passed with every inter-module command; validated by ga-GateKeeper</td></tr>
+          <tr><td>for-id</td><td>Formation ID — unique identifier for a formation context</td></tr>
+          <tr><td>FAD</td><td>Field Agent Device — a physical edge device in an operating cell</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="card" id="juan">
+      <h2 class="sec">How Juan Connects His Work to This Patent Family</h2>
+      <p>The strongest bridges by component:</p>
+      <table>
+        <thead><tr><th style="width:42%">AGMS Component</th><th>Juan's Work</th></tr></thead>
+        <tbody>
+          <tr><td>Scout applications on FADs</td><td>OSED edge platform (K8s/K3s, Docker, FastAPI, MQTT) — the runtime scouts would run on</td></tr>
+          <tr><td><strong>Scout Incubator (1445)</strong> instantiating role-typed scouts, cloning to fill gaps</td><td><strong>K3s/K8s pod scheduling</strong>: place role-typed workloads on nodes; reconcile desired state by instantiating/replacing replicas (the Incubator <em>is</em> a grid-semantics scheduler)</td></tr>
+          <tr><td>Alert correlation + action stress frames</td><td>Databricks/PySpark substation analytics — the data pipeline feeding alert correlation</td></tr>
+          <tr><td><strong>Operation Loop simulation before commit (claim 3)</strong></td><td><strong>CVXPY MPC solve-before-commit</strong> (the sharpest, most literal analogy in the family)</td></tr>
+          <tr><td>CaCSM simulation → production</td><td>MPC solve-before-commit pattern (CVXPY) — the same "validate before execute" gate</td></tr>
+          <tr><td><strong>Logistician orchestrating template→class→asset→audit</strong></td><td><strong>OSED FastAPI control plane</strong> that resolves an abstract job into placed, health-checked, monitored K3s workloads (a domain-specific orchestrator/scheduler)</td></tr>
+          <tr><td>Learning Engine / schema matching</td><td>HEMS thermal ML model with calibration feedback loop; SI-MAPPER best-matched-pattern retrieval</td></tr>
+          <tr><td>POV file / data management module</td><td>OSED FastAPI service layer — mediated data access; Grafana role-differentiated dashboards</td></tr>
+          <tr><td>gAVA message standardization</td><td>OSED MQTT topic + payload schema enforced across all services</td></tr>
+          <tr><td><strong>DNA map / schema</strong> / asset fingerprinting</td><td><strong>SI-MAPPER</strong>: CV→ontology knowledge graph with typed, relationship-aware asset fingerprints</td></tr>
+          <tr><td>ga-authenticationkey</td><td>gRPC service-to-service auth (OSED) + MCP server tool-call auth (SI-MAPPER)</td></tr>
+          <tr><td>Federated operating cells (island mode)</td><td>OSED local buffering (InfluxDB/TimescaleDB) sustaining control loop during WAN outage</td></tr>
+          <tr><td>Operational indexes (observability, controllability)</td><td>CVXPY MPC constraint dimensions: observability and controllability bounds on controllable loads</td></tr>
+          <tr><td>Asset health → replacement loop</td><td>Databricks/PySpark prognostics; OSED telemetry-driven reschedule/failover</td></tr>
+        </tbody>
+      </table>
+      <div class="narrative">
+        <p><strong>The interview master narrative:</strong> "The patent family describes a platform I have been
+        building the components of — independently, in a different domain (buildings and DER), but
+        with the same architectural DNA. It is one assembly line: the Logistician decides <em>which</em>
+        assets, the Portfolio Manager <em>verifies</em> them, Operation Loop Formation <em>assembles and
+        simulates</em> the ORACS loop, and Scout Command <em>deploys</em> the scouts. OSED is the edge runtime
+        those scouts would land on, my K3s scheduler is the Scout Incubator with grid semantics,
+        SI-MAPPER is the typed DNA-map asset model, and CVXPY MPC is the simulate-before-commit gate
+        that the <em>granted</em> Operation Loop patent — GE Vernova's own IP — puts in its claims. Coming
+        to GE Vernova means integrating those experiences into a T&D-scale version of exactly this architecture."</p>
+      </div>
+    </section>
+
+    <footer>Rendered from <code>INDEX.md</code> — content unchanged.</footer>
+
+  </main>
+</div>
+</body>
+</html>
