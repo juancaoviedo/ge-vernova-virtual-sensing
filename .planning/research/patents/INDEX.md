@@ -118,12 +118,13 @@ The AGMS has three major modules and a distributed execution layer:
 
 **Operating Cells** — field agent devices running scout applications (coordinator, messenger, inspector, guard roles); self-forming, self-terminating, operable without WAN
 
-**ORACS** — the core execution unit (the "operation loop" / operating cell). **Note the
-acronym drift** (see cheat sheet below): the parent/Asset-Portfolio notes gloss it as
-*Operation + Role + Asset + Context + Scouts*, while the newer Logistician and Operation
-Loop patents gloss it as the **operational-index set** *Observability, Reachability,
-Adaptability, Controllability, Security* (extended to seven with sustainability + stability).
-Treat ORACS as a loose mnemonic for the operation-loop/operational-index concept, not a rigid expansion.
+**ORACS** — the core execution unit (the "operation loop" / operating cell). The patents'
+own abbreviation key (para [0209], identical in all three new patents) defines it as the
+five **operational-index dimensions**: **Observability, Reachability, Adaptability,
+Controllability, Security** — extended to **seven** for asset verification with
+*sustainability* + *stability*. (An earlier Phase-1 note glossed it as "Operation + Role +
+Asset + Context + Scouts" — that backronym appears in **no** patent and has been corrected;
+it is not real acronym drift, just a fixed mistake.)
 
 **POV Files** — role-filtered data views assembled on demand by the data management module from a patterns database; no module queries the asset DB directly
 
@@ -163,7 +164,7 @@ loop construction (meta objects) and scout incubation (roster + launch plan)
 | GWCH | GridWideCommandHub — the orchestration and execution layer |
 | CaCSM | Contextual and Cognitive State Machine — the core grid reasoning engine |
 | CAP | Contextual Abstraction Panel — a ranked contextual grouping that feeds CaCSM construction |
-| ORACS | Operation loop / operating-cell unit. Acronym drift: *Operation+Role+Asset+Context+Scouts* (parent notes) **vs.** *Observability, Reachability, Adaptability, Controllability, Security* (Logistician / Operation Loop patents). Loose mnemonic — see Architecture note. |
+| ORACS | Operation loop / operating-cell unit. Patents (para [0209]) define it as **Observability, Reachability, Adaptability, Controllability, Security** — the 5 operational indexes (extended to 7 for verification with sustainability + stability). ("Operation+Role+Asset+Context+Scouts" was a Phase-1 note error, now corrected — not in any patent.) |
 | Operation loop (ol) | The ORACS as executed; `oft` = operation formation type (e.g. `ioc.cc`, `ioc.sc`, `ioc.coc`, `ioc.fm`) |
 | Logistician Module (1023A) | Logistics orchestrator; builds + procures + audits the provisional logistics list; owns inter-ORACS gap files |
 | gWFCll / gWFClf | gridWideFederationCommand Logistics **List** / **File**; `.p` suffix = provisional |

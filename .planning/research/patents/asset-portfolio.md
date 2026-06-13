@@ -19,7 +19,7 @@
 
 ## Problem Addressed
 
-When the AGMS parent patent determines a formation plan, it identifies which assets (field devices, sensors, controllers, PMUs, microgrids) need to participate in an operation loop (ORACS — Operation, Role, Asset, Context, Scouts). The parent patent's formation logic assumes asset availability and operational readiness, but does not specify how to verify that each candidate asset actually meets the operational requirements for that specific formation task. In degraded grid scenarios — post-disturbance, post-storm, during maintenance windows — a significant fraction of assets will be offline, degraded, or operationally mismatched for a given task. Deploying formation plans to unverified assets wastes scout resources, creates failed coordination loops, and risks incomplete formation execution. This patent fills that gap with a dedicated **Asset Portfolio Manager** that acts as a gating layer between the provisional logistics list (raw asset candidates) and the verified logistics list (assets cleared for inclusion in the formation plan).
+When the AGMS parent patent determines a formation plan, it identifies which assets (field devices, sensors, controllers, PMUs, microgrids) need to participate in an operation loop (ORACS — **Observability, Reachability, Adaptability, Controllability, Security**; the index set the patents define in their abbreviation key, extended to seven for verification with *sustainability* + *stability*). The parent patent's formation logic assumes asset availability and operational readiness, but does not specify how to verify that each candidate asset actually meets the operational requirements for that specific formation task. In degraded grid scenarios — post-disturbance, post-storm, during maintenance windows — a significant fraction of assets will be offline, degraded, or operationally mismatched for a given task. Deploying formation plans to unverified assets wastes scout resources, creates failed coordination loops, and risks incomplete formation execution. This patent fills that gap with a dedicated **Asset Portfolio Manager** that acts as a gating layer between the provisional logistics list (raw asset candidates) and the verified logistics list (assets cleared for inclusion in the formation plan).
 
 ---
 
@@ -27,12 +27,14 @@ When the AGMS parent patent determines a formation plan, it identifies which ass
 
 ### Key New Concept: ORACS Operation Loop
 
-The patent centers on the **ORACS** construct: each operation loop in a formation plan has five interrelated dimensions:
-- **O** — Operation type/function
-- **R** — Role assigned to the asset
-- **A** — Asset identity
-- **C** — Context (contextual abstraction panel binding)
-- **S** — Scouts configuration
+The patent centers on the **ORACS** construct. The patents' own abbreviation key (para [0209]) defines ORACS as the five **operational-index dimensions** every operation loop must satisfy — *not* an Operation/Role/Asset/Context/Scouts backronym (that earlier gloss was an error and has been corrected):
+- **O** — Observability (can the asset's state be seen / measured?)
+- **R** — Reachability (can it be communicated with / commanded?)
+- **A** — Adaptability (can it reconfigure to the task?)
+- **C** — Controllability (can its behavior be driven?)
+- **S** — Security (is it trustworthy / defensible?)
+
+For asset *verification*, the Portfolio Manager extends these five to **seven** by adding **sustainability** and **stability**. ("Adaptability" sometimes appears as "adoptability" in the WO continuation's OCR — same index.)
 
 An "ORACS operation loop formation construct" (Fig. 16) is the unit of work that the Asset Portfolio Manager validates. Each ORACS has a host ORACS (the lead asset) and participating ORACS (supporting assets). The formation plan may consist of multiple ORACS loops, each corresponding to a different geographic cluster or operational domain.
 
