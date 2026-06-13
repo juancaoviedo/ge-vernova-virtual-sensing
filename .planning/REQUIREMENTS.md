@@ -8,27 +8,27 @@
 
 ## v1 Requirements
 
-### Kalman & State Estimation (KAL) — 🔴 Gap 1 (disqualifying if shallow)
+### Kalman & State Estimation (KAL) — Gap 1 (disqualifying if shallow)
 
 - [ ] **KAL-01**: Notes explaining WLS / Gauss-Newton power-system state estimation in plain, interview-ready language
 - [ ] **KAL-02**: Notes on the Kalman family progression KF → EKF → UKF (predict/update, Jacobian, sigma points)
 - [ ] **KAL-03**: Worked line-temperature EKF example mapping the IEEE 738 conductor ODE to the predict step (Q/R tuning, innovation sequence, divergence detection)
 - [ ] **KAL-04**: Hands-on Python EKF mini-demo estimating line temperature from current + weather telemetry
 
-### Transmission Virtual Sensing (TVS) — 🔴 Gap 2 (T&D vocabulary)
+### Transmission Virtual Sensing (TVS) — Gap 2 (T&D vocabulary)
 
 - [ ] **TVS-01**: Notes on voltage stability monitoring — P-V curve, voltage collapse, Thevenin-equivalent VSI from PMU data
 - [ ] **TVS-02**: Notes on phase-angle / power-flow inference — DC approximation (P = Bθ), sparse PMU coverage problem
 - [ ] **TVS-03**: Notes on observability analysis and bad-data detection (chi-squared test, normalized residual, leverage measurements)
 - [ ] **TVS-04**: Notes on asset-health estimation — transformer hot-spot (IEEE C57.91), Dynamic Line Rating as a virtual-sensing product, RUL framing
 
-### Director's Patents (PAT) — 🔴 Gap 3 (highest differentiation)
+### Director's Patents (PAT) — Gap 3 (highest differentiation)
 
 - [ ] **PAT-01**: Deep-read summary of each of the four patents (adaptive power, asset portfolio, data management, OCR)
 - [ ] **PAT-02**: One concrete connection per patent linking it to Juan's OSED/HEMS/SI-MAPPER work
 - [ ] **PAT-03**: One sharp question per patent Juan can ask the director that demonstrates understanding
 
-### Stack, Protocols & Architecture (STK) — 🟠 Gaps 4, 6, 7
+### Stack, Protocols & Architecture (STK) — Gaps 4, 6, 7
 
 - [ ] **STK-01**: Notes on the grid protocol stack — SCADA, DNP3, PMU/C37.118, LoRa, MQTT — and where each lives
 - [ ] **STK-02**: Notes on IEC 61850 (GOOSE vs. SV vs. MMS, three-tier hierarchy, logical nodes) at the depth needed to discuss it
@@ -36,7 +36,7 @@
 - [ ] **STK-04**: Notes on Prometheus pull model vs. InfluxDB push, PromQL basics, kube-prometheus-stack
 - [ ] **STK-05**: A whiteboard-able four-tier reference architecture (field → edge → fog/federated → cloud) Juan can draw and narrate
 
-### Federated Architectures & Security (FED) — 🟠 Gap 5
+### Federated Architectures & Security (FED) — Gap 5
 
 - [ ] **FED-01**: Notes distinguishing federated from distributed (the "no central coordinator" constraint), FedAvg vs. FedProx, non-IID client drift
 - [ ] **FED-02**: Notes on Byzantine robustness (Krum / coordinate-wise median) and edge security (OTA integrity, TPM attestation, SPIFFE/SPIRE PKI)
@@ -79,17 +79,39 @@ Deferred — useful but not worth the runway before this interview.
 
 ## Traceability
 
-Populated during roadmap creation.
-
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| (filled by roadmapper) | | Pending |
+| DOC-01 | Phase 0: Document Ingestion | Pending |
+| KAL-01 | Phase 1: Kalman & State Estimation | Pending |
+| KAL-02 | Phase 1: Kalman & State Estimation | Pending |
+| KAL-03 | Phase 1: Kalman & State Estimation | Pending |
+| KAL-04 | Phase 1: Kalman & State Estimation | Pending |
+| TVS-01 | Phase 2: Transmission Virtual Sensing | Pending |
+| TVS-02 | Phase 2: Transmission Virtual Sensing | Pending |
+| TVS-03 | Phase 2: Transmission Virtual Sensing | Pending |
+| TVS-04 | Phase 2: Transmission Virtual Sensing | Pending |
+| PAT-01 | Phase 3: Director's Patents Deep-Read | Pending |
+| PAT-02 | Phase 3: Director's Patents Deep-Read | Pending |
+| PAT-03 | Phase 3: Director's Patents Deep-Read | Pending |
+| STK-01 | Phase 4: Protocols, Stack & Architecture | Pending |
+| STK-02 | Phase 4: Protocols, Stack & Architecture | Pending |
+| STK-03 | Phase 4: Protocols, Stack & Architecture | Pending |
+| STK-04 | Phase 4: Protocols, Stack & Architecture | Pending |
+| STK-05 | Phase 4: Protocols, Stack & Architecture | Pending |
+| FED-01 | Phase 5: Federated Architectures & Security | Pending |
+| FED-02 | Phase 5: Federated Architectures & Security | Pending |
+| BRG-01 | Phase 6: Synthesis, Drills & Mock Interview | Pending |
+| BRG-02 | Phase 6: Synthesis, Drills & Mock Interview | Pending |
+| BRG-03 | Phase 6: Synthesis, Drills & Mock Interview | Pending |
+| QNA-01 | Phase 6: Synthesis, Drills & Mock Interview | Pending |
+| QNA-02 | Phase 6: Synthesis, Drills & Mock Interview | Pending |
+| QNA-03 | Phase 6: Synthesis, Drills & Mock Interview | Pending |
 
 **Coverage:**
-- v1 requirements: 24 total
-- Mapped to phases: TBD (roadmapper)
-- Unmapped: TBD
+- v1 requirements: 25 total
+- Mapped to phases: 25/25
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-06-13*
-*Last updated: 2026-06-13 after initial definition*
+*Last updated: 2026-06-13 — traceability populated by roadmapper*
