@@ -833,6 +833,123 @@ will expect you to contrast AGMS against.
 
 ---
 
+## Appendix B — How the Industry Is Structured (Utility vs. ISO vs. DSO — Who Operates What)
+
+Appendix A described *what* a distribution operator does. This appendix answers the structural
+questions: what "utility" actually means, who operates the distribution network in real life, and
+why that work is still surprisingly manual.
+
+### What "utility" actually means
+
+There is no single tidy definition, because the industry is structured differently in different
+places. The cleanest approach is to separate the **functions** from the **companies** — one company
+may perform one function or several:
+
+| Role | What it does | Serves end customers? | Examples |
+|------|--------------|----------------------|----------|
+| **Generator** | Makes the power | No | Vistra, NRG, plus utility-owned plants |
+| **ISO / RTO** (North America) or **TSO** (Europe) | *Operates* the bulk transmission grid + runs the wholesale market | No | ERCOT, PJM, MISO, CAISO, NYISO; RTE (FR), National Grid ESO (GB) |
+| **Transmission owner** | Owns the high-voltage lines | No | Often the same company as the distribution utility |
+| **Distribution utility** ("wires company" / **DSO** / **LDC**) | Owns & operates the poles and wires that deliver to customers; runs distribution operations | Delivers (may not *sell* the energy) | Oncor, CenterPoint, Con Edison, Enedis (FR), UK Power Networks |
+| **Retail electricity provider** | Sells the energy commodity; does billing | Yes (commercially) | Competitive retail providers in Texas |
+| **Vertically integrated utility** | All of the above, in one regulated company | Yes | Duke Energy, Southern Co., Dominion, Hydro-Québec |
+
+**How to use the word:** "utility" most precisely means **the regulated company that owns/operates
+the wires and serves end customers** — either a *vertically integrated utility* (does everything) or
+a *distribution utility* (just the wires). Colloquially, "the utility" = "your power company."
+
+Two things it does **not** mean:
+
+- An **ISO/RTO is not a utility** — it owns no wires and serves no customers; it is an independent
+  grid and market operator.
+- In **deregulated markets, generation and retail are often separate companies**, not "the utility."
+
+### Sorting real entities into the right buckets
+
+- **Duke Energy** → a **vertically integrated utility**: owns generation + transmission +
+  distribution, serves customers, runs distribution operations.
+- **Hydro-Québec** → a **vertically integrated public utility** (provincial crown corporation):
+  generation (mostly hydro), transmission (its *TransÉnergie* division), and distribution
+  (*Hydro-Québec Distribution*).
+- **ERCOT** → **not a utility.** It is the **ISO** for most of Texas — it operates the *bulk
+  transmission* grid and the market, and does **no** distribution. Distribution in Texas is done by
+  separate "wires" utilities (TDUs) such as Oncor, CenterPoint, and AEP Texas.
+- **CAISO, MISO, NYISO, PJM** → same category as ERCOT: **transmission and market operators, not
+  utilities, no distribution.**
+
+**The key correction:** the ISOs are the "transmission system operator that is present almost
+everywhere." They are emphatically **not** distribution operators — so the instinct "TSOs are
+everywhere, but is there really an active distribution operator?" is exactly the right question.
+
+### Is distribution actively operated? (Yes — but it is a spectrum)
+
+Separate two ideas:
+
+- **The formal term "DSO"** is mostly **European** — a legally-defined, unbundled entity under EU
+  rules (e.g., Enedis in France, the DNOs in Britain). In North America, "DSO" is a newer,
+  aspirational term ("the utility of the future / DSO model"). By the formal label, not every utility
+  has a "DSO."
+- **The function of operating the distribution network** exists almost everywhere a utility owns
+  distribution wires — *someone* must dispatch crews, execute switching, and manage outages. So
+  essentially every distribution utility has a **distribution operations center** (sometimes its own
+  Distribution Control Center, sometimes merged with the transmission control room or the
+  outage/dispatch center).
+
+But the **sophistication varies enormously**:
+
+```
+ MANUAL / REACTIVE  ───────────────────────────────►  AUTOMATED / PROACTIVE
+ small rural co-op            mid-size municipal        large investor-owned utility
+ - few dispatchers            - basic SCADA             - SCADA + full ADMS + DERMS
+ - paper switching orders     - some remote control     - automated FLISR, VVO
+ - "we know when              - growing automation      - AMI / smart meters everywhere
+    customers call"                                      - DER management
+```
+
+In the US alone there are roughly **3,000 distribution utilities** — large investor-owned,
+municipal, and rural cooperatives — sitting all along that line.
+
+### How it really looks, physically
+
+- A utility runs **one or a few control centers** (usually a primary plus a backup, for resilience);
+  a large utility may consolidate into a handful of regional distribution operations centers.
+- One operator does not cover "5–10 substations" — modern SCADA lets a single operator monitor a
+  **large territory: dozens of substations and hundreds of feeders**, all remotely.
+- A **substation** steps transmission voltage down to distribution voltage; from each substation
+  several **feeders** (circuits) radiate out. A large utility may have **hundreds of substations and
+  thousands of feeders.**
+- On those feeders sit reclosers, sectionalizers, capacitor banks, regulators, and switches. **Some
+  are remotely controllable via SCADA; many are not** — they are manual and need a crew. The
+  remotely-controllable fraction is growing but is far from 100% on most systems.
+
+### Why it is still so human
+
+The distribution control room is surprisingly manual, for honest reasons:
+
+1. **Distribution was historically "fit and forget."** Transmission has been heavily instrumented and
+   automated for *decades*, because one transmission failure can black out millions. Distribution grew
+   up **radial and "dumb"**: power flows one way, local devices (fuses, reclosers) handle faults
+   *autonomously*, and the utility often only learned of an outage **when customers phoned in.**
+2. **Scale and cost of instrumentation.** There are *thousands of times* more devices on distribution
+   than on transmission, spread over enormous areas; sensoring and actuating all of it was never
+   cost-justified.
+3. **Safety and liability keep humans in the loop.** Switching energizes and de-energizes lines that
+   field crews are physically touching. Utilities are deeply conservative about letting software do
+   that autonomously — a wrong switch can kill someone — so a human verifies switching orders.
+4. **Much of the "automation" that does exist is local, not central.** A recloser tripping and
+   re-closing on its own is *protection*, not centralized operation; that has always been automated —
+   just decentralized and dumb, not coordinated intelligence.
+
+**▶ Juan:** the punchline ties straight to the role. That old model — under-instrumented, radial,
+locally-dumb, human-in-the-loop distribution — is **breaking now** because rooftop solar, batteries,
+and EVs make distribution two-way, fast, and complex in ways the manual model cannot handle. That is
+forcing distribution to finally become **observable, automated, and decentralized** — which is
+precisely *"Virtual Sensing and Decentralized Grid Operations."* Virtual sensing answers reason #2
+(you cannot afford a sensor everywhere → estimate the missing state with ML); AGMS-style decentralized
+operations answer #1 and #4 (push coordinated intelligence to the edge instead of a central room).
+
+---
+
 ## Quick links
 
 - Map of the family + pipeline diagram + glossary → `INDEX.md`
