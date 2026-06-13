@@ -16,25 +16,21 @@ picture of what the grid is actually doing.**
 
 The state vector captures everything you need to know:
 
-```
-x = [V₁, θ₁, V₂, θ₂, ..., Vₙ, θₙ]
-```
+$$x = [V_1,\, \theta_1,\, V_2,\, \theta_2,\, \ldots,\, V_n,\, \theta_n]$$
 
-Voltage magnitude Vᵢ and phase angle θᵢ at every one of n buses. Once you know x, you can
+Voltage magnitude $V_i$ and phase angle $\theta_i$ at every one of $n$ buses. Once you know $x$, you can
 compute every power flow, every current injection — the full operating point falls out of the
 AC power-flow equations.
 
 The **measurement model** relates the hidden state to what sensors actually report:
 
-```
-z = h(x) + e
-```
+$$z = h(x) + e$$
 
-- `z` = vector of m measurements (bus voltages, real/reactive power flows, current magnitudes)
-- `h(x)` = the nonlinear AC power-flow equations mapping state to observables
-- `e` = measurement errors: e ~ N(0, R), Gaussian with covariance R
+- $z$ = vector of $m$ measurements (bus voltages, real/reactive power flows, current magnitudes)
+- $h(x)$ = the nonlinear AC power-flow equations mapping state to observables
+- $e$ = measurement errors: $e \sim \mathcal{N}(0, R)$, Gaussian with covariance $R$
 
-R is diagonal: each sensor has its own noise variance. A high-accuracy PMU gets a small R entry;
+$R$ is diagonal: each sensor has its own noise variance. A high-accuracy PMU gets a small $R$ entry;
 a legacy SCADA meter with loose calibration gets a large one.
 
 **One-liner for the interview:** "State estimation answers: given all these noisy, redundant
@@ -44,17 +40,15 @@ SCADA readings, what is the most consistent operating point that best explains a
 
 ## 2. The WLS Objective Function
 
-We want the estimate x̂ that minimizes the **weighted sum of squared residuals**:
+We want the estimate $\hat{x}$ that minimizes the **weighted sum of squared residuals**:
 
-```
-J(x) = [z − h(x)]ᵀ W [z − h(x)]
-```
+$$J(x) = [z - h(x)]^\top W\, [z - h(x)]$$
 
-where `W = R⁻¹` — the weight matrix is the inverse of the noise covariance. A more trustworthy
-sensor (small Rᵢᵢ) gets higher weight Wᵢᵢ = 1/Rᵢᵢ; a noisy legacy meter gets low weight.
+where $W = R^{-1}$ — the weight matrix is the inverse of the noise covariance. A more trustworthy
+sensor (small $R_{ii}$) gets higher weight $W_{ii} = 1/R_{ii}$; a noisy legacy meter gets low weight.
 
 This is exactly **least squares** with per-measurement trust. When all sensors are equally
-trusted (W = I), it collapses to ordinary least squares. The WLS version is what every
+trusted ($W = I$), it collapses to ordinary least squares. The WLS version is what every
 production energy management system (EMS) runs.
 
 **Key intuition:** You are not minimizing the number of wrong measurements — you are minimizing
@@ -64,46 +58,38 @@ the energy of the residuals in a space where trustworthy sensors pull harder.
 
 ## 3. The Gauss-Newton Iteration (How You Actually Solve It)
 
-h(x) is nonlinear (AC power flow involves sines and cosines of phase angles). So J(x) has no
+$h(x)$ is nonlinear (AC power flow involves sines and cosines of phase angles). So $J(x)$ has no
 closed-form minimum. We solve iteratively using Gauss-Newton:
 
-**At each iteration, starting from current estimate x̂:**
+**At each iteration, starting from current estimate $\hat{x}$:**
 
-**Step 1 — Linearize.** Compute the Jacobian of h at the current estimate:
+**Step 1 — Linearize.** Compute the Jacobian of $h$ at the current estimate:
 
-```
-H = ∂h/∂x  (evaluated at x̂)
-```
+$$H = \frac{\partial h}{\partial x}\bigg|_{\hat{x}}$$
 
-H has shape m × 2n (m measurements, 2n states). Each row says: "how does measurement i change
-when state j changes by a tiny amount?"
+$H$ has shape $m \times 2n$ ($m$ measurements, $2n$ states). Each row says: "how does measurement $i$ change
+when state $j$ changes by a tiny amount?"
 
 **Step 2 — Form the gain matrix (information matrix):**
 
-```
-G = Hᵀ W H
-```
+$$G = H^\top W H$$
 
-G is 2n × 2n. It captures how much information the current measurements give you about each
-state variable. A well-conditioned G means the grid is observable.
+$G$ is $2n \times 2n$. It captures how much information the current measurements give you about each
+state variable. A well-conditioned $G$ means the grid is observable.
 
 **Step 3 — Compute the state correction:**
 
-```
-Δx = G⁻¹ Hᵀ W [z − h(x̂)]
-```
+$$\Delta x = G^{-1} H^\top W\, [z - h(\hat{x})]$$
 
-The bracketed term `[z − h(x̂)]` is the current residual — the gap between what we measured
+The bracketed term $[z - h(\hat{x})]$ is the current residual — the gap between what we measured
 and what our current estimate predicts. We correct the estimate to close that gap, weighted
 by sensor trust.
 
 **Step 4 — Update and check convergence:**
 
-```
-x̂ ← x̂ + Δx
-```
+$$\hat{x} \leftarrow \hat{x} + \Delta x$$
 
-Repeat until ‖Δx‖ < tolerance. In practice, a well-initialized power-system SE converges in
+Repeat until $\|\Delta x\| < \text{tolerance}$. In practice, a well-initialized power-system SE converges in
 **2–4 iterations**. The operating point from the previous scan is almost always a good starting
 point, so convergence is fast.
 
@@ -113,7 +99,7 @@ point, so convergence is fast.
 
 ### Observability
 
-The grid is **observable** when H has full column rank — there are enough independent
+The grid is **observable** when $H$ has full column rank — there are enough independent
 measurements to uniquely determine all state variables. In graph terms: every bus must have
 at least one incident measurement (voltage or a power flow on a connected branch).
 
@@ -121,32 +107,28 @@ If a portion of the grid has no measurements (and no measured branches connectin
 rest), it forms an **unobservable island** — SE cannot determine those bus voltages. The EMS
 flags this and either uses historical data or skips that region.
 
-**Interview sentence:** "Observability is about whether the Jacobian H has full column rank —
+**Interview sentence:** "Observability is about whether the Jacobian $H$ has full column rank —
 whether the measurement set is rich enough to uniquely pin down every state variable."
 
 ### Residuals
 
 After WLS converges, the **residuals** are:
 
-```
-r = z − h(x̂)
-```
+$$r = z - h(\hat{x})$$
 
 Small residuals across the board = the estimate is consistent with all measurements. A large
 residual on one measurement flags a potential bad sensor.
 
 ### Bad-Data Detection: Chi-Squared Test
 
-After convergence, the weighted residual sum `J(x̂) = rᵀ W r` follows a **chi-squared
-distribution** with `m − n` degrees of freedom (m measurements minus n states = degrees of
+After convergence, the weighted residual sum $J(\hat{x}) = r^\top W r$ follows a **chi-squared
+distribution** with $m - n$ degrees of freedom ($m$ measurements minus $n$ states = degrees of
 redundancy). If:
 
-```
-J(x̂) > χ²_threshold(m − n, 0.95)
-```
+$$J(\hat{x}) > \chi^2_{\text{threshold}}(m - n,\; 0.95)$$
 
 ...at least one measurement is bad. The **Largest Normalized Residual (LNR) test** then
-identifies the culprit: compute `rᵢ / √Ωᵢᵢ` for each measurement i (where Ωᵢᵢ is the
+identifies the culprit: compute $r_i / \sqrt{\Omega_{ii}}$ for each measurement $i$ (where $\Omega_{ii}$ is the
 diagonal of the residual covariance matrix); the measurement with the largest normalized
 residual is the prime suspect. Remove it and re-run SE.
 
@@ -207,16 +189,16 @@ Unpacking the structural isomorphism:
 
 | Power-System WLS | OSED Convex Optimization |
 |-----------------|--------------------------|
-| State vector x = [V, θ] per bus | State vector = [T_zone, P_HVAC, ...] per building |
-| Measurement model z = h(x) + e | Sensor model y = C·x + e |
-| Objective: min [z−h(x)]ᵀ W [z−h(x)] | Objective: min [y−Cx]ᵀ R⁻¹ [y−Cx] + regularization |
-| Nonlinear h → Gauss-Newton | Linear C → closed-form or CVXPY |
-| Measurement noise R from sensor specs | Noise R from building sensor calibration |
-| Observable = H full column rank | Observable = C full column rank |
+| State vector $x = [V,\, \theta]$ per bus | State vector $= [T_\text{zone},\, P_\text{HVAC},\, \ldots]$ per building |
+| Measurement model $z = h(x) + e$ | Sensor model $y = Cx + e$ |
+| Objective: $\min [z-h(x)]^\top W [z-h(x)]$ | Objective: $\min [y-Cx]^\top R^{-1} [y-Cx] + \text{regularization}$ |
+| Nonlinear $h$ → Gauss-Newton | Linear $C$ → closed-form or CVXPY |
+| Measurement noise $R$ from sensor specs | Noise $R$ from building sensor calibration |
+| Observable = $H$ full column rank | Observable = $C$ full column rank |
 
 The mathematical logic — minimize weighted squared residuals to get the best consistent
 estimate from redundant noisy sensors — is identical. The grid version is more complex because
-h(x) is nonlinear (requires Gauss-Newton iteration), while the building version is linear
+$h(x)$ is nonlinear (requires Gauss-Newton iteration), while the building version is linear
 (RC thermal model), so it solves in one shot with CVXPY.
 
 **How to say this in the interview:**
@@ -224,7 +206,7 @@ h(x) is nonlinear (requires Gauss-Newton iteration), while the building version 
 > "I have implemented the WLS objective in a different physical domain: OSED's building thermal
 > state estimator minimizes a weighted least-squares objective over zone temperatures and HVAC
 > states using building management system sensor readings. The math is structurally identical
-> to power-system WLS. The difference is that my measurement function h(x) is linear in
+> to power-system WLS. The difference is that my measurement function $h(x)$ is linear in
 > building temperatures — the RC thermal model is linear — whereas the grid version is
 > nonlinear in voltage angles, which is why it needs Gauss-Newton iteration instead of a
 > closed-form solve."
@@ -233,12 +215,12 @@ h(x) is nonlinear (requires Gauss-Newton iteration), while the building version 
 
 ## Quick-Recall Card (Recite Before the Interview)
 
-1. **State vector:** x = [V, θ] per bus — WLS finds the best consistent x.
-2. **Measurement model:** z = h(x) + e; h is nonlinear AC power flow; e ~ N(0, R).
-3. **Objective:** minimize J(x) = [z − h(x)]ᵀ R⁻¹ [z − h(x)].
-4. **Gauss-Newton:** linearize H = ∂h/∂x → gain G = HᵀWH → correction Δx = G⁻¹HᵀW[z−h(x̂)] → iterate 2–4 times.
-5. **Observability:** H full column rank; unobservable islands if buses have no incident measurements.
-6. **Bad data:** J(x̂) ~ χ²(m−n); LNR test finds the suspect measurement.
+1. **State vector:** $x = [V,\, \theta]$ per bus — WLS finds the best consistent $x$.
+2. **Measurement model:** $z = h(x) + e$; $h$ is nonlinear AC power flow; $e \sim \mathcal{N}(0, R)$.
+3. **Objective:** minimize $J(x) = [z - h(x)]^\top R^{-1} [z - h(x)]$.
+4. **Gauss-Newton:** linearize $H = \partial h/\partial x$ → gain $G = H^\top W H$ → correction $\Delta x = G^{-1} H^\top W [z - h(\hat{x})]$ → iterate 2–4 times.
+5. **Observability:** $H$ full column rank; unobservable islands if buses have no incident measurements.
+6. **Bad data:** $J(\hat{x}) \sim \chi^2(m-n)$; LNR test finds the suspect measurement.
 7. **Leverage measurement trap:** near-zero normalized residual even when corrupted — structural blind spot of LNR.
 8. **Static vs. dynamic:** WLS = 4-second snapshot; KF/EKF = running estimate with time propagation.
 9. **My bridge:** OSED convex optimization IS structurally WLS — same minimize-weighted-residuals logic, linear RC model instead of nonlinear AC power flow.
