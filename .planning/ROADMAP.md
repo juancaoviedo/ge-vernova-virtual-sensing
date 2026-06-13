@@ -118,7 +118,7 @@ Phases execute in numeric order: 0 → 1 → 2 → 3 → 4 → 5 → 6
 | 0. Document Ingestion | 0/TBD | Not started | - |
 | 1. Kalman & State Estimation | 0/3 | Not started | - |
 | 2. Transmission Virtual Sensing | 0/3 | Not started | - |
-| 3. Director's Patents Deep-Read | 1/1 | Complete   | 2026-06-13 |
+| 3. Director's Patents Deep-Read | 1/1 | Complete    | 2026-06-13 |
 | 4. Protocols, Stack & Architecture | 0/TBD | Not started | - |
 | 5. Federated Architectures & Security | 0/TBD | Not started | - |
 | 6. Synthesis, Drills & Mock Interview | 0/TBD | Not started | - |
