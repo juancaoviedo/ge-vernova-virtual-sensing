@@ -19,8 +19,8 @@
 
 - [x] **TVS-01**: Notes on voltage stability monitoring — P-V curve, voltage collapse, Thevenin-equivalent VSI from PMU data
 - [x] **TVS-02**: Notes on phase-angle / power-flow inference — DC approximation (P = Bθ), sparse PMU coverage problem
-- [ ] **TVS-03**: Notes on observability analysis and bad-data detection (chi-squared test, normalized residual, leverage measurements)
-- [ ] **TVS-04**: Notes on asset-health estimation — transformer hot-spot (IEEE C57.91), Dynamic Line Rating as a virtual-sensing product, RUL framing
+- [x] **TVS-03**: Notes on observability analysis and bad-data detection (chi-squared test, normalized residual, leverage measurements)
+- [x] **TVS-04**: Notes on asset-health estimation — transformer hot-spot (IEEE C57.91), Dynamic Line Rating as a virtual-sensing product, RUL framing
 
 ### Director's Patents (PAT) — Gap 3 (highest differentiation)
 
@@ -88,8 +88,8 @@ Deferred — useful but not worth the runway before this interview.
 | KAL-04 | Phase 1: Kalman & State Estimation | Pending |
 | TVS-01 | Phase 2: Transmission Virtual Sensing | Complete |
 | TVS-02 | Phase 2: Transmission Virtual Sensing | Complete |
-| TVS-03 | Phase 2: Transmission Virtual Sensing | Pending |
-| TVS-04 | Phase 2: Transmission Virtual Sensing | Pending |
+| TVS-03 | Phase 2: Transmission Virtual Sensing | Complete |
+| TVS-04 | Phase 2: Transmission Virtual Sensing | Complete |
 | PAT-01 | Phase 3: Director's Patents Deep-Read | Pending |
 | PAT-02 | Phase 3: Director's Patents Deep-Read | Pending |
 | PAT-03 | Phase 3: Director's Patents Deep-Read | Pending |

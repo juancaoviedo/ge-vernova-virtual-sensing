@@ -59,7 +59,7 @@ deliverable maps to exactly one phase; no requirement is orphaned.
   4. Juan can describe transformer hot-spot estimation (IEEE C57.91 ODE), DGA indicator gases, Dynamic Line Rating as a virtual-sensing product, and RUL framing — and explicitly connect each to an OSED analog
 **Plans**: 3 plans
 - [x] 02-01-PLAN.md — TVS-01 voltage-stability + TVS-02 DC power-flow angle-WLS notes
-- [ ] 02-02-PLAN.md — TVS-03 observability + bad-data + TVS-04 asset-health notes
+- [x] 02-02-PLAN.md — TVS-03 observability + bad-data + TVS-04 asset-health notes
 - [ ] 02-03-PLAN.md — 3-bus DC power-flow WLS + chi-squared bad-data detection demo
 
 ### Phase 3: Director's Patents Deep-Read
