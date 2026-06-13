@@ -57,7 +57,10 @@ deliverable maps to exactly one phase; no requirement is orphaned.
   2. Juan can state the DC power-flow approximation (P = Bθ), describe the sparse PMU coverage problem, and frame angle inference as a WLS problem
   3. Juan can explain the chi-squared bad-data test, normalized residuals, leverage measurements as the critical limitation, and Jacobian rank as the observability check
   4. Juan can describe transformer hot-spot estimation (IEEE C57.91 ODE), DGA indicator gases, Dynamic Line Rating as a virtual-sensing product, and RUL framing — and explicitly connect each to an OSED analog
-**Plans**: TBD
+**Plans**: 3 plans
+- [ ] 02-01-PLAN.md — TVS-01 voltage-stability + TVS-02 DC power-flow angle-WLS notes
+- [ ] 02-02-PLAN.md — TVS-03 observability + bad-data + TVS-04 asset-health notes
+- [ ] 02-03-PLAN.md — 3-bus DC power-flow WLS + chi-squared bad-data detection demo
 
 ### Phase 3: Director's Patents Deep-Read
 **Goal**: Juan has read all four director patents, can articulate what each solves, and can make one concrete connection per patent to his own work and ask one sharp question per patent in the interview
@@ -112,7 +115,7 @@ Phases execute in numeric order: 0 → 1 → 2 → 3 → 4 → 5 → 6
 |-------|----------------|--------|-----------|
 | 0. Document Ingestion | 0/TBD | Not started | - |
 | 1. Kalman & State Estimation | 0/3 | Not started | - |
-| 2. Transmission Virtual Sensing | 0/TBD | Not started | - |
+| 2. Transmission Virtual Sensing | 0/3 | Not started | - |
 | 3. Director's Patents Deep-Read | 0/TBD | Not started | - |
 | 4. Protocols, Stack & Architecture | 0/TBD | Not started | - |
 | 5. Federated Architectures & Security | 0/TBD | Not started | - |
