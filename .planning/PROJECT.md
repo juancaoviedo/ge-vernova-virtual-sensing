@@ -131,4 +131,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-06-13 after initialization*
+*Last updated: 2026-06-13 — Phase 2 (Transmission Virtual Sensing) complete: TVS-01..04 study notes + DC power-flow bad-data demo.*
