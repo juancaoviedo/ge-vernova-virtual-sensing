@@ -56,7 +56,8 @@
     <a href="#p15">Appendix C — Transmission (TSO) vs. Distribution Operations: A Side-by-Side</a>
     <a href="#p16">Appendix D — Where the Role Fits: From Grid Problems → the Patents → Your Day-to-Day</a>
     <a href="#p17">Appendix E — The Devices Themselves: A Field Glossary (Transmission vs. Distribution)</a>
-    <a href="#p18">Quick links</a>
+    <a href="#p18">Appendix F — The Three Meanings of &quot;State&quot; (and Why They Keep Colliding)</a>
+    <a href="#p19">Quick links</a>
   </nav>
   <main>
 <section class="card">
@@ -401,7 +402,57 @@
 <div class="juan"><strong>▶ Juan:</strong> map this glossary back to the job. <strong>Virtual sensing</strong> is about turning sparse CT/VT + slow AMI + a handful of D-PMUs into a full feeder picture — synthesizing the <em>instrument transformers that were never installed</em>. Your <strong>edge software</strong> is what ingests RTU / IED / PMU / DER telemetry (over DNP3, C37.118, IEEE 2030.5, MQTT) and runs the estimators on it. And the <strong>controllable devices in E.2–E.4</strong> — reclosers, regulators, capacitor banks, smart inverters — are exactly what an AGMS operation loop issues commands to. Knowing each device cold lets you talk to the power-systems engineers in their own language, which is half of a "bridge physics, AI, and distributed computing" role.</div>
 </section>
 <section class="card">
-<h2 class="sec" id="p18">Quick links</h2>
+<h2 class="sec" id="p18">Appendix F — The Three Meanings of "State" (and Why They Keep Colliding)</h2>
+<p>Almost every confusion about this architecture traces back to one overloaded word. <strong>"State" is used for three genuinely different objects</strong>, and because they are all called "state," they appear circular ("measurements determine the state, but measurements also build the state machine, whose state the measurements then determine…"). They are not circular — they are <strong>three different things at three different levels.</strong> Name them apart and the whole picture snaps into focus.</p>
+<table><thead><tr><th>#</th><th>The "state"</th><th>What it really is</th><th>Discrete or continuous</th><th>How it is obtained</th><th>AGMS component</th><th>Its proper name</th></tr></thead><tbody><tr><td>①</td><td><strong>Physical state</strong></td><td>The grid's electrical condition: bus voltages, phase angles, currents, power flows, tap positions, frequency</td><td><strong>Continuous</strong> — a vector of numbers (<code>x</code>)</td><td><strong>Virtual sensing / state estimation</strong> from sparse measurements</td><td>The virtual-sensing layer feeding GWM's <strong>Context Data (205)</strong></td><td>the <strong>system state</strong> / <strong>state vector</strong>; recovered by a <strong>state estimator / observer</strong> (Kalman filter)</td></tr><tr><td>②</td><td><strong>Operating regime / mode</strong></td><td>Which <em>situation</em> we are in: normal, fault on feeder 15, overvoltage on feeder 25</td><td><strong>Discrete</strong> — one label from a small set</td><td><strong>Classifying</strong> the physical state (plus raw alerts)</td><td><strong>Alert Correlation Engine (201)</strong> raises it; <strong>Context Construct Engine (210) + CAPs</strong> classify and rank it</td><td>the <strong>operating regime</strong> / <strong>mode</strong>; via <strong>mode detection / fault detection &amp; diagnosis (FDD) / situational awareness</strong></td></tr><tr><td>③</td><td><strong>Plan step</strong></td><td>Which step of the chosen response we are executing: isolate, reconfigure, stabilize</td><td><strong>Discrete</strong> — a node in <em>one</em> plan</td><td>The <strong>CaCSM</strong>, built from a learned template; current step picked by measurements meeting a transition condition</td><td><strong>CSM Builder (214)</strong> builds it, <strong>CSM Operator (213/1040)</strong> runs it</td><td>the <strong>control / execution state</strong> of a <strong>state machine</strong>; a <strong>procedure step</strong></td></tr></tbody></table>
+<p>The trap is that ②, the regime, and ③, the plan step, are <em>also</em> "states" in plain English — but they are a <strong>label</strong> and a <strong>node in a graph</strong>, respectively, while ① is a <strong>vector of physical numbers.</strong> Three different mathematical objects wearing the same word.</p>
+<h3 class="sub">F.1 — ① The physical state (continuous; the state vector)</h3>
+<p>This is "what the grid is electrically doing right now": the voltages, angles, currents, flows, tap positions, and frequency. It is a <strong>continuous vector</strong>, <code>x</code>. Because the feeder is sparsely measured, you cannot read all of <code>x</code> directly — you <strong>estimate</strong> it from the few measurements you have. That estimation <em>is</em> <strong>virtual sensing</strong>, and its formal name is <strong>state estimation</strong>; the algorithm that does it is an <strong>observer</strong>, the canonical one being the <strong>Kalman filter</strong>. This runs <strong>continuously, always on</strong> — it is the bedrock every other layer reads from. In AGMS, it is the layer the <em>job</em> builds, feeding clean state into GWM. (This is why the JD names "Kalman filters, state estimation," and why Phase 1 of this project is exactly that.)</p>
+<div class="callout"><p>Keyword: <strong>state estimation.</strong> When the interview says "state," in <em>this</em> layer it means the physical state vector — and your job is to estimate it.</p></div>
+<h3 class="sub">F.2 — ② The operating regime / mode (discrete; a label)</h3>
+<p>This is "what <em>kind</em> of situation we are in" — normal, a fault on feeder 15, a voltage violation on feeder 25. It is <strong>discrete</strong>: one label drawn from a small set of regimes. Crucially, <strong>it is computed <em>from</em> ①</strong> — you look at the estimated physical state (and the raw alerts) and <strong>classify</strong> it into a regime. So ② is <em>downstream</em> of ①; it is not the same object, it is a <em>summary judgment</em> about ①.</p>
+<p>Who computes it in AGMS:</p>
+<ul><li>The <strong>Alert Correlation Engine (201)</strong> in GridWideMind detects that an abnormal condition exists and packages it as the <strong>action stress frame</strong> (vital attributes, severity, timestamp) — it <em>raises</em> the regime.</li><li>GridArtificer's <strong>Context Construct Engine (210)</strong> runs the GA-Parser, decomposes the frame into context meta-objects, and builds <strong>Contextual Abstraction Panels (CAPs)</strong> ranked by the Learning Engine's relevancy — it <em>classifies and prioritizes</em> the regime. The highest-relevancy CAP is, in effect, "the dominant situation to act on."</li></ul>
+<p>Its proper names in the literature: <strong>mode detection</strong>, <strong>fault detection and diagnosis (FDD)</strong>, <strong>classification</strong>, or operationally, <strong>situational awareness</strong>. (If you want the formal model for "infer a hidden <em>discrete</em> mode from observations over time," that is a <strong>Hidden Markov Model.</strong>)</p>
+<div class="callout"><p>Keyword: <strong>regime / mode</strong> — <em>not</em> "state." Say "operating regime" out loud to keep it distinct from ① and ③.</p></div>
+<h3 class="sub">F.3 — ③ The plan step (discrete; a node in the response state machine)</h3>
+<p>Once the regime is known, the system <strong>selects and builds a response plan</strong> for it — the <strong>CaCSM</strong>, a <strong>state machine</strong> whose nodes are the steps (Isolate → Reconfigure → Stabilize → Restored). The <em>template</em> for that machine is <strong>learned over time</strong> (a library of patterns); the <em>concrete</em> machine is instantiated for this event. Then, as it runs, measurements determine <strong>which step we are currently in</strong> and when a step's <strong>transition condition</strong> is met to advance.</p>
+<p>Who does it in AGMS: the <strong>CSM Builder (214)</strong> assembles the machine from the best-matched learned template (then simulates/calibrates it); the <strong>CSM Operator (213/1040)</strong> runs it, with a per-state <strong>Learning Engine Agent</strong> watching for drift.</p>
+<p>Its proper names: the <strong>control state</strong> or <strong>execution state</strong> of a <strong>state machine</strong>, or plainly a <strong>procedure step</strong>. This is meaning-of-state most software engineers already hold (a Kubernetes pod's <code>Running</code>, a workflow's current node).</p>
+<div class="callout"><p>Keyword: <strong>plan step</strong> (or "CaCSM state") — a node in a procedure, <em>not</em> the physical state.</p></div>
+<h3 class="sub">F.4 — How the three connect (the part that looks circular but isn't)</h3>
+<p>The physical state ① is the <strong>shared, continuous input</strong>; ② and ③ are both <em>derived from</em> it but are different <em>kinds</em> of object, produced at different moments:</p>
+<pre class="diagram">        sparse field measurements (SCADA, PMU, AMI, line sensors)
+                          │
+                          ▼
+        ┌──────────────────────────────────────────┐
+        │  VIRTUAL SENSING / STATE ESTIMATION        │   ← continuous, always on
+        └──────────────────────────────────────────┘
+                          │ produces
+                          ▼
+        ① PHYSICAL STATE  x = (voltages, angles, currents, taps, f)   ← a continuous vector
+                          │
+            ┌─────────────┴──────────────────────────────┐
+            │ classify (downstream of x)                   │ drive (downstream of x)
+            ▼                                              ▼
+   ② OPERATING REGIME / MODE                          ③ PLAN STEP  (a CaCSM node)
+   "fault on feeder 3, section B"  (a label)          "currently: ISOLATE"
+            │ selects + builds (once)                       ▲
+            └────────────►  CaCSM state machine ────────────┘
+                           built once from a learned template,
+                           then driven by x toward its goal state</pre>
+<p>Read it as three jobs that all consume <code>x</code> but ask different questions:</p>
+<ul><li><strong>②</strong> asks <em>"what kind of situation is this?"</em> — once, when the regime changes — and uses the answer to <strong>build</strong> the plan. (Build is rare, event-triggered.)</li><li><strong>③</strong> asks <em>"which step am I on, and is the next transition's condition met?"</em> — continuously, after the plan exists — and uses the answer to <strong>drive</strong> the plan. (Drive is constant.)</li><li>A supervisor keeps re-checking ② ("does this regime still hold?"); if it changes, ② re-fires and a <strong>new</strong> plan replaces the old one.</li></ul>
+<p>So <code>x</code> is never "building the machine and reading its state at the same instant." <code>x</code> continuously <em>exists</em>; a <em>change</em> in <code>x</code>'s regime triggers a <strong>one-time build</strong> of a plan; thereafter <code>x</code> <em>drives</em> that plan. Build-once, drive-continuously — different jobs on different floors.</p>
+<h3 class="sub">F.5 — The naming convention to adopt (so they never collide again)</h3>
+<p>Use three distinct phrases and never the bare word "state":</p>
+<table><thead><tr><th>Layer</th><th>Say this</th><th>Never just say</th><th>One-word cue</th></tr></thead><tbody><tr><td>①</td><td><strong>"physical state"</strong> (or <em>state vector</em> / <em>system state</em>)</td><td>"state"</td><td><em>estimate</em></td></tr><tr><td>②</td><td><strong>"operating regime"</strong> (or <em>mode</em>)</td><td>"state"</td><td><em>classify</em></td></tr><tr><td>③</td><td><strong>"plan step"</strong> (or <em>CaCSM state</em> / <em>procedure step</em>)</td><td>"state"</td><td><em>execute</em></td></tr></tbody></table>
+<p>The sentence that ties them, said precisely:</p>
+<div class="callout"><p>"Virtual sensing <strong>estimates the physical state</strong>; the system <strong>classifies that into an operating regime</strong>; the regime <strong>selects a response plan whose steps</strong> are then <strong>driven by the physical state.</strong> Three different 'states,' three different jobs."</p></div>
+<div class="juan"><strong>▶ Juan:</strong> this distinction is worth rehearsing because an interviewer may use "state" loosely and <em>you</em> can be the one who is precise. Your role lives almost entirely in <strong>layer ①</strong> — you build the <strong>state estimator</strong> that turns sparse measurements into the physical state vector. Everything above you (regime classification, plan building, plan execution) <em>consumes</em> your output. Being able to say "I own the physical-state estimation — the observer — which is the input the regime-classifier and the control plan both depend on" places you exactly in the architecture and shows you understand the layers you hand off to.</div>
+</section>
+<section class="card">
+<h2 class="sec" id="p19">Quick links</h2>
 <ul><li>Map of the family + pipeline diagram + glossary → <a href="INDEX.html"><code>INDEX.md</code></a></li><li>Parent architecture in patent detail → <code>adaptive-power.md</code></li><li>Per-stage detail → <code>logistician-module.md</code>, <code>asset-portfolio.md</code>, <code>operation-loop.md</code>, <code>scout-command.md</code>, <code>data-management.md</code></li><li>Extra OCR-only detail (gAVA, relevancy tiers, CSM validation stages) → <code>ocr.md</code></li></ul>
 </section>
     <footer>Rendered from <code>AGMS-architecture.md</code> — content unchanged.</footer>
