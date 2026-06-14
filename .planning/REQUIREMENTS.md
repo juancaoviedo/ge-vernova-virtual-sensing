@@ -32,8 +32,8 @@
 
 - [x] **STK-01**: Notes on the grid protocol stack — SCADA, DNP3, PMU/C37.118, LoRa, MQTT — and where each lives
 - [x] **STK-02**: Notes on IEC 61850 (GOOSE vs. SV vs. MMS, three-tier hierarchy, logical nodes) at the depth needed to discuss it
-- [ ] **STK-03**: Notes positioning NATS/JetStream vs. MQTT vs. Kafka vs. Pulsar, and K3s vs. K8s, with interview-ready justifications
-- [ ] **STK-04**: Notes on Prometheus pull model vs. InfluxDB push, PromQL basics, kube-prometheus-stack
+- [x] **STK-03**: Notes positioning NATS/JetStream vs. MQTT vs. Kafka vs. Pulsar, and K3s vs. K8s, with interview-ready justifications
+- [x] **STK-04**: Notes on Prometheus pull model vs. InfluxDB push, PromQL basics, kube-prometheus-stack
 - [ ] **STK-05**: A whiteboard-able four-tier reference architecture (field → edge → fog/federated → cloud) Juan can draw and narrate
 
 ### Federated Architectures & Security (FED) — Gap 5
@@ -95,8 +95,8 @@ Deferred — useful but not worth the runway before this interview.
 | PAT-03 | Phase 3: Director's Patents Deep-Read | Complete |
 | STK-01 | Phase 4: Protocols, Stack & Architecture | Complete |
 | STK-02 | Phase 4: Protocols, Stack & Architecture | Complete |
-| STK-03 | Phase 4: Protocols, Stack & Architecture | Pending |
-| STK-04 | Phase 4: Protocols, Stack & Architecture | Pending |
+| STK-03 | Phase 4: Protocols, Stack & Architecture | Complete |
+| STK-04 | Phase 4: Protocols, Stack & Architecture | Complete |
 | STK-05 | Phase 4: Protocols, Stack & Architecture | Pending |
 | FED-01 | Phase 5: Federated Architectures & Security | Pending |
 | FED-02 | Phase 5: Federated Architectures & Security | Pending |

@@ -86,7 +86,7 @@ deliverable maps to exactly one phase; no requirement is orphaned.
   5. Juan can draw and narrate the four-tier reference architecture (field → edge → fog/federated → cloud) on a whiteboard, including control-latency tiers and key components at each level
 **Plans**: 3 plans
 - [x] 04-01-PLAN.md — STK-01 grid protocol stack tier-map + STK-02 IEC 61850 (GOOSE/SV/MMS, logical nodes) notes
-- [ ] 04-02-PLAN.md — STK-03 NATS/MQTT/Kafka + K3s/K8s messaging-orchestration + STK-04 Prometheus/PromQL observability notes
+- [x] 04-02-PLAN.md — STK-03 NATS/MQTT/Kafka + K3s/K8s messaging-orchestration + STK-04 Prometheus/PromQL observability notes
 - [ ] 04-03-PLAN.md — STK-05 standalone four-tier reference-architecture doc (ASCII + Mermaid + narration + AGMS overlay)
 
 ### Phase 5: Federated Architectures & Security
@@ -122,7 +122,7 @@ Phases execute in numeric order: 0 → 1 → 2 → 3 → 4 → 5 → 6
 | 1. Kalman & State Estimation | 0/3 | Not started | - |
 | 2. Transmission Virtual Sensing | 0/3 | Not started | - |
 | 3. Director's Patents Deep-Read | 1/1 | Complete    | 2026-06-13 |
-| 4. Protocols, Stack & Architecture | 1/3 | In Progress|  |
+| 4. Protocols, Stack & Architecture | 2/3 | In Progress|  |
 | 5. Federated Architectures & Security | 0/TBD | Not started | - |
 | 6. Synthesis, Drills & Mock Interview | 0/TBD | Not started | - |
 </content>
