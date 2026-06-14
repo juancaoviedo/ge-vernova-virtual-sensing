@@ -575,7 +575,11 @@ These are control *systems*, not discrete field devices:
   relays physically sit on distribution feeders* — a place where the two worlds meet.
 - **Distributed FLISR / loop schemes** — reclosers and switches with peer logic that isolate a fault
   and restore power via an alternate path **without the control center**. Distribution; the
-  decentralized self-healing that AGMS generalizes from fixed logic into *reasoning*.
+  decentralized self-healing that AGMS generalizes from fixed logic into *reasoning*. A published
+  example (Koch-Ciobotaru et al., ICRERA 2014 — `sources/flisr-distributed-fsm-2014.md`) implements
+  exactly this: the *same finite-state machine* on every breaker, cooperating via IEC 61850 **GOOSE**
+  messages, in three phases — isolate downstream, search upstream for a tie breaker, then restore from
+  a neighboring feeder.
 
 ### E.8 Quick visual reference (clickable — opens an image search)
 
@@ -768,6 +772,59 @@ The sentence that ties them, said precisely:
 the physical-state estimation — the observer — which is the input the regime-classifier and the control
 plan both depend on" places you exactly in the architecture and shows you understand the layers you
 hand off to.
+
+---
+
+## Appendix G — AGMS in Self-Adaptive-Systems Terms (MAPE-K → AWARE)
+
+A useful way to *name* what AGMS is, for a software audience: it is a **self-adaptive (autonomic)
+system** — one that adjusts its own behavior at runtime through a feedback loop. The canonical loop is
+**MAPE-K**; the 2025 research frontier is **AWARE**. AGMS lines up almost exactly with the shift from the
+first to the second. *(Source: Sanwouo, Quinton & Temple, "Breaking the Loop: AWARE is the New MAPE-K,"
+FSE Companion '25 — `sources/mapek-aware-2025.md`.)*
+
+### The two loops
+
+**MAPE-K** (Kephart, IBM, ~2003): **M**onitor → **A**nalyze → **P**lan → **E**xecute, over a central
+**K**nowledge base. Centralized, reactive, sequential, no built-in learning. **Today's grid control —
+SCADA + ADMS / DERMS + a human operator — is essentially a centralized, reactive MAPE-K loop.**
+
+**AWARE** = **A**ssess, **W**eigh, **A**ct, **R**eflect, **E**nrich: distributed, goal-driven AI agents
+that perceive context, weigh options (and negotiate), act in a coordinated/distributed way, **reflect**
+(continuous learning), and **enrich** shared knowledge. Distributed, proactive, learning.
+
+### AGMS maps onto AWARE, not classic MAPE-K
+
+| AWARE stage | AGMS embodiment |
+|---|---|
+| **Assess** — understand context, not just raw data | GWM alert correlation + GA context construction (CAPs); **virtual sensing** supplies the physical state |
+| **Weigh** — formulate and evaluate options, simulate | CaCSM build: match a learned pattern → **simulate-before-commit** → promote |
+| **Act** — distributed, coordinated execution | GWCH + scouts on operating cells, acting edge-locally |
+| **Reflect** — continuous learning | Learning Engine Agents watching per-state variance, recalibrating |
+| **Enrich** — update and share knowledge | Learning Engine updating the patterns DB; POV-mediated distributed knowledge |
+
+And the limitations AWARE pins on MAPE-K are exactly the ones AGMS is built to fix:
+
+| MAPE-K limitation | AGMS's answer |
+|---|---|
+| Centralized | Distributed operating cells + scouts; island-mode autonomy |
+| Reactive only | Foresight Manager + simulate-before-commit (proactive) |
+| Sequential, raw monitoring | Contextual perception (action stress frame → CAPs) first |
+| No continuous learning | Learning Engine: pattern recognition + calibration |
+| Centralized knowledge | POV files / patterns DB — distributable knowledge |
+
+### Why this is worth carrying into the room
+
+It lets you describe the architecture in **recognized software-engineering terms** rather than only the
+patents' bespoke vocabulary: *"AGMS is a self-adaptive system — a distributed, learning evolution of the
+MAPE-K loop, very much in the spirit of AWARE: scouts are the agents, the Foresight Manager is the
+anticipation, the Learning Engine is the Reflect/Enrich, and simulate-before-commit is the option
+evaluation in Weigh."*
+
+**▶ Juan:** your role sits squarely in **Assess** — virtual sensing is the contextual-state perception
+the whole adaptive loop is built on. Framing it this way shows you can speak both the power-systems
+language *and* the self-adaptive-systems language, which is the "bridge physics, AI, and distributed
+computing" mandate in one sentence.
 
 ---
 
