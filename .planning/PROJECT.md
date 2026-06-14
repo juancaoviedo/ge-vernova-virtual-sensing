@@ -25,6 +25,7 @@ Everything else is secondary to that.
 <!-- Shipped and confirmed valuable. -->
 
 - [x] Deep-read of the director's six-patent AGMS family (parent + Logistician, Asset Portfolio, Operation Loop ★GRANTED/GE Vernova, Scout Command, Data Management) → one consolidated rehearsal deck with per-patent summary + connection + architecture-level question, a ~90s family pitch, and the "one assembly line = my stack" master narrative — *Validated in Phase 3: Director's Patents Deep-Read*
+- [x] Grid protocol & software-stack study notes (STK-01..05): field-to-cloud protocol tier map (SCADA/DNP3/PMU-C37.118/IEC 61850/LoRa), IEC 61850 deep note (GOOSE/SV/MMS + XCBR/MMXU/CSWI/PTOC/PDIS logical nodes), NATS/MQTT/Kafka + K3s/K8s positioning, Prometheus/PromQL/kube-prometheus-stack, and a whiteboard-able four-tier reference architecture (ASCII + Mermaid + narration + AGMS overlay) — *Validated in Phase 4: Protocols, Stack & Architecture* (oral/whiteboard rehearsal tracked in 04-HUMAN-UAT.md)
 
 ### Active
 
@@ -130,4 +131,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-06-13 — Phase 3 (Director's Patents Deep-Read) complete: consolidated six-patent AGMS rehearsal deck (summary + connection + question per patent, ~90s family pitch, master narrative).*
+*Last updated: 2026-06-14 — Phase 4 (Protocols, Stack & Architecture) complete: five study notes (STK-01..05) covering the grid protocol stack, IEC 61850 logical nodes, NATS/K3s/Prometheus positioning, and a whiteboard four-tier reference architecture with AGMS overlay. Oral/whiteboard rehearsal of the four criteria tracked in 04-HUMAN-UAT.md.*
