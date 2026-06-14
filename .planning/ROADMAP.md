@@ -97,7 +97,10 @@ deliverable maps to exactly one phase; no requirement is orphaned.
   1. Juan can state the "no central coordinator" constraint that distinguishes federated from distributed, explain FedAvg weight aggregation, and articulate why FedProx proximal regularization is needed when substations have non-IID load profiles
   2. Juan can explain coordinate-wise median / Krum Byzantine robustness, describe how gradient poisoning is detected, and name the gossip-vs-central-aggregation tradeoff
   3. Juan can describe OTA update integrity, TPM attestation, and SPIFFE/SPIRE PKI for edge identity — and connect each to a concrete grid threat
-**Plans**: TBD
+**Plans**: 3 plans
+- [ ] 05-01-PLAN.md — FED-01 federated-vs-distributed (FedAvg/FedProx/non-IID) + FED-02 byzantine-robustness (Krum/coord-median/gossip-vs-central) explain-why notes
+- [ ] 05-02-PLAN.md — FED-03 edge-security awareness note (OTA integrity / TPM attestation / SPIFFE-SPIRE, each tied to a grid threat)
+- [ ] 05-03-PLAN.md — NumPy-only FedAvg/FedProx/Krum/coord-median teaching demo + README
 
 ### Phase 6: Synthesis, Drills & Mock Interview
 **Goal**: All accumulated knowledge is deliverable as verbal interview answers under pressure — vocabulary bridges rehearsed, OSED pitch in GE Vernova language, STAR stories mapped to JD lines, system-design drills walked through, and the full tough-question bank answered aloud
@@ -123,6 +126,6 @@ Phases execute in numeric order: 0 → 1 → 2 → 3 → 4 → 5 → 6
 | 2. Transmission Virtual Sensing | 0/3 | Not started | - |
 | 3. Director's Patents Deep-Read | 1/1 | Complete    | 2026-06-13 |
 | 4. Protocols, Stack & Architecture | 3/3 | Complete   | 2026-06-14 |
-| 5. Federated Architectures & Security | 0/TBD | Not started | - |
+| 5. Federated Architectures & Security | 0/3 | Planned | - |
 | 6. Synthesis, Drills & Mock Interview | 0/TBD | Not started | - |
 </content>
