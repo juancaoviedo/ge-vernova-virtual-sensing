@@ -18,7 +18,7 @@ deliverable maps to exactly one phase; no requirement is orphaned.
 - [ ] **Phase 1: Kalman & State Estimation** - Close Gap 1 (disqualifying): build EKF/UKF depth plus a working Python demo, anchored to the IEEE 738 DLR bridge story
 - [ ] **Phase 2: Transmission Virtual Sensing** - Close Gap 2: acquire fluent T&D vocabulary covering voltage stability, phase angles, observability, bad-data detection, and asset health
 - [x] **Phase 3: Director's Patents Deep-Read** - Close Gap 3 (highest differentiation): deep-read all six AGMS-family patents and prepare one connection and one question per patent (completed 2026-06-13)
-- [ ] **Phase 4: Protocols, Stack & Architecture** - Close Gaps 4, 6, 7: grid protocol stack (SCADA/DNP3/PMU/IEC 61850) plus NATS/Kafka/K3s/Prometheus positioning
+- [x] **Phase 4: Protocols, Stack & Architecture** - Close Gaps 4, 6, 7: grid protocol stack (SCADA/DNP3/PMU/IEC 61850) plus NATS/Kafka/K3s/Prometheus positioning (completed 2026-06-14)
 - [ ] **Phase 5: Federated Architectures & Security** - Close Gap 5: distinguish federated from distributed, master FedAvg/FedProx/Krum, and frame edge security
 - [ ] **Phase 6: Synthesis, Drills & Mock Interview** - Convert all knowledge to deliverable interview answers: vocabulary bridges, OSED pitch, STAR stories, system-design drills, timed Q&A rehearsal
 
@@ -87,7 +87,7 @@ deliverable maps to exactly one phase; no requirement is orphaned.
 **Plans**: 3 plans
 - [x] 04-01-PLAN.md — STK-01 grid protocol stack tier-map + STK-02 IEC 61850 (GOOSE/SV/MMS, logical nodes) notes
 - [x] 04-02-PLAN.md — STK-03 NATS/MQTT/Kafka + K3s/K8s messaging-orchestration + STK-04 Prometheus/PromQL observability notes
-- [ ] 04-03-PLAN.md — STK-05 standalone four-tier reference-architecture doc (ASCII + Mermaid + narration + AGMS overlay)
+- [x] 04-03-PLAN.md — STK-05 standalone four-tier reference-architecture doc (ASCII + Mermaid + narration + AGMS overlay)
 
 ### Phase 5: Federated Architectures & Security
 **Goal**: Juan can precisely distinguish federated from distributed, explain FedAvg and FedProx, name the non-IID / client-drift failure mode, articulate Byzantine robustness, and frame edge security beyond "just TLS"
@@ -122,7 +122,7 @@ Phases execute in numeric order: 0 → 1 → 2 → 3 → 4 → 5 → 6
 | 1. Kalman & State Estimation | 0/3 | Not started | - |
 | 2. Transmission Virtual Sensing | 0/3 | Not started | - |
 | 3. Director's Patents Deep-Read | 1/1 | Complete    | 2026-06-13 |
-| 4. Protocols, Stack & Architecture | 2/3 | In Progress|  |
+| 4. Protocols, Stack & Architecture | 3/3 | Complete   | 2026-06-14 |
 | 5. Federated Architectures & Security | 0/TBD | Not started | - |
 | 6. Synthesis, Drills & Mock Interview | 0/TBD | Not started | - |
 </content>
