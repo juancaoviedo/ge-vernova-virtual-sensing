@@ -38,8 +38,8 @@
 
 ### Federated Architectures & Security (FED) — Gap 5
 
-- [ ] **FED-01**: Notes distinguishing federated from distributed (the "no central coordinator" constraint), FedAvg vs. FedProx, non-IID client drift
-- [ ] **FED-02**: Notes on Byzantine robustness (Krum / coordinate-wise median) and edge security (OTA integrity, TPM attestation, SPIFFE/SPIRE PKI)
+- [x] **FED-01**: Notes distinguishing federated from distributed (the "no central coordinator" constraint), FedAvg vs. FedProx, non-IID client drift
+- [x] **FED-02**: Notes on Byzantine robustness (Krum / coordinate-wise median) and edge security (OTA integrity, TPM attestation, SPIFFE/SPIRE PKI)
 
 ### Reframe & Narrative Bridges (BRG)
 
@@ -98,8 +98,8 @@ Deferred — useful but not worth the runway before this interview.
 | STK-03 | Phase 4: Protocols, Stack & Architecture | Complete |
 | STK-04 | Phase 4: Protocols, Stack & Architecture | Complete |
 | STK-05 | Phase 4: Protocols, Stack & Architecture | Complete |
-| FED-01 | Phase 5: Federated Architectures & Security | Pending |
-| FED-02 | Phase 5: Federated Architectures & Security | Pending |
+| FED-01 | Phase 5: Federated Architectures & Security | Complete |
+| FED-02 | Phase 5: Federated Architectures & Security | Complete |
 | BRG-01 | Phase 6: Synthesis, Drills & Mock Interview | Pending |
 | BRG-02 | Phase 6: Synthesis, Drills & Mock Interview | Pending |
 | BRG-03 | Phase 6: Synthesis, Drills & Mock Interview | Pending |
