@@ -4,14 +4,14 @@ milestone: v1.0
 milestone_name: milestone
 status: executing
 stopped_at: "Completed 05-01: FED-01 and FED-02 algorithm-depth notes"
-last_updated: "2026-06-14T10:33:39.486Z"
+last_updated: "2026-06-14T10:37:31.977Z"
 last_activity: 2026-06-14
 progress:
   total_phases: 7
   completed_phases: 4
   total_plans: 13
-  completed_plans: 11
-  percent: 85
+  completed_plans: 12
+  percent: 92
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-06-13)
 ## Current Position
 
 Phase: 05 (federated-architectures-security) — EXECUTING
-Plan: 2 of 3
+Plan: 3 of 3
 Status: Ready to execute
 Last activity: 2026-06-14
 
-Progress: [█████████░] 85%
+Progress: [█████████░] 92%
 
 ## Performance Metrics
 
@@ -83,6 +83,8 @@ Recent decisions affecting current work:
 - [Phase ?]: FedProx proximal term lives in client local objective (NOT server aggregation) — Pitfall 2 honored in FED-01
 - [Phase ?]: Vanilla Krum selects ONE update (argmin); Multi-Krum averages m — Pitfall 3 honored in FED-02
 - [Phase ?]: Honest bridge: OSED distributed edge inference as analog; no false production FL claim (D-07)
+- [Phase ?]: Awareness depth only for FED-03 edge-security (D-05): no SPIRE config, no TPM PCR internals
+- [Phase ?]: SPIFFE 'Not just TLS' paragraph added to counter Pitfall 5 — workload identity distinguishes which workload, not just encrypts the channel
 
 ### Pending Todos
 
@@ -106,6 +108,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-06-14T10:33:39.473Z
+Last session: 2026-06-14T10:37:23.394Z
 Stopped at: Completed 05-01: FED-01 and FED-02 algorithm-depth notes
-Resume file: .planning/phases/05-federated-architectures-security/05-01-SUMMARY.md
+Resume file: None
