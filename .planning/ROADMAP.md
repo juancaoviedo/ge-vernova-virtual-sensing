@@ -19,7 +19,7 @@ deliverable maps to exactly one phase; no requirement is orphaned.
 - [ ] **Phase 2: Transmission Virtual Sensing** - Close Gap 2: acquire fluent T&D vocabulary covering voltage stability, phase angles, observability, bad-data detection, and asset health
 - [x] **Phase 3: Director's Patents Deep-Read** - Close Gap 3 (highest differentiation): deep-read all six AGMS-family patents and prepare one connection and one question per patent (completed 2026-06-13)
 - [x] **Phase 4: Protocols, Stack & Architecture** - Close Gaps 4, 6, 7: grid protocol stack (SCADA/DNP3/PMU/IEC 61850) plus NATS/Kafka/K3s/Prometheus positioning (completed 2026-06-14)
-- [ ] **Phase 5: Federated Architectures & Security** - Close Gap 5: distinguish federated from distributed, master FedAvg/FedProx/Krum, and frame edge security
+- [x] **Phase 5: Federated Architectures & Security** - Close Gap 5: distinguish federated from distributed, master FedAvg/FedProx/Krum, and frame edge security (completed 2026-06-14)
 - [ ] **Phase 6: Synthesis, Drills & Mock Interview** - Convert all knowledge to deliverable interview answers: vocabulary bridges, OSED pitch, STAR stories, system-design drills, timed Q&A rehearsal
 
 ## Phase Details
@@ -100,7 +100,7 @@ deliverable maps to exactly one phase; no requirement is orphaned.
 **Plans**: 3 plans
 - [x] 05-01-PLAN.md — FED-01 federated-vs-distributed (FedAvg/FedProx/non-IID) + FED-02 byzantine-robustness (Krum/coord-median/gossip-vs-central) explain-why notes
 - [x] 05-02-PLAN.md — FED-03 edge-security awareness note (OTA integrity / TPM attestation / SPIFFE-SPIRE, each tied to a grid threat)
-- [ ] 05-03-PLAN.md — NumPy-only FedAvg/FedProx/Krum/coord-median teaching demo + README
+- [x] 05-03-PLAN.md — NumPy-only FedAvg/FedProx/Krum/coord-median teaching demo + README
 
 ### Phase 6: Synthesis, Drills & Mock Interview
 **Goal**: All accumulated knowledge is deliverable as verbal interview answers under pressure — vocabulary bridges rehearsed, OSED pitch in GE Vernova language, STAR stories mapped to JD lines, system-design drills walked through, and the full tough-question bank answered aloud
@@ -126,6 +126,6 @@ Phases execute in numeric order: 0 → 1 → 2 → 3 → 4 → 5 → 6
 | 2. Transmission Virtual Sensing | 0/3 | Not started | - |
 | 3. Director's Patents Deep-Read | 1/1 | Complete    | 2026-06-13 |
 | 4. Protocols, Stack & Architecture | 3/3 | Complete   | 2026-06-14 |
-| 5. Federated Architectures & Security | 2/3 | In Progress|  |
+| 5. Federated Architectures & Security | 3/3 | Complete   | 2026-06-14 |
 | 6. Synthesis, Drills & Mock Interview | 0/TBD | Not started | - |
 </content>

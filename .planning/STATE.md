@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-stopped_at: "Completed 05-01: FED-01 and FED-02 algorithm-depth notes"
-last_updated: "2026-06-14T10:37:31.977Z"
+status: verifying
+stopped_at: "Completed 05-03: FedAvg/FedProx/Krum demo + README — Phase 5 complete"
+last_updated: "2026-06-14T10:42:31.357Z"
 last_activity: 2026-06-14
 progress:
   total_phases: 7
-  completed_phases: 4
+  completed_phases: 5
   total_plans: 13
-  completed_plans: 12
-  percent: 92
+  completed_plans: 13
+  percent: 100
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-13)
 
 **Core value:** Juan walks into the interview able to connect his real experience to this role's exact requirements — and to the director's own patented work — with confidence and specifics.
-**Current focus:** Phase 05 — federated-architectures-security
+**Current focus:** Phase 06 — synthesis-drills (Phase 5 complete)
 
 ## Current Position
 
 Phase: 05 (federated-architectures-security) — EXECUTING
 Plan: 3 of 3
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-06-14
 
-Progress: [█████████░] 92%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -85,6 +85,8 @@ Recent decisions affecting current work:
 - [Phase ?]: Honest bridge: OSED distributed edge inference as analog; no false production FL claim (D-07)
 - [Phase ?]: Awareness depth only for FED-03 edge-security (D-05): no SPIRE config, no TPM PCR internals
 - [Phase ?]: SPIFFE 'Not just TLS' paragraph added to counter Pitfall 5 — workload identity distinguishes which workload, not just encrypts the channel
+- [Phase 05-03]: Demo mu=0.5 + poison_magnitude=5.0 produce legible contrast on first run: FedAvg error -0.64, FedProx +0.006, Krum +0.26, Median +0.04 (seed 42, no tuning needed)
+- [Phase 05-03]: Phase 5 complete — 3 notes (FED-01/02/03) + 1 NumPy demo (FedAvg/FedProx/Krum/coord-median); FED-01 and FED-02a 'I ran this from scratch' credibility established
 
 ### Pending Todos
 
@@ -108,6 +110,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-06-14T10:37:23.394Z
-Stopped at: Completed 05-01: FED-01 and FED-02 algorithm-depth notes
+Last session: 2026-06-14T10:42:31.338Z
+Stopped at: Completed 05-03: FedAvg/FedProx/Krum demo + README — Phase 5 complete
 Resume file: None
