@@ -26,6 +26,7 @@ Everything else is secondary to that.
 
 - [x] Deep-read of the director's six-patent AGMS family (parent + Logistician, Asset Portfolio, Operation Loop ★GRANTED/GE Vernova, Scout Command, Data Management) → one consolidated rehearsal deck with per-patent summary + connection + architecture-level question, a ~90s family pitch, and the "one assembly line = my stack" master narrative — *Validated in Phase 3: Director's Patents Deep-Read*
 - [x] Grid protocol & software-stack study notes (STK-01..05): field-to-cloud protocol tier map (SCADA/DNP3/PMU-C37.118/IEC 61850/LoRa), IEC 61850 deep note (GOOSE/SV/MMS + XCBR/MMXU/CSWI/PTOC/PDIS logical nodes), NATS/MQTT/Kafka + K3s/K8s positioning, Prometheus/PromQL/kube-prometheus-stack, and a whiteboard-able four-tier reference architecture (ASCII + Mermaid + narration + AGMS overlay) — *Validated in Phase 4: Protocols, Stack & Architecture* (oral/whiteboard rehearsal tracked in 04-HUMAN-UAT.md)
+- [x] Federated architectures & edge-security study notes (FED-01/02) + a NumPy teaching demo: federated-vs-distributed (no central coordinator), FedAvg/FedProx + non-IID/client-drift, Byzantine robustness (Krum / coordinate-wise median + gossip-vs-central), and an awareness-depth edge-security note (OTA integrity / TPM attestation / SPIFFE-SPIRE, each tied to a grid threat). The demo runs from scratch in NumPy and shows plain FedAvg corrupted by a poisoned client while FedProx/Krum/median resist. Closes the Phase-4 STK-05 "fog/federated" tier with light AGMS ties — *Validated in Phase 5: Federated Architectures & Security*
 
 ### Active
 
@@ -36,7 +37,7 @@ Everything else is secondary to that.
 - [ ] A "reframe" map translating Juan's existing work (OSED, HEMS, DER control) into GE Vernova's virtual-sensing / decentralized-grid vocabulary
 - [ ] Kalman filter & state-estimation primer grounded in a grid virtual-sensing example
 - [ ] Grid domain & protocol notes: SCADA, PMUs, DNP3, LoRa, IEC 61850, IEEE 2030.5
-- [ ] Federated architectures / federated learning framing
+- [x] Federated architectures / federated learning framing — *done in Phase 5 (FED-01/02 notes + NumPy demo)*
 - [ ] Streaming-stack notes covering Kafka/NATS, Pulsar (vs. Juan's MQTT/Pub-Sub experience)
 - [ ] 1–2 hands-on mini-demos (e.g., Kalman filter inferring a grid parameter; MQTT→edge pipeline)
 - [ ] System-design drills for edge/virtual-sensing/decentralized-grid scenarios
@@ -131,4 +132,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-06-14 — Phase 4 (Protocols, Stack & Architecture) complete: five study notes (STK-01..05) covering the grid protocol stack, IEC 61850 logical nodes, NATS/K3s/Prometheus positioning, and a whiteboard four-tier reference architecture with AGMS overlay. Oral/whiteboard rehearsal of the four criteria tracked in 04-HUMAN-UAT.md.*
+*Last updated: 2026-06-14 — Phase 5 (Federated Architectures & Security) complete: three study notes (federated-vs-distributed + FedAvg/FedProx/non-IID, Byzantine robustness via Krum/coordinate-wise median, awareness-depth edge security OTA/TPM/SPIFFE-SPIRE) plus a from-scratch NumPy FedAvg/FedProx/Krum/median demo that shows a poisoned client corrupting plain FedAvg while robust methods resist. Closes the STK-05 fog/federated tier. Only Phase 6 (Synthesis, Drills & Mock Interview) remains.*
