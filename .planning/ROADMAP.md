@@ -21,7 +21,7 @@ deliverable maps to exactly one phase; no requirement is orphaned.
 - [x] **Phase 4: Protocols, Stack & Architecture** - Close Gaps 4, 6, 7: grid protocol stack (SCADA/DNP3/PMU/IEC 61850) plus NATS/Kafka/K3s/Prometheus positioning (completed 2026-06-14)
 - [x] **Phase 5: Federated Architectures & Security** - Close Gap 5: distinguish federated from distributed, master FedAvg/FedProx/Krum, and frame edge security (completed 2026-06-14)
 - [ ] **Phase 6: Synthesis, Drills & Mock Interview** - Convert all knowledge to deliverable interview answers: vocabulary bridges, OSED pitch, STAR stories, system-design drills, timed Q&A rehearsal
-- [ ] **Phase 7: Integrated HTML Study Site** - Consolidate all phase study notes and research HTML/diagram assets into one navigable HTML study site: AGMS architecture (patents), study notes, and demo explanations/references
+- [x] **Phase 7: Integrated HTML Study Site** - Consolidate all phase study notes and research HTML/diagram assets into one navigable HTML study site: AGMS architecture (patents), study notes, and demo explanations/references (completed 2026-06-15)
 
 ## Phase Details
 
@@ -128,7 +128,7 @@ deliverable maps to exactly one phase; no requirement is orphaned.
   - [x] 07-01-PLAN.md — Build foundation: venv, build_site.py, shared CSS, vendored MathJax, convert all 15 notes (HTML-03, HTML-04)
   - [x] 07-02-PLAN.md — Architecture integration: copy research trio + sources + diagram, rewrite cross-links, diagram viewer (HTML-02)
   - [x] 07-03-PLAN.md — Card-grid hub + demos page with embedded key code and inline results (HTML-01, HTML-05)
-  - [ ] 07-04-PLAN.md — Publish-readiness: .nojekyll, robots/noindex, link-validation pass, PUBLISH.md, offline smoke check (HTML-06, HTML-07)
+  - [x] 07-04-PLAN.md — Publish-readiness: .nojekyll, robots/noindex, link-validation pass, PUBLISH.md, offline smoke check (HTML-06, HTML-07)
 
 ## Progress
 
@@ -144,4 +144,4 @@ Phases execute in numeric order: 0 → 1 → 2 → 3 → 4 → 5 → 6 → 7
 | 4. Protocols, Stack & Architecture | 3/3 | Complete   | 2026-06-14 |
 | 5. Federated Architectures & Security | 3/3 | Complete   | 2026-06-14 |
 | 6. Synthesis, Drills & Mock Interview | 0/TBD | Not started | - |
-| 7. Integrated HTML Study Site | 3/4 | In Progress|  |
+| 7. Integrated HTML Study Site | 4/4 | Complete   | 2026-06-15 |
