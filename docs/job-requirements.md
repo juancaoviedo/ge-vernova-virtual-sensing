@@ -13,25 +13,32 @@ time left to apply
 End Date: July 26, 2026 (30+ days left to apply)
 job requisition id
 R5043890
-Job Description Summary
+
+# Job Description Summary
 We are building the foundation for next-generation decentralized grid operations—distributing intelligence to the resilient edge to enable autonomous, self-healing, and adaptive grid management. 
 
 As a Senior Software Engineer & Scientist (Virtual Sensing), you will develop edge-native software, advanced virtual sensing algorithms, and intelligent control systems that bridge physics, AI, and distributed computing. This is a high-impact, hands-on role in a startup-style, fast-moving environment within GE Vernova’s CTO organization. You will report directly to the Electrification Chief Architect and collaborate across simulation, real-time edge deployments, and field validation to transform how the grid senses and responds.
-Job Description
-Edge Engineering & Data Pipelines
+
+# Job Description
+
+## Edge Engineering & Data Pipelines
 Build and deploy edge-native software components for decentralized operation, sensing, and control.
 Develop federated data pipelines that allow distributed nodes to collaborate securely without central coordination.
 Integrate field data sources (SCADA, PMUs, DER controllers) and industrial IoT protocols (LoRa, MQTT, DNP3, Modbus).
-Virtual Sensing & Control
+
+## Virtual Sensing & Control
 Develop and deploy robust virtual sensing algorithms to infer critical power grid parameters (e.g., voltage stability, phase angles, line temperature, asset health) from limited edge sensor data.
 Deploy adaptive edge intelligence and control logic to enable real-time grid insights with minimal latency.
 Apply control theory and signal processing techniques (e.g., Kalman filters, state estimation) to refine virtual sensor accuracy.
-Simulation & Integration
+
+## Simulation & Integration
 Collaborate with power systems engineers to validate virtual sensor performance against physical models and real-world field data.
 Bridge the gap between simulation environments and live grid operations to "close the loop."
 Integrate AI/ML capabilities, federated control frameworks, and digital twins into next-generation grid platforms.
-Technical Qualifications
-Required Skills
+
+# Technical Qualifications
+
+## Required Skills
 Software Engineering: Proficiency in Python, Go, or Rust (backend/edge) and TypeScript/React or Angular (UI).
 Edge/Cloud Infrastructure: Deep experience with Kubernetes/K3s, Kafka/NATS, MQTT, gRPC, and Pulsar.
 Data & Observability: Hands-on experience with InfluxDB/TimescaleDB and observability stacks (Prometheus, Grafana).
@@ -43,6 +50,7 @@ Education: Master’s degree in electrical engineering, Computer Science, or a r
 Simulation Tools: Familiarity with EMT platforms (PSCAD, RTDS, Opal-RT).
 Digital Twins: Experience with OpenFMB, Modelica, or graph-based modeling.
 Grid Standards: Knowledge of IEEE 2030.5, IEC 61850, or similar utility protocols.
+
 Why Join Us
 Mission: Work at the forefront of the energy transition, solving the most critical challenges of the modern grid.
 Impact: Influence the architecture of decentralized, autonomous energy systems.

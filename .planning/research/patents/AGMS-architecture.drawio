@@ -1,0 +1,341 @@
+<mxfile host="65bd71144e">
+    <diagram name="AGMS-Architecture" id="0">
+        <mxGraphModel dx="2796" dy="2228" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2100" pageHeight="1620" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="title" value="AGMS — Adaptive (Power) Grid Management System — Architecture &amp; Interconnection (six-patent family)" style="text;html=1;align=left;verticalAlign=middle;fontSize=18;fontStyle=1;fontColor=#0c2a20;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="-60" width="1500" height="26" as="geometry"/>
+                </mxCell>
+                <mxCell id="subtitle" value="Solid = data-object flow (perceive → reason → command → execute)&#xa;Red dashed = feedback / resupply loops&#xa;Grey dashed = cross-cutting influence" style="text;html=1;align=left;verticalAlign=middle;fontSize=11;fontColor=#5c6b7a;" parent="1" vertex="1">
+                    <mxGeometry x="1620" y="6" width="360" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="gwm" value="GridWideMind (GWM) — PERCEPTION &amp;amp; INTELLIGENCE  (200 / 310)&lt;div&gt;&lt;span style=&quot;font-weight: normal;&quot;&gt;What is happening, and what has happened like it before?&lt;/span&gt;&lt;/div&gt;" style="swimlane;startSize=38;html=1;fillColor=#eaf2fb;strokeColor=#6c8ebf;fontStyle=1;fontColor=#1a3a5c;verticalAlign=top;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="-18" width="1540" height="215" as="geometry"/>
+                </mxCell>
+                <mxCell id="ace" value="Alert Correlation Engine (201)&#xa;collapses alert storms → one structured event" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="gwm" vertex="1">
+                    <mxGeometry x="20" y="55" width="280" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="gdss" value="Grid-Wide Decision Support (202)&#xa;ML recommendation + confidence degree" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="gwm" vertex="1">
+                    <mxGeometry x="320" y="55" width="280" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="le" value="Learning Engine (203)&lt;br&gt;institutional memory • pattern recognition&lt;br&gt;“we’ve seen this before” =&lt;br&gt;&quot;operation regime&quot; + &quot;what worked before&quot;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" parent="gwm" vertex="1">
+                    <mxGeometry x="620" y="55" width="270" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="se" value="Simulation Engine (204)&lt;br&gt;“Try it before you do it”" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="gwm" vertex="1">
+                    <mxGeometry x="910" y="55" width="270" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="ctx" value="Context Data (205)&lt;br&gt;Labeled feature store" style="shape=cylinder3;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" parent="gwm" vertex="1">
+                    <mxGeometry x="1210" y="48" width="300" height="95" as="geometry"/>
+                </mxCell>
+                <mxCell id="4" value="Is &quot;reality&quot; stimated using the virtual sensing module?" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0a30a;fontColor=#000000;strokeColor=#BD7000;" vertex="1" parent="gwm">
+                    <mxGeometry x="920" y="158" width="160" height="45" as="geometry"/>
+                </mxCell>
+                <mxCell id="ga" value="GridArtificer (GA) — REASONING &amp;amp; DECISION  (210 / 315 / 960)&lt;br&gt;&lt;span style=&quot;font-weight: normal;&quot;&gt;&amp;nbsp;builds the Contextual &amp;amp; Cognitive State Machine (CaCSM):  draft → simulate → calibrate → promote&lt;/span&gt;" style="swimlane;startSize=40;html=1;fillColor=#eef7f1;strokeColor=#82b366;fontStyle=1;fontColor=#13433a;verticalAlign=top;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="280" width="1540" height="280" as="geometry"/>
+                </mxCell>
+                <mxCell id="gap" value="Context Construct Engine (210)&#xa;GA-Parser → context meta-objects" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="ga" vertex="1">
+                    <mxGeometry x="20" y="55" width="220" height="75" as="geometry"/>
+                </mxCell>
+                <mxCell id="caps" value="Contextual Abstraction&#xa;Panels (CAPs)&#xa;ranked by relevancy index" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="ga" vertex="1">
+                    <mxGeometry x="270" y="55" width="220" height="75" as="geometry"/>
+                </mxCell>
+                <mxCell id="csmb" value="CSM Builder (214)&#xa;match historical pattern" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="ga" vertex="1">
+                    <mxGeometry x="520" y="55" width="180" height="75" as="geometry"/>
+                </mxCell>
+                <mxCell id="pcacsm" value="Provisional CaCSM&#xa;(draft state machine)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" parent="ga" vertex="1">
+                    <mxGeometry x="730" y="55" width="170" height="75" as="geometry"/>
+                </mxCell>
+                <mxCell id="prodcacsm" value="Production CaCSM&#xa;(promoted, executable)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" parent="ga" vertex="1">
+                    <mxGeometry x="930" y="55" width="170" height="75" as="geometry"/>
+                </mxCell>
+                <mxCell id="csmop" value="CSM Operator (213 / 1040)&#xa;runs the state machine,&#xa;fires the formation pipeline" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" parent="ga" vertex="1">
+                    <mxGeometry x="1130" y="55" width="190" height="75" as="geometry"/>
+                </mxCell>
+                <mxCell id="gk" value="ga-GateKeeper&#xa;validates&#xa;ga-authenticationkey" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" parent="ga" vertex="1">
+                    <mxGeometry x="1350" y="55" width="170" height="75" as="geometry"/>
+                </mxCell>
+                <mxCell id="4DyDUN3vrFLzL9egiClx-10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.768;exitY=-0.056;exitDx=0;exitDy=0;exitPerimeter=0;" parent="ga" source="gasim" target="prodcacsm" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="gasim" value="Simulate &amp;amp; calibrate every state  (via Simulation Engine 204)  —  &lt;b&gt;simulate-before-commit gate&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff8e6;strokeColor=#d6b656;fontStyle=2;dashed=1;" parent="ga" vertex="1">
+                    <mxGeometry x="730" y="170" width="370" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="4DyDUN3vrFLzL9egiClx-9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.231;entryY=-0.037;entryDx=0;entryDy=0;entryPerimeter=0;" parent="ga" source="pcacsm" target="gasim" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="gwch" value="GridWideCommandHub (GWCH) — ORCHESTRATION &amp;amp; EXECUTION  (230 / 340 / 975)&lt;div&gt;&lt;span style=&quot;font-weight: normal;&quot;&gt;The formation pipeline: one assembly line turning an abstract CaCSM into running software&lt;/span&gt;&lt;/div&gt;" style="swimlane;startSize=40;html=1;fillColor=#fff5ea;strokeColor=#d79b00;fontStyle=1;fontColor=#7a4f00;verticalAlign=top;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="600" width="1540" height="430" as="geometry"/>
+                </mxCell>
+                <mxCell id="gfc" value="Grid-Wide Federation Command (975)   —   issues marching orders to the logistics corps" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontStyle=1;" parent="gwch" vertex="1">
+                    <mxGeometry x="510" y="60" width="520" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="log" value="① Logistician (1023A)&#xa;WHICH assets → procure&#xa;• match federation command template&#xa;• select classes/assets by real-time status&#xa;• acquisition agent (1280) • auditor (1278)&#xa;• standing owner of unmet needs" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;align=left;spacingLeft=8;verticalAlign=top;spacingTop=6;" parent="gwch" vertex="1">
+                    <mxGeometry x="20" y="175" width="280" height="180" as="geometry"/>
+                </mxCell>
+                <mxCell id="apm" value="② Asset Portfolio Manager (1300)&#xa;VERIFY fitness — ORACS indexes&#xa;• Observability • Reachability&#xa;• Adaptability • Controllability&#xa;• Security  (+ Sustainability, Stability = 7)&#xa;health (1310) / perf (1315) analytics" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;align=left;spacingLeft=8;verticalAlign=top;spacingTop=6;" parent="gwch" vertex="1">
+                    <mxGeometry x="320" y="175" width="280" height="180" as="geometry"/>
+                </mxCell>
+                <mxCell id="olf" value="③ Operation Loop Formation (1400)&#xa;★ GRANTED  US 12,596,341 B2 (GE Vernova)&#xa;ASSEMBLE + SIMULATE the ORACS loop&#xa;• retrieve matching schema = DNA&#xa;• build per-asset meta objects&#xa;• interdependency / critical asset&#xa;• simulate loop before commit (claim 3)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#2d7a3a;strokeWidth=3;align=left;spacingLeft=8;verticalAlign=top;spacingTop=6;fontStyle=1;" parent="gwch" vertex="1">
+                    <mxGeometry x="620" y="175" width="300" height="180" as="geometry"/>
+                </mxCell>
+                <mxCell id="sc" value="④ Scout Command (1230)&#xa;DEPLOY the software agents&#xa;(expanded in the layer below)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;align=left;spacingLeft=8;verticalAlign=top;spacingTop=6;" parent="gwch" vertex="1">
+                    <mxGeometry x="940" y="175" width="270" height="180" as="geometry"/>
+                </mxCell>
+                <mxCell id="fetm" value="Federated Edge&#xa;Transaction Manager (240 / 437)&#xa;authority transfer across cells&#xa;as a federated transaction&#xa;(integrity-preserving handoff)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;align=left;spacingLeft=8;verticalAlign=top;spacingTop=6;" parent="gwch" vertex="1">
+                    <mxGeometry x="1230" y="175" width="290" height="180" as="geometry"/>
+                </mxCell>
+                <mxCell id="e3" value="provisional logistics list&#xa;gWFCll(id).p" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#23445d;strokeWidth=2;fontSize=10;fontColor=#23445d;labelBackgroundColor=#ffffff;exitX=0.786;exitY=0.001;exitDx=0;exitDy=0;entryX=0.15;entryY=0;entryDx=0;entryDy=0;exitPerimeter=0;" parent="gwch" source="log" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="240" y="140"/>
+                            <mxPoint x="402" y="140"/>
+                        </Array>
+                        <mxPoint x="298" y="174.97000000000003" as="sourcePoint"/>
+                        <mxPoint x="402" y="174.97000000000003" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="4DyDUN3vrFLzL9egiClx-16" value="Are the scouts dockers deployed using CI/CD? Or are they serverless functions&amp;nbsp;deployed using existing k3s/docker instances on the edge?" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0a30a;fontColor=#000000;strokeColor=#BD7000;" parent="gwch" vertex="1">
+                    <mxGeometry x="1260" y="60" width="160" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="scoutpipe" value="Scout Command pipeline (1230) — DEPLOY&lt;div&gt;&lt;span style=&quot;font-weight: normal;&quot;&gt;Stand up role-typed software agents on field hardware&lt;/span&gt;&lt;/div&gt;" style="swimlane;startSize=40;html=1;fillColor=#eaf2fb;strokeColor=#6c8ebf;fontStyle=1;fontColor=#1a3a5c;verticalAlign=top;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="1090" width="1540" height="170" as="geometry"/>
+                </mxCell>
+                <mxCell id="liaison" value="Scout Command Liaison (1441)&#xa;receives OC-meta-object,&#xa;kicks off scout formation" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="scoutpipe" vertex="1">
+                    <mxGeometry x="20" y="50" width="340" height="90" as="geometry"/>
+                </mxCell>
+                <mxCell id="sfp" value="Scout Formation Processor (1444)&#xa;parse host + inter-cell DNA maps&#xa;to drive incubation" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="scoutpipe" vertex="1">
+                    <mxGeometry x="400" y="50" width="340" height="90" as="geometry"/>
+                </mxCell>
+                <mxCell id="incub" value="Scout Incubator Manager (1445)&#xa;reconcile desired-vs-actual roles&#xa;assign idle • clone busy • incubate new&#xa;DNA.role = s_c, s_m, s_i, s_g" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#2d7a3a;strokeWidth=2;fontStyle=1;" parent="scoutpipe" vertex="1">
+                    <mxGeometry x="780" y="50" width="340" height="90" as="geometry"/>
+                </mxCell>
+                <mxCell id="slm" value="Scout Launch Manager (1447)&#xa;build launch plan per scout:&#xa;time, load, origin, destination, asset-id" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="scoutpipe" vertex="1">
+                    <mxGeometry x="1160" y="50" width="360" height="90" as="geometry"/>
+                </mxCell>
+                <mxCell id="cells" value="Operating Cells — Field Agent Devices (FADs) running Scouts&lt;div&gt;&lt;span style=&quot;font-weight: normal;&quot;&gt;Execute autonomously — even with no WAN&lt;/span&gt;&lt;/div&gt;" style="swimlane;startSize=40;html=1;fillColor=#f3eef7;strokeColor=#9673a6;fontStyle=1;fontColor=#4a2d66;verticalAlign=top;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="1300" width="1540" height="240" as="geometry"/>
+                </mxCell>
+                <mxCell id="coord" value="Coordinator  (s_c)&#xa;cell authority — manages cell &amp; mission" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" parent="cells" vertex="1">
+                    <mxGeometry x="20" y="50" width="350" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="msg" value="Messenger  (s_m)&#xa;data in motion — ingest, transform, comms" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="cells" vertex="1">
+                    <mxGeometry x="400" y="50" width="350" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="insp" value="Inspector  (s_i)&#xa;observes cell — feeds decision support" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" parent="cells" vertex="1">
+                    <mxGeometry x="780" y="50" width="350" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="guard" value="Guard  (s_g)&#xa;defends vs cyber / physical threats" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" parent="cells" vertex="1">
+                    <mxGeometry x="1160" y="50" width="360" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="cellnote" value="Scout lifecycle: receive → verify (auth key) → execute role → detect trigger → { task | communicate | clone | terminate }   •   Self-forming &amp; self-terminating cells   •   ISLAND MODE: runs hours/days with no WAN   •   Self-forming federations under a scout-master   •   clone / transfer-authority to scale &amp; heal" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;align=left;spacingLeft=10;fontColor=#333333;" parent="cells" vertex="1">
+                    <mxGeometry x="20" y="150" width="1500" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="xcut" value=" " style="swimlane;startSize=30;html=1;fillColor=#fbfbfb;strokeColor=#888888;fontStyle=1;fontColor=#333333;verticalAlign=top;dashed=1;" parent="1" vertex="1">
+                    <mxGeometry x="1620" y="50" width="380" height="1490" as="geometry"/>
+                </mxCell>
+                <mxCell id="xle" value="Learning Engine — the spine&#xa;retrieval &amp; adaptation from history:&#xa;ranks CAPs • matches CaCSM patterns&#xa;• matches DNA schemas • picks POV&#xa;patterns • recalibrates states live" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;align=left;spacingLeft=8;verticalAlign=top;spacingTop=6;" parent="xcut" vertex="1">
+                    <mxGeometry x="20" y="70" width="340" height="160" as="geometry"/>
+                </mxCell>
+                <mxCell id="xsim" value="Simulate-before-commit — a law&#xa;CaCSM promotion (GA) • operation&#xa;loop formation [granted claim 3]&#xa;• ORACS verification simulation.&#xa;Never actuate on an unvalidated plan." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;align=left;spacingLeft=8;verticalAlign=top;spacingTop=6;" parent="xcut" vertex="1">
+                    <mxGeometry x="20" y="590" width="340" height="110" as="geometry"/>
+                </mxCell>
+                <mxCell id="xdata" value="Data Management / POV files&#xa;sole interface to the asset DB — no&#xa;module touches raw data. Role-filtered&#xa;views via patterns DB + Learning Engine:&#xa;• viewConstructModule (observe)&#xa;• controlConstructModule (actuate)&#xa;• adminConstructModule (coordinate)&#xa;GridWideEye builds PoV frames." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;align=left;spacingLeft=8;verticalAlign=top;spacingTop=6;" parent="xcut" vertex="1">
+                    <mxGeometry x="20" y="760" width="340" height="150" as="geometry"/>
+                </mxCell>
+                <mxCell id="xfed" value="Federation &amp; autonomy spectrum (oft)&#xa;ioc.cc  independent, supports central cmd&#xa;ioc.sc  fully autonomous cell&#xa;ioc.coc  member of cooperating neighbors&#xa;ioc.fm  sub-federation member&#xa;Cells merge / federate under a scout-master." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3eef7;strokeColor=#9673a6;align=left;spacingLeft=8;verticalAlign=top;spacingTop=6;" parent="xcut" vertex="1">
+                    <mxGeometry x="20" y="1280" width="340" height="180" as="geometry"/>
+                </mxCell>
+                <mxCell id="xsec" value="Security in the protocol&#xa;every inter-module message carries a&#xa;ga-authenticationkey, validated by a&#xa;ga-GateKeeper before any state machine&#xa;activates or data is released.&#xa;gAVA standardizes the message schema&#xa;so all modules speak one language." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;align=left;spacingLeft=8;verticalAlign=top;spacingTop=6;" parent="xcut" vertex="1">
+                    <mxGeometry x="20" y="270" width="340" height="200" as="geometry"/>
+                </mxCell>
+                <mxCell id="4DyDUN3vrFLzL9egiClx-17" value="POV files are interesting way of managing data access by role. But I wonder if the &quot;schema&quot; changes as the system evolves (like new devices enter the system). I that drift managed by updateing the POV?" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0a30a;fontColor=#000000;strokeColor=#BD7000;" parent="xcut" vertex="1">
+                    <mxGeometry x="20" y="950" width="160" height="130" as="geometry"/>
+                </mxCell>
+                <mxCell id="e1" value="action stress frame&#xa;(va_n, sd_n, t_i)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#23445d;strokeWidth=2;fontSize=11;fontColor=#23445d;labelBackgroundColor=#ffffff;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" target="gap" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="170" y="117"/>
+                        </Array>
+                        <mxPoint x="170" y="120" as="sourcePoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e_gap_caps" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#23445d;strokeWidth=2;" parent="1" source="gap" target="caps" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_caps_csmb" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#23445d;strokeWidth=2;" parent="1" source="caps" target="csmb" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_csmb_pc" value="retrieve &amp;&#xa;assemble" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#23445d;strokeWidth=2;fontSize=9;labelBackgroundColor=#ffffff;" parent="1" source="csmb" target="pcacsm" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_pc_prod" value="promote" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#23445d;strokeWidth=2;fontSize=9;labelBackgroundColor=#ffffff;" parent="1" source="pcacsm" target="prodcacsm" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_prod_op" value="execute" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#23445d;strokeWidth=2;fontSize=9;labelBackgroundColor=#ffffff;" parent="1" source="prodcacsm" target="csmop" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e2" value="Production CaCSM → preparation alert (begin formation)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#23445d;strokeWidth=2;fontSize=11;fontColor=#23445d;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="csmop" target="gfc" edge="1">
+                    <mxGeometry x="-0.2766" relative="1" as="geometry">
+                        <mxPoint as="offset"/>
+                        <Array as="points">
+                            <mxPoint x="1265" y="685"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e_gfc_log" value="Fire pipeline" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#23445d;strokeWidth=2;fontSize=10;labelBackgroundColor=#ffffff;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="gfc" target="log" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="200" y="685"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e4" value="verified logistics file&#xa;ORACS(id).lf" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#23445d;strokeWidth=2;fontSize=10;fontColor=#23445d;labelBackgroundColor=#ffffff;exitX=0.85;exitY=0;exitDx=0;exitDy=0;entryX=0.15;entryY=0;entryDx=0;entryDy=0;" parent="1" source="apm" target="olf" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="598" y="740"/>
+                            <mxPoint x="705" y="740"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e5" value="OC-meta-object&#xa;(meta objects, DNA map, roster)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#23445d;strokeWidth=2;fontSize=10;fontColor=#23445d;labelBackgroundColor=#ffffff;exitX=0.737;exitY=0.007;exitDx=0;exitDy=0;entryX=0.259;entryY=-0.005;entryDx=0;entryDy=0;exitPerimeter=0;entryPerimeter=0;" parent="1" source="olf" target="sc" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="881" y="775"/>
+                            <mxPoint x="880" y="775"/>
+                            <mxPoint x="880" y="740"/>
+                            <mxPoint x="1050" y="740"/>
+                            <mxPoint x="1050" y="774"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e6" value="deploy (OC-meta-object)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#23445d;strokeWidth=2;fontSize=10;fontColor=#23445d;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="sc" target="liaison" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1115" y="1065"/>
+                            <mxPoint x="230" y="1065"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e_li_sfp" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#23445d;strokeWidth=2;" parent="1" source="liaison" target="sfp" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_sfp_inc" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#23445d;strokeWidth=2;" parent="1" source="sfp" target="incub" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_inc_slm" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#23445d;strokeWidth=2;" parent="1" source="incub" target="slm" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e7" value="launch plan (time, load, origin, destination, asset-id)  →  scouts run on FADs" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#23445d;strokeWidth=2;fontSize=11;fontColor=#23445d;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="slm" target="coord" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1380" y="1280"/>
+                            <mxPoint x="235" y="1280"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="f1" value="replacement request&#xa;(failed ORACS index)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;strokeColor=#b85450;strokeWidth=2;fontSize=10;fontColor=#b85450;labelBackgroundColor=#ffffff;exitX=0.4;exitY=1;exitDx=0;exitDy=0;entryX=0.6;entryY=1;entryDx=0;entryDy=0;" parent="1" source="apm" target="log" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="472" y="985"/>
+                            <mxPoint x="228" y="985"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="f2" value="logistic gap files&#xa;iO-DNA.Mf.g (inter-ORACS)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;strokeColor=#b85450;strokeWidth=2;fontSize=10;fontColor=#b85450;labelBackgroundColor=#ffffff;exitX=0.4;exitY=1;exitDx=0;exitDy=0;entryX=0.4;entryY=1;entryDx=0;entryDy=0;" parent="1" source="olf" target="log" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="780" y="1010"/>
+                            <mxPoint x="172" y="1010"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="f3" value="Each state has a Learning Engine Agent watching for variance.&amp;nbsp;&lt;div&gt;if reality drifts from the simulated expectation, it fires a calibration&amp;nbsp;&lt;/div&gt;&lt;div&gt;request back to the Learning Engine (the system keeps learning during execution)&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;strokeColor=#b85450;strokeWidth=2;fontSize=10;fontColor=#b85450;labelBackgroundColor=#ffffff;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" parent="1" source="csmop" target="le" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1265" y="230"/>
+                            <mxPoint x="795" y="230"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="x1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;strokeColor=#999999;endArrow=open;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.3;entryDx=0;entryDy=0;" parent="1" source="xle" target="gwm" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="x2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;strokeColor=#999999;endArrow=open;exitX=0;exitY=0.5;exitDx=0;exitDy=0;" parent="1" source="xsim" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1580" y="695"/>
+                        </Array>
+                        <mxPoint x="1580" y="695" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="x3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;strokeColor=#999999;endArrow=open;entryX=1;entryY=0.6;entryDx=0;entryDy=0;" parent="1" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1640" y="880"/>
+                        </Array>
+                        <mxPoint x="1640" y="880" as="sourcePoint"/>
+                        <mxPoint x="1580" y="880" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="x4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;strokeColor=#999999;endArrow=open;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="xsec" target="ga" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="x5" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;strokeColor=#999999;endArrow=open;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="xfed" target="cells" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="4DyDUN3vrFLzL9egiClx-2" value="DB saves &quot;captured&quot;, &quot;stimated&quot; and &quot;real&quot; grid state for pattern extraction?&lt;div&gt;I mean, from virtual sensing and real sensing?&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0a30a;fontColor=#000000;strokeColor=#BD7000;" parent="1" vertex="1">
+                    <mxGeometry x="1420" y="-160" width="160" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="4DyDUN3vrFLzL9egiClx-4" value="How do cells define who is the scout-master? What is the scope of &quot;control&quot; of the scout-master?" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0a30a;fontColor=#000000;strokeColor=#BD7000;" parent="1" vertex="1">
+                    <mxGeometry x="1820" y="1550" width="160" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="4DyDUN3vrFLzL9egiClx-5" value="Pattern extraction from DB? so the pattern recognition can work?" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0a30a;fontColor=#000000;strokeColor=#BD7000;" parent="1" vertex="1">
+                    <mxGeometry x="1240" y="-160" width="160" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="4DyDUN3vrFLzL9egiClx-6" value="Alerts come only from measurements? Or can they come from &quot;stimated&quot; states from the virtual sensing module? Like stimated over-voltage?" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0a30a;fontColor=#000000;strokeColor=#BD7000;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="-200" width="160" height="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="4DyDUN3vrFLzL9egiClx-7" value="Can the virtual sensing module ask to add more measuring points (more sensors)? Or should always work with what is already available?" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0a30a;fontColor=#000000;strokeColor=#BD7000;" parent="1" vertex="1">
+                    <mxGeometry x="240" y="-200" width="160" height="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="4DyDUN3vrFLzL9egiClx-8" value="Is the action stress frame computed using the states stimated from the virtual sensing module?" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0a30a;fontColor=#000000;strokeColor=#BD7000;" parent="1" vertex="1">
+                    <mxGeometry x="-160" y="180" width="160" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="4DyDUN3vrFLzL9egiClx-11" value="Virtual sensing module uses the sim. eng. to compute global state? Or the sim. eng. only computes effects of the CaCSM actions?" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0a30a;fontColor=#000000;strokeColor=#BD7000;" parent="1" vertex="1">
+                    <mxGeometry x="1000" y="-160" width="160" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="4DyDUN3vrFLzL9egiClx-12" value="Isn&#39;t it heavy to create a learning engine agent for each state?" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0a30a;fontColor=#000000;strokeColor=#BD7000;" parent="1" vertex="1">
+                    <mxGeometry x="1290" y="195" width="160" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="4DyDUN3vrFLzL9egiClx-13" value="Does the acquisition agent really participate on an assets market? How are prefrences of the assets (busy/free) modeled? NEAT!" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0a30a;fontColor=#000000;strokeColor=#BD7000;" parent="1" vertex="1">
+                    <mxGeometry x="-160" y="800" width="160" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="4DyDUN3vrFLzL9egiClx-14" value="How to avoid infinite loops between logistician and asset portfolio manager? Procure device, not available, procure, not available, etc?" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0a30a;fontColor=#000000;strokeColor=#BD7000;" parent="1" vertex="1">
+                    <mxGeometry x="-160" y="920" width="160" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="4DyDUN3vrFLzL9egiClx-15" value="CaCSM produces an abstract intent, CaCSM does not have ORACS. But, its supposed to have at list the inventary of devices (what worked in the past), right? Otherwise it will be impossible to reconcile with the Logistician and Asset Portfolio Manager ORACS. What happends when the history is changed? Like new devices where added? What worked on the past might drift from what will work now. Continuous learning?" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0a30a;fontColor=#000000;strokeColor=#BD7000;" parent="1" vertex="1">
+                    <mxGeometry x="-160" y="520" width="160" height="240" as="geometry"/>
+                </mxCell>
+                <mxCell id="4DyDUN3vrFLzL9egiClx-18" value="1. No optimality ideas. Learning yes, but no optimality.&lt;div&gt;2. A giant adaptable lookup table: what worked on the past, lets solve it again in the same way.&lt;/div&gt;&lt;div&gt;3. CaCSM is not a reasoning engine, is a match engine. In this sense, the system will not be able to solve situations that never saw before. So, we will have self-healing only on previously healed conditions.&lt;/div&gt;&lt;div&gt;4. Lack of generalization over the learningWorks only in the network that was learned&quot;&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0a30a;fontColor=#000000;strokeColor=#BD7000;" parent="1" vertex="1">
+                    <mxGeometry x="1630" y="-400" width="160" height="280" as="geometry"/>
+                </mxCell>
+                <mxCell id="4DyDUN3vrFLzL9egiClx-19" value="A cell can hand off authority to a neighbour. This is managed by the Federated Edge Transaction Manager. Is this transfer cell 1 notifies transfer to cloud, cloud terminates cell 1, cloud spawn cell 2 with same config as 1? Or is it really a local cell 1 transfer itself to cell 2 over local network without cloud involvement?" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0a30a;fontColor=#000000;strokeColor=#BD7000;" parent="1" vertex="1">
+                    <mxGeometry x="1630" y="1550" width="160" height="180" as="geometry"/>
+                </mxCell>
+                <mxCell id="4DyDUN3vrFLzL9egiClx-20" value="Can the logistician rely on virtual sensing to replace a missing sensor? How to determine the realiability of the stimated state?" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0a30a;fontColor=#000000;strokeColor=#BD7000;" parent="1" vertex="1">
+                    <mxGeometry x="-160" y="1040" width="160" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="2" value="1. Does the virtual sensing module need to start from zero and stimate state for any grid?&amp;nbsp;&lt;div&gt;2. Does the virtual sensing module need to be decentralized? Or is it executed on the &quot;cloud&quot; i.e., centralized?&lt;/div&gt;&lt;div&gt;3. Cells can run&amp;nbsp;&amp;nbsp;&lt;span style=&quot;color: rgb(63, 63, 63); background-color: transparent;&quot;&gt;autonomously while&amp;nbsp;&lt;/span&gt;&lt;span style=&quot;color: rgb(63, 63, 63); background-color: transparent;&quot;&gt;&quot;disconnected&quot; from central control. Do they need virtual sensing capabilities? Will that make the virtual sensing module distributed as well?&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0a30a;fontColor=#000000;strokeColor=#BD7000;" parent="1" vertex="1">
+                    <mxGeometry x="1830" y="-400" width="160" height="280" as="geometry"/>
+                </mxCell>
+                <mxCell id="3" value="Several modules talk about &quot;simulating&quot; the effects of the decisions/actions. However, that simulation needs an initial state of the system. Is that initial state of the system provided by virtual sensing? If so, how the uncertainity of that initial state is handled?" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0a30a;fontColor=#000000;strokeColor=#BD7000;" vertex="1" parent="1">
+                    <mxGeometry x="-160" y="320" width="160" height="150" as="geometry"/>
+                </mxCell>
+                <mxCell id="5" value="How do cells define who is the scout-master? What is the scope of &quot;control&quot; of the scout-master?" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0a30a;fontColor=#000000;strokeColor=#BD7000;" vertex="1" parent="1">
+                    <mxGeometry x="-430" y="1000" width="160" height="80" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>
