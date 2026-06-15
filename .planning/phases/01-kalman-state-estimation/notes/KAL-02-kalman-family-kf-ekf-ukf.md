@@ -1,10 +1,13 @@
-# KAL-02: Kalman Filter Family — KF, EKF, UKF
+# KAL-02: The Kalman Filter Family — KF, EKF, UKF
 
 **For:** Oral rehearsal — speak the equations aloud; you must be able to recite the
 predict-update cycle and name what each matrix means without looking at notes.
-**Purpose:** Provide the exact mathematical progression you need to demonstrate Kalman
-depth in the interview, including EKF Jacobians, UKF sigma points, a decision table,
-and the Q/R tuning + divergence detection that separates practitioners from theorists.
+**Purpose:** These mechanics are the engine of a *virtual sensing module* that fuses sparse,
+multi-rate distribution telemetry — not a transmission denoiser. The filter processes
+heterogeneous, asynchronous measurements (SCADA head flows, smart-inverter self-reports,
+delayed AMI) and produces a posterior state estimate plus calibrated covariance at every step.
+Mastering the algorithm means you can credibly explain FASE (KAL-03) and the distribution
+state-estimation centerpiece to the interviewer.
 
 ---
 
@@ -13,7 +16,9 @@ and the Q/R tuning + divergence detection that separates practitioners from theo
 The Kalman Filter is the **optimal recursive estimator for linear-Gaussian systems**. Optimal
 means minimum mean-squared error among all linear estimators when the noise is Gaussian and
 the dynamics are linear. Two stages: **Predict** (extrapolate using the physics model) and
-**Update** (correct with the new measurement).
+**Update** (correct with the new measurement). In the distribution virtual-sensing context,
+each update may arrive from a different sensor at a different rate — the filter handles this
+natively by running the predict step for each time gap and the update step on arrival.
 
 ### State-Space Model
 
@@ -22,12 +27,12 @@ x_k &= F\, x_{k-1} + B\, u_k + w_k & &(w_k \sim \mathcal{N}(0, Q)) \\
 z_k &= H\, x_k + v_k               & &(v_k \sim \mathcal{N}(0, R))
 \end{aligned}$$
 
-- $x_k$ = state vector at time $k$
+- $x_k$ = state vector at time $k$ (e.g., load injections at each distribution node)
 - $F$ = state transition matrix (physics: how the state evolves one step)
-- $B$ = control input matrix; $u_k$ = known input (e.g., load dispatch)
-- $Q$ = process noise covariance (uncertainty in the model)
+- $B$ = control input matrix; $u_k$ = **known input** — in the FASE distribution context this is the diurnal ramp / cyclicality forecast (the `Bu` term is where load forecasts enter)
+- $Q$ = process noise covariance (uncertainty in the model — can be learned and time-indexed per time-of-day/season)
 - $H$ = measurement matrix (which linear combination of states you observe)
-- $R$ = measurement noise covariance (sensor uncertainty)
+- $R$ = measurement noise covariance (sensor uncertainty — also learnable per source and per time slot)
 
 ### Predict Step
 
@@ -311,19 +316,53 @@ than the principle.
 
 ---
 
-## Connection to KAL-03 (Worked Example)
+## Connection to KAL-03 and KAL-04 (Worked Examples)
 
-Everything in this file is realized in the IEEE 738 conductor temperature EKF (KAL-03):
+The mechanics in this file are realized in two complementary worked examples:
 
+**KAL-03 — FASE augmented-load feeder walk (the vector-state distribution centerpiece):**
+Everything above runs on a 3-bus feeder where the state is $x = [P_1, P_2]^\top$ (load injections,
+not voltages). Measurements arrive asynchronously from three channels at different rates. The
+**money shot** is Event 2: the head SCADA update observes the *dark*, unmetered bus $P_2$ via
+Kirchhoff coupling — covariance collapses 100 → 4.73, off-diagonal goes negative. The comms-gap
+predict step inflates uncertainty honestly; the voltage map propagates the posterior covariance
+into a voltage confidence interval that trips the AGMS voltage-support CaCSM near the 0.95 pu
+limit. This is the distribution virtual-sensing centerpiece. Read KAL-03 first.
+
+**KAL-04 — IEEE 738 line-temperature EKF (the scalar asset-health secondary example):**
+A *scalar* EKF where the state is conductor temperature $T_c$:
 - $f(T_c, u)$ = the discretized IEEE 738 ODE (process model)
-- $h(T_c) = R_{25}[1 + \alpha_R(T_c - 25)]$ — resistance as a function of temperature (measurement model)
-- $A = \partial f/\partial T_c$ — scalar Jacobian from the ODE linearization
-- $H = \partial h/\partial T_c = R_{25} \times \alpha_R$ — scalar measurement Jacobian (a constant)
-- $Q$ = model uncertainty from wind + aging ($\approx 0.01$–$0.1\,{}^\circ\text{C}^2/\text{step}$)
-- $R$ = CT accuracy ($\approx (0.002 \times I_\text{rated})^2$ in current units, then propagated through $h$)
+- $h(T_c) = R_{25}[1 + \alpha_R(T_c - 25)]$ — resistance as a function of temperature
+- $A = \partial f/\partial T_c$ — scalar Jacobian; $H = R_{25} \cdot \alpha_R$ (constant scalar)
+- $Q$ = model uncertainty from wind + aging; $R$ = CT accuracy
 
-The scalar state makes the matrix equations collapse to scalars, which makes the worked
-example easy to trace step by step. All the same logic applies for vector-state grid DSE.
+The scalar state collapses matrix equations to scalars, making the mechanics easy to trace.
+This is the *asset-health* companion to the network state-estimation problem in KAL-03.
+
+---
+
+## FASE Preview — Cyclicality, Learned Q/R, and the Bu Term
+
+**Forecasting-Aided State Estimation (FASE)** is the distribution virtual-sensing architecture
+that operationalizes everything above. Two key additions over vanilla KF:
+
+1. **Cyclicality / load forecasts enter as the known-input `Bu` term.** The diurnal profile of a
+   feeder — morning ramp, lunchtime plateau, evening peak — is repeatable. The Holt-Winters or
+   Debs-Larson forecast of the load ramp becomes the $v\,\Delta t$ increment to $\hat x$ in the
+   predict step:
+
+   $$\hat{x}_{k|k-1} = \hat{x}_{k-1} + v\,\Delta t$$
+
+   where $v$ is the expected load ramp (kW/min) from the temporal prior. This is the `Bu` term —
+   not a measurement, not a model parameter, but a *known input* derived from historical patterns.
+
+2. **$Q$ and $R$ can be learned and time-indexed.** A year of archived predictions, actuals, and
+   residuals — indexed by hour-of-day, day-of-week, season, weather — lets you condition $Q$ and
+   $R$ on context. At 8 a.m. Monday, load variance is higher than at 2 a.m. Sunday; the filter
+   should know that. The Learning Engine in AGMS closes this loop by analyzing innovation sequences
+   and issuing calibration requests.
+
+Full numeric worked example: **KAL-03 — the 3-bus feeder walk.**
 
 ---
 
@@ -352,7 +391,12 @@ Check: sensor failure, model mismatch, $Q$ too small.
 
 **Q/R trap:** $Q=0$ → $K\to0$ → filter goes deaf. Always set $Q>0$.
 
+**Distribution virtual sensing:** state = load injections $[P_1, P_2, \ldots]$ (not voltages); update on arrival from each source with its own $R$; predict with diurnal ramp $v\Delta t$ between updates; covariance = observability index.
+
+**FASE:** cyclicality enters as `Bu` = $v\,\Delta t$; $Q$, $R$ are learned and time-indexed from historical archive.
+
 ---
 
 *Sources: Welch & Bishop, Edinburgh CVonline EKF formulation; filterpy ReadTheDocs UKF equations;
-Stone Soup UKF tutorial; arXiv 2012.06069 (power system DSE with EKF/UKF); 01-RESEARCH.md verified equations*
+Stone Soup UKF tutorial; arXiv 2012.06069 (power system DSE with EKF/UKF); AGMS patent (Director;
+FASE, Learning Engine, Inspector scout); 01-RESEARCH.md verified equations.*

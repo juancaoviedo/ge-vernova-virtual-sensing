@@ -1,11 +1,29 @@
-# KAL-03: Line-Temperature EKF — IEEE 738 Worked Example
+# KAL-04: IEEE 738 Line-Temperature EKF — Secondary Asset-Health Virtual Sensor
 
-**Phase:** 01 — Kalman & State Estimation
-**Deliverable:** KAL-03
-**Purpose:** Interview-ready narration of the IEEE 738 conductor thermal ODE mapped to an EKF,
-with actual numbers traced through one full predict-update step, Q/R tuning logic, innovation
-monitoring, divergence detection, and the explicit building-RC isomorphism that connects Juan's
-existing work to this domain.
+<!-- greppable tag: IEEE 738 asset health -->
+
+**For:** Oral rehearsal — work through the one-step trace aloud so you can narrate it in under
+90 seconds.
+**Purpose:** A *scalar* EKF worked example that (a) makes the predict/update mechanics concrete
+with real numbers, and (b) demonstrates a valid JD "line temperature / asset health" virtual-sensing
+parameter. This is the **asset-health companion** to KAL-03's network state estimation — not the
+distribution virtual-sensing centerpiece. The centerpiece is KAL-03 (FASE augmented-load feeder
+walk). IEEE 738 is valuable precisely because it is simple: one state, one ODE, tractable
+Jacobians — the mechanics are transparent, making it the ideal whiteboard example for the
+scalar-EKF half of the story. Use it to introduce the predict/update cycle; then redirect to
+KAL-03 for the distribution network state-estimation problem.
+
+---
+
+## Positioning (Say This First)
+
+> "Let me give you two worked examples at different scales. The scalar case — which I'll describe
+> first because it makes the mechanics transparent — is IEEE 738 line temperature: a single hidden
+> state, a single ODE, a single EKF. Then I'll describe the distribution network version (KAL-03)
+> where the state is a vector of load injections, measurements arrive asynchronously from multiple
+> channels, and observability of dark nodes comes from Kirchhoff coupling rather than direct
+> sensors. The scalar case is where the algorithm is easiest to see; the vector case is the one
+> that matters for this role."
 
 ---
 
@@ -602,7 +620,7 @@ When the interviewer asks: "Have you worked with Kalman filters on power systems
 
 ---
 
-## 8. Quick-Reference Card (for Oral Review)
+## 8. Quick-Recall Card (Recite Before the Interview)
 
 **The ODE:** $mC_p \, dT_c/dt = I^2 R(T_c) + q_s - q_c - q_r$ (heating left → right = gain − loss)
 
@@ -629,14 +647,18 @@ When the interviewer asks: "Have you worked with Kalman filters on power systems
 **Bridge sentence:** "Swapping building RC parameters for ACSR conductor parameters is a
 parameter substitution, not a conceptual leap."
 
+**Positioning:** This scalar example shows the mechanics cleanly. The distribution network
+centerpiece — where the state is $[P_1, P_2]$ injections and Kirchhoff coupling observes dark
+nodes — is in KAL-03.
+
 ---
 
-## Sources
-
-- IEEE Std 738-2006/2012 (paywalled; ODE structure from secondary sources)
-- stevenblair/ieee738matlab GitHub — verified ODE implementation and ACSR Drake parameters
-- Welch & Bishop, "An Introduction to the Kalman Filter" (Edinburgh CVonline) — EKF equations
-- arxiv.org/abs/2012.06069 — EKF for power system dynamic state estimation
-- arxiv.org/pdf/2106.10775 — covariance matching and chi-squared divergence detection
-- arxiv.org/pdf/1702.00884 — adaptive Q/R update (Sage-Husa)
-- 01-RESEARCH.md sections "IEEE 738 Thermal Model", "EKF for Line Temperature", "Innovation Sequence and Divergence Detection", "Common Pitfalls"
+*Sources: IEEE Std 738-2006/2012 (paywalled; ODE structure from secondary sources);
+stevenblair/ieee738matlab GitHub — verified ODE implementation and ACSR Drake parameters;
+Welch & Bishop, "An Introduction to the Kalman Filter" (Edinburgh CVonline) — EKF equations;
+arxiv.org/abs/2012.06069 — EKF for power system dynamic state estimation;
+arxiv.org/pdf/2106.10775 — covariance matching and chi-squared divergence detection;
+arxiv.org/pdf/1702.00884 — adaptive Q/R update (Sage-Husa);
+KAL-03-fase-augmented-load-feeder-walk.md (distribution network centerpiece, see for AGMS connection);
+01-RESEARCH.md sections "IEEE 738 Thermal Model", "EKF for Line Temperature", "Innovation Sequence
+and Divergence Detection", "Common Pitfalls".*
