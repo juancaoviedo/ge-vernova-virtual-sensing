@@ -118,13 +118,17 @@ deliverable maps to exactly one phase; no requirement is orphaned.
 ### Phase 7: Integrated HTML Study Site
 **Goal**: All study notes produced across the phases plus the research-stage HTML/diagram assets are consolidated into a single, navigable HTML study site — AGMS architecture (the patents), the study notes, and the demos (what each demo is, why it was built, and references) — so Juan can revise everything in one place
 **Depends on**: Phase 6
-**Requirements**: TBD (run /gsd-plan-phase 7)
+**Requirements**: HTML-01, HTML-02, HTML-03, HTML-04, HTML-05, HTML-06, HTML-07 (defined in 07-SPEC.md)
 **Success Criteria** (what must be TRUE):
   1. A single HTML entry point renders the AGMS architecture section (patent-derived), built from the existing patents research assets (AGMS-architecture.drawio/.svg/.png/.pdf)
   2. All phase study notes (Markdown across .planning/phases/*) are converted to HTML and reachable from a single navigation
   3. Each hands-on demo has a section explaining what it is, why it was created, and references/links to its code and README
   4. The site opens locally in a browser with working internal navigation between architecture, notes, and demos
-**Plans**: TBD
+**Plans**: 4 plans
+  - [ ] 07-01-PLAN.md — Build foundation: venv, build_site.py, shared CSS, vendored MathJax, convert all 15 notes (HTML-03, HTML-04)
+  - [ ] 07-02-PLAN.md — Architecture integration: copy research trio + sources + diagram, rewrite cross-links, diagram viewer (HTML-02)
+  - [ ] 07-03-PLAN.md — Card-grid hub + demos page with embedded key code and inline results (HTML-01, HTML-05)
+  - [ ] 07-04-PLAN.md — Publish-readiness: .nojekyll, robots/noindex, link-validation pass, PUBLISH.md, offline smoke check (HTML-06, HTML-07)
 
 ## Progress
 
