@@ -28,7 +28,7 @@ decisions:
 metrics:
   duration_minutes: 10
   completed_date: "2026-06-15"
-  tasks_completed: 2
+  tasks_completed: 3
   tasks_total: 3
   files_created: 126
 ---
@@ -120,14 +120,14 @@ None — plan executed exactly as written.
 
 ## Checkpoint Status
 
-**Task 3 (checkpoint:human-verify) — PENDING user verification.**
+**Task 3 (checkpoint:human-verify) — APPROVED by user (2026-06-15).**
 
-The human-verify checkpoint requires the user to:
-1. Disable networking
-2. Open `docs/notes/kal-03-ieee738-ekf-worked-example.html` at `file://`
-3. Confirm display equations typeset (not raw `$`), subscripts render correctly, sticky TOC and masthead match existing research pages
+The user disabled networking and opened `docs/notes/kal-03-ieee738-ekf-worked-example.html` at `file://`. Confirmed:
+- Display equations (IEEE-738 thermal balance and all others) typeset correctly — not raw `$` or boxes
+- Subscripts (T_c, R_25, etc.) render as typeset math, not italicized prose
+- Sticky left TOC, masthead, and code blocks match the existing research-page look
 
-This checkpoint cannot be auto-approved — it is a critical HTML-04 acceptance gate.
+HTML-04 acceptance gate: PASSED.
 
 ## Known Stubs
 
