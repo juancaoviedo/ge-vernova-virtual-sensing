@@ -5,19 +5,25 @@ build_site.py — Idempotent build script for the GE Vernova Virtual Sensing stu
 Plan 07-01 scope: note discovery, MD→HTML conversion, shared HTML shell, pygments highlight.
 Plan 07-02 scope: copy research trio + sources + diagram into docs/architecture/; rewrite
                   cross-links; emit diagram.html viewer.
-Later plans (07-03/04) will extend this file with demos page and hub.
+Plan 07-03 scope: demos page (build_demos()) and card-grid hub index.html (build_hub()).
+Plan 07-04 scope: link validation.
 
 Usage:
     .venv-site/bin/python docs/build_site.py
 """
 
+import ast
 import json
 import pathlib
+import re
 import shutil
 import sys
 import textwrap
 
 import markdown
+from pygments import highlight
+from pygments.formatters import HtmlFormatter
+from pygments.lexers import PythonLexer
 
 # ---------------------------------------------------------------------------
 # Paths
@@ -315,6 +321,473 @@ def build_diagram_page() -> None:
 
 
 # ---------------------------------------------------------------------------
+# Demo page builder (Plan 07-03)
+# ---------------------------------------------------------------------------
+
+# Demo source roots
+_DEMO_SRCS = {
+    "ekf": REPO_ROOT / ".planning/phases/01-kalman-state-estimation/demo",
+    "dc":  REPO_ROOT / ".planning/phases/02-transmission-virtual-sensing/demo",
+    "fed": REPO_ROOT / ".planning/phases/05-federated-architectures-security/demo",
+}
+
+
+def _slice_function(py_path: pathlib.Path, func_name: str) -> str:
+    """Return the source text of a single top-level function from a .py file.
+
+    Uses ast to find the exact line range, then falls back to a regex approach
+    if ast cannot parse.  Returns only the named function — not the whole file (D-11).
+    """
+    source = py_path.read_text(encoding="utf-8")
+    try:
+        tree = ast.parse(source)
+        for node in ast.walk(tree):
+            if isinstance(node, ast.FunctionDef) and node.name == func_name:
+                lines = source.splitlines()
+                return "\n".join(lines[node.lineno - 1 : node.end_lineno])
+        raise ValueError(f"function {func_name!r} not found in {py_path.name}")
+    except SyntaxError:
+        # Fallback: regex from ^def <name>( to next ^def /^class /^if __name__
+        pattern = re.compile(
+            r"^def " + re.escape(func_name) + r"\b.*?(?=^def |^class |^if __name__|\\Z)",
+            re.MULTILINE | re.DOTALL,
+        )
+        m = pattern.search(source)
+        if m:
+            return m.group(0).rstrip()
+        raise ValueError(f"function {func_name!r} not found in {py_path.name} (regex fallback)")
+
+
+def _highlight_snippet(code: str) -> str:
+    """Return pygments-highlighted HTML for a Python snippet (cssclass='highlight')."""
+    return highlight(code, PythonLexer(), HtmlFormatter(cssclass="highlight"))
+
+
+def build_demos() -> None:
+    """Copy demo assets into docs/demos/ and emit docs/demos/index.html.
+
+    Per-demo: README-sourced prose + inline result (PNG figure or numeric table)
+    + pygments-highlighted key functions only (D-11) + full-source link (D-10/D-12).
+    """
+    demos_dir = DOCS / "demos"
+    demos_dir.mkdir(parents=True, exist_ok=True)
+
+    # ---- 1. Copy demo source files and result PNGs into docs/demos/ ----
+    _DEMO_COPIES = [
+        (_DEMO_SRCS["ekf"] / "ekf_line_temp_demo.py",     demos_dir / "ekf_line_temp_demo.py"),
+        (_DEMO_SRCS["ekf"] / "ekf_line_temp.png",         demos_dir / "ekf_line_temp.png"),
+        (_DEMO_SRCS["dc"]  / "dc_powerflow_baddata_demo.py", demos_dir / "dc_powerflow_baddata_demo.py"),
+        (_DEMO_SRCS["dc"]  / "dc_powerflow_baddata.png",  demos_dir / "dc_powerflow_baddata.png"),
+        (_DEMO_SRCS["fed"] / "fedavg_fedprox_krum_demo.py", demos_dir / "fedavg_fedprox_krum_demo.py"),
+    ]
+    for src, dst in _DEMO_COPIES:
+        shutil.copy2(src, dst)
+        print(f"  copied demo asset  {src.name}")
+
+    # ---- 2. Slice and highlight key functions (D-11 — key functions only) ----
+    # Demo 1: EKF — ekf_step only (the predict-update cycle)
+    ekf_py = _DEMO_SRCS["ekf"] / "ekf_line_temp_demo.py"
+    ekf_step_html = _highlight_snippet(_slice_function(ekf_py, "ekf_step"))
+
+    # Demo 2: DC power-flow — wls_solve + chi2_test + normalized_residuals
+    dc_py = _DEMO_SRCS["dc"] / "dc_powerflow_baddata_demo.py"
+    wls_solve_html      = _highlight_snippet(_slice_function(dc_py, "wls_solve"))
+    chi2_test_html      = _highlight_snippet(_slice_function(dc_py, "chi2_test"))
+    norm_resid_html     = _highlight_snippet(_slice_function(dc_py, "normalized_residuals"))
+
+    # Demo 3: FedAvg/Krum — fedavg_aggregate + krum_select
+    fed_py = _DEMO_SRCS["fed"] / "fedavg_fedprox_krum_demo.py"
+    fedavg_agg_html = _highlight_snippet(_slice_function(fed_py, "fedavg_aggregate"))
+    krum_html       = _highlight_snippet(_slice_function(fed_py, "krum_select"))
+
+    # ---- 3. Emit docs/demos/index.html ----
+    html = textwrap.dedent(f"""\
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noindex,nofollow">
+        <title>Hands-On Demos — GE Vernova Virtual Sensing Study Site</title>
+        <link rel="stylesheet" href="../assets/site.css">
+        <link rel="stylesheet" href="../assets/pygments.css">
+        </head>
+        <body>
+        <div class="wrap">
+          <header class="masthead">
+            <h1>Hands-On Demos</h1>
+            <div class="meta">Three from-scratch NumPy demos — EKF line temperature, DC
+            power-flow bad-data detection, and federated learning robustness.</div>
+          </header>
+          <nav class="toc">
+            <h2>Contents</h2>
+            <a href="#ekf">1. EKF Line Temperature</a>
+            <a href="#dc">2. DC Power-Flow Bad-Data</a>
+            <a href="#fed">3. Federated Learning</a>
+          </nav>
+          <main>
+
+        <!-- ================================================================
+             Demo 1: EKF Line Temperature
+             ================================================================ -->
+        <section class="card" id="ekf">
+          <h2 class="sec">1. EKF Line-Temperature / Dynamic Line Rating</h2>
+
+          <h3 class="sub">What it is</h3>
+          <p>A from-scratch <strong>Extended Kalman Filter (EKF)</strong> — NumPy/SciPy only,
+          no external KF library — that estimates overhead conductor temperature from simulated
+          current telemetry, demonstrating the core idea behind <strong>Dynamic Line Rating
+          (DLR)</strong> virtual sensing.</p>
+
+          <h3 class="sub">Why it was built (interview gap it closes)</h3>
+          <p>The role requires virtual-sensing experience: inferring unmeasured physical
+          quantities from indirect measurements.  This demo shows the EKF predict-update
+          loop applied to a conductor thermal model — the same first-order thermal ODE
+          structure used in building energy management (Juan's OSED work), just with Drake
+          ACSR parameters instead of building RC parameters.</p>
+          <div class="juan"><strong>&#9658; Juan:</strong> The bridge story: <em>"My OSED
+          building thermal model is <code>C&middot;dT/dt = Q_HVAC &minus; UA&middot;(T&minus;Ta)</code>
+          — structurally identical to the IEEE&nbsp;738 conductor ODE.  Swapping building RC
+          parameters for Drake ACSR parameters is a parameter substitution, not a conceptual
+          leap."</em></div>
+
+          <h3 class="sub">What it demonstrates</h3>
+          <ul>
+            <li>Simulates a Drake ACSR conductor heating up as current ramps 400&nbsp;A&nbsp;&rarr;&nbsp;600&nbsp;A over one hour using the <strong>IEEE&nbsp;738 thermal ODE</strong> as the physics engine.</li>
+            <li>Generates noisy apparent-resistance measurements (<code>z&nbsp;=&nbsp;R25&middot;(1&nbsp;+&nbsp;&alpha;&middot;(Tc&minus;25))</code>) mimicking current + voltage-drop observations.</li>
+            <li>Runs the <strong>EKF predict-update loop</strong> — IEEE&nbsp;738 ODE as the predict step; resistance model as the update step.</li>
+            <li>Computes a <strong>Dynamic Line Rating ampacity</strong> at the estimated temperature, showing available capacity vs. the 75&nbsp;&deg;C thermal limit.</li>
+            <li>Monitors filter health via a <strong>Normalized Innovation Squared (NIS) / chi-squared gate</strong> — only 0.3&nbsp;% of steps trigger (well below the expected 5&nbsp;% false-alarm rate).</li>
+          </ul>
+
+          <figure>
+            <img src="ekf_line_temp.png"
+                 alt="EKF line-temperature estimation: three-subplot figure showing true Tc vs EKF estimate with uncertainty band, innovation sequence, and posterior uncertainty convergence">
+            <figcaption>EKF output: true conductor temperature vs estimate with &plusmn;2&sigma;
+            band (top), innovation sequence (middle), and posterior uncertainty showing rapid
+            convergence from &plusmn;10&nbsp;&deg;C to &lt;0.2&nbsp;&deg;C (bottom).</figcaption>
+          </figure>
+
+          <h3 class="sub">Key function: <code>ekf_step</code></h3>
+          <p>One complete predict-update cycle (scalar state).  The IEEE&nbsp;738 ODE is the
+          predict step; the apparent-resistance model is the update step.</p>
+        <!-- embedded: def ekf_step -->
+        {ekf_step_html}
+
+          <p><a href="ekf_line_temp_demo.py">View full source &rarr;</a></p>
+        </section>
+
+        <!-- ================================================================
+             Demo 2: DC Power-Flow Bad-Data Detection
+             ================================================================ -->
+        <section class="card" id="dc">
+          <h2 class="sec">2. DC Power-Flow Bad-Data Detection</h2>
+
+          <h3 class="sub">What it is</h3>
+          <p>A from-scratch <strong>Weighted-Least-Squares (WLS) state estimator</strong>
+          for a 3-bus DC power-flow network — NumPy/SciPy only, no power-flow library —
+          that infers bus voltage angles from a redundant measurement set, then
+          <strong>detects and removes a single corrupted measurement</strong> using the
+          chi-squared test and the largest normalized residual.</p>
+
+          <h3 class="sub">Why it was built (interview gap it closes)</h3>
+          <p>The role names state estimation and bad-data detection as core competencies.
+          This demo is the textbook TVS-02&nbsp;+&nbsp;TVS-03 illustration: the DC model
+          <code>h(&theta;)&nbsp;=&nbsp;H&theta;</code> is linear, so the Gauss-Newton
+          iteration from Phase&nbsp;1 collapses to a single normal-equations solve
+          — demonstrating the same WLS machinery Juan already uses, now applied to a
+          grid power network.</p>
+
+          <h3 class="sub">What it demonstrates</h3>
+          <ul>
+            <li>Builds a <strong>3-bus DC network</strong> and solves the reduced power flow for ground-truth angles.</li>
+            <li>Estimates two voltage angles via <strong>one-shot linear WLS</strong> from 5 redundant measurements (injections + line flows).</li>
+            <li>Injects a <strong>gross error (+15&sigma;)</strong> on the line-flow 2&rarr;3 measurement.</li>
+            <li>Runs the <strong>chi-squared test</strong> (<em>J&nbsp;=&nbsp;176.7 vs threshold&nbsp;7.8</em>) to detect bad data.</li>
+            <li>Uses the <strong>largest normalized residual</strong> (<em>rN&nbsp;=&nbsp;13.2 on measurement&nbsp;5</em>) to identify the culprit.</li>
+            <li><strong>Removes the suspect and re-solves</strong>: <em>J&nbsp;=&nbsp;1.8</em>, angles within 7&times;10<sup>&minus;4</sup>&nbsp;rad of truth.</li>
+          </ul>
+
+          <figure>
+            <img src="dc_powerflow_baddata.png"
+                 alt="DC power-flow bad-data detection: normalized residuals bar chart with flagged measurement highlighted in red (left), true vs estimated angles before and after bad-data removal (right)">
+            <figcaption>Bad-data detection output: normalized residuals with the 3&sigma; line
+            and flagged measurement #5 in red (left); true vs estimated angles before/after
+            bad-data removal (right).</figcaption>
+          </figure>
+
+          <h3 class="sub">Key functions</h3>
+          <p><strong><code>wls_solve</code></strong> — one-shot linear WLS (the linear
+          collapse of KAL-01's normal equations):</p>
+        {wls_solve_html}
+
+          <p><strong><code>chi2_test</code></strong> — detection: is there bad data?</p>
+        {chi2_test_html}
+
+          <p><strong><code>normalized_residuals</code></strong> — identification: which
+          measurement is the culprit?</p>
+        {norm_resid_html}
+
+          <p><a href="dc_powerflow_baddata_demo.py">View full source &rarr;</a></p>
+        </section>
+
+        <!-- ================================================================
+             Demo 3: Federated Learning — FedAvg / FedProx / Byzantine Robustness
+             ================================================================ -->
+        <section class="card" id="fed">
+          <h2 class="sec">3. Federated Learning — FedAvg / FedProx / Byzantine Robustness</h2>
+
+          <h3 class="sub">What it is</h3>
+          <p>A from-scratch implementation of <strong>FedAvg</strong>, <strong>FedProx</strong>
+          (proximal regularization), <strong>Krum</strong>, and <strong>coordinate-wise
+          median</strong> entirely in NumPy — no Flower, no PySyft, no framework
+          dependency.  Six simulated substations with non-IID data distributions demonstrate
+          client drift, FedProx's proximal damping, and Byzantine-robust aggregation.</p>
+
+          <h3 class="sub">Why it was built (interview gap it closes)</h3>
+          <p>The role names <em>"federated control frameworks"</em> and edge-ML expertise.
+          This demo shows FedAvg aggregation math, the proximal term that keeps substation
+          models tethered to the global fleet model, and Krum's distance-based rejection of
+          a poisoned client — all the algorithmic pieces that underpin a production federated
+          virtual-sensing system without ever shipping raw telemetry.</p>
+
+          <h3 class="sub">What it demonstrates</h3>
+          <ul>
+            <li><strong>Non-IID clients:</strong> six substations with different local data distributions (feeder means 0.0&nbsp;&hellip;&nbsp;2.5).</li>
+            <li><strong>FedAvg convergence</strong> over 20 communication rounds: <em>weighted average w&nbsp;=&nbsp;&sum;(n_k/n)&middot;w_k</em>.</li>
+            <li><strong>FedProx damps client drift:</strong> proximal term +(&mu;/2)&Vert;w&minus;w_t&Vert;&sup2; lives in the <em>client's local objective</em> (not the server aggregation — a common interview pitfall).</li>
+            <li><strong>Byzantine injection:</strong> client&nbsp;0 sends a poisoned update (shift &minus;5.0). Plain FedAvg averages the poison in; Krum and coordinate-wise median reject it.</li>
+          </ul>
+
+          <h3 class="sub">Key numeric output (seed&nbsp;42, reproducible)</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Method</th>
+                <th>Final estimate</th>
+                <th>Error vs true optimum (1.22)</th>
+                <th>Notes</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Plain FedAvg</td>
+                <td>+0.5826</td>
+                <td>&minus;0.64</td>
+                <td>Poisoned — client&nbsp;0 pulled it off</td>
+              </tr>
+              <tr>
+                <td>FedProx (&mu;&nbsp;=&nbsp;0.5)</td>
+                <td>+1.2237</td>
+                <td>+0.006</td>
+                <td>Proximal term kept local models near global</td>
+              </tr>
+              <tr>
+                <td>Krum (f&nbsp;=&nbsp;1)</td>
+                <td>+1.4743</td>
+                <td>+0.26</td>
+                <td>Rejected client&nbsp;0; selected honest update</td>
+              </tr>
+              <tr>
+                <td>Coord&nbsp;Median</td>
+                <td>+1.2548</td>
+                <td>+0.04</td>
+                <td>Median ignores outlier</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h3 class="sub">Key functions</h3>
+          <p><strong><code>fedavg_aggregate</code></strong> — server-side weighted-average
+          aggregation (McMahan et al.&nbsp;2017):</p>
+        {fedavg_agg_html}
+
+          <p><strong><code>krum_select</code></strong> — Byzantine-robust update selection
+          (Blanchard et al.&nbsp;2017): picks the update with the minimum sum of distances
+          to its nearest neighbors — honest updates cluster, the poisoned update is distant:</p>
+        {krum_html}
+
+          <p><a href="fedavg_fedprox_krum_demo.py">View full source &rarr;</a></p>
+        </section>
+
+            <footer><a href="../index.html">&larr; Back to study hub</a></footer>
+          </main>
+        </div>
+        </body>
+        </html>
+        """)
+
+    out = demos_dir / "index.html"
+    out.write_text(html, encoding="utf-8")
+    print(f"  generated  demos/index.html  (3 demo sections, {len(_DEMO_COPIES)} assets copied)")
+
+
+# ---------------------------------------------------------------------------
+# Hub page builder (Plan 07-03)
+# ---------------------------------------------------------------------------
+
+# Card-group → hub-card definitions
+# Architecture group: fixed set of 4 pages from 07-02
+_ARCH_CARDS = [
+    ("AGMS Architecture Walkthrough",
+     "Read the AGMS system walkthrough — self-organizing grid-management platform, patents deep-dive.",
+     "architecture/AGMS-architecture.html"),
+    ("Grid Operations &amp; Director&#x27;s Role",
+     "Read grid operations and role companion — Appendices A&ndash;G mapping the role to the architecture.",
+     "architecture/grid-operations-and-role.html"),
+    ("Patent Family Index",
+     "Browse the patent index — six patents covering AGMS, Logistician Module, Scout Command, and more.",
+     "architecture/INDEX.html"),
+    ("AGMS Architecture Diagram",
+     "View the full AGMS reference-architecture diagram (SVG, crisp at any zoom).",
+     "architecture/diagram.html"),
+]
+
+# Demo group: single entry-point card
+_DEMO_CARDS = [
+    ("Hands-On Demos",
+     "See three from-scratch NumPy demos: EKF line temperature, DC power-flow bad-data detection, and federated learning robustness.",
+     "demos/index.html"),
+]
+
+# Phase prefix → group label for study notes
+_NOTE_GROUPS = [
+    ("KAL", "Phase 1 — Kalman State Estimation"),
+    ("TVS", "Phase 2 — Transmission Virtual Sensing"),
+    ("AGMS", "Phase 3 — Director&#x27;s Patents"),
+    ("STK", "Phase 4 — Protocols &amp; Stack Architecture"),
+    ("FED", "Phase 5 — Federated Architectures &amp; Security"),
+]
+
+
+def _note_group(slug: str) -> str:
+    """Return the phase-prefix key for a note slug (first hyphen-delimited part, uppercase)."""
+    return slug.split("-")[0].upper()
+
+
+def build_hub(manifest: dict) -> None:
+    """Emit docs/index.html — card-grid hub in three groups.
+
+    Hub is at docs/ root so asset paths have NO '../' prefix (assets/site.css not ../assets/).
+    Note cards are generated from the manifest (single source of truth — Pitfall 5).
+    Architecture cards are fixed (from 07-02 outputs).
+    """
+    # ---- Build note-card HTML grouped by phase prefix ----
+    # Collect slug→relpath from manifest (only notes/ entries)
+    note_entries = {
+        slug: relpath
+        for slug, relpath in manifest.items()
+        if relpath.startswith("notes/")
+    }
+
+    note_cards_html = ""
+    for prefix, group_label in _NOTE_GROUPS:
+        group_slugs = sorted(
+            slug for slug in note_entries
+            if _note_group(slug) == prefix
+        )
+        if not group_slugs:
+            continue  # skip empty groups (UI-SPEC: never render empty group)
+        note_cards_html += f'\n    <h3 class="sub">{group_label}</h3>\n    <div class="card-grid">\n'
+        for slug in group_slugs:
+            relpath = note_entries[slug]
+            # Derive a readable title from the slug (capitalize each word)
+            readable = slug.replace("-", " ").title()
+            note_cards_html += (
+                f'      <a class="hub-card" href="{relpath}">'
+                f'<h3>Open study note</h3>'
+                f'<p>{readable}</p></a>\n'
+            )
+        note_cards_html += "    </div>\n"
+
+    # ---- Build architecture card HTML ----
+    arch_cards_html = '<div class="card-grid">\n'
+    for title, desc, href in _ARCH_CARDS:
+        arch_cards_html += (
+            f'      <a class="hub-card" href="{href}">'
+            f'<h3>{title}</h3>'
+            f'<p>{desc}</p></a>\n'
+        )
+    arch_cards_html += "    </div>"
+
+    # ---- Build demos card HTML ----
+    demo_cards_html = '<div class="card-grid">\n'
+    for title, desc, href in _DEMO_CARDS:
+        demo_cards_html += (
+            f'      <a class="hub-card" href="{href}">'
+            f'<h3>{title}</h3>'
+            f'<p>{desc}</p></a>\n'
+        )
+    demo_cards_html += "    </div>"
+
+    html = textwrap.dedent(f"""\
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noindex,nofollow">
+        <title>GE Vernova Virtual Sensing &mdash; Interview Study Site</title>
+        <link rel="stylesheet" href="assets/site.css">
+        <link rel="stylesheet" href="assets/pygments.css">
+        </head>
+        <body>
+        <div class="wrap">
+          <header class="masthead">
+            <h1>GE Vernova Virtual Sensing &mdash; Interview Study Site</h1>
+            <div class="meta">Architecture, study notes, and hands-on demos in one place.</div>
+          </header>
+          <nav class="toc">
+            <h2>Jump to</h2>
+            <a href="#architecture">Architecture</a>
+            <a href="#notes">Study Notes</a>
+            <a href="#demos">Demos</a>
+          </nav>
+          <main>
+
+        <!-- ================================================================
+             Group 1: Architecture
+             ================================================================ -->
+        <section class="card" id="architecture">
+          <h2 class="sec">Architecture</h2>
+          <p>Research pages covering the AGMS patent family, the director&#x27;s architecture,
+          and the grid-operations context &mdash; copied directly from the hand-authored
+          research HTML.</p>
+          {arch_cards_html}
+        </section>
+
+        <!-- ================================================================
+             Group 2: Study Notes
+             ================================================================ -->
+        <section class="card" id="notes">
+          <h2 class="sec">Study Notes</h2>
+          <p>{len(note_entries)} notes converted from Markdown, organized by phase.</p>
+          {note_cards_html}
+        </section>
+
+        <!-- ================================================================
+             Group 3: Demos
+             ================================================================ -->
+        <section class="card" id="demos">
+          <h2 class="sec">Demos</h2>
+          <p>Three from-scratch NumPy demos with embedded key-function code, inline
+          results, and links to full source &mdash; built offline, no runtime dependencies.</p>
+          {demo_cards_html}
+        </section>
+
+            <footer>GE Vernova Virtual Sensing Study Site &mdash; local, offline, no deployment required.</footer>
+          </main>
+        </div>
+        </body>
+        </html>
+        """)
+
+    out = DOCS / "index.html"
+    out.write_text(html, encoding="utf-8")
+    print(f"  generated  docs/index.html  ({len(note_entries)} note cards + {len(_ARCH_CARDS)} arch cards + {len(_DEMO_CARDS)} demo card)")
+
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 
@@ -347,6 +820,15 @@ def main() -> None:
     print("--- architecture copy ---")
     build_architecture()
     build_diagram_page()
+    print()
+
+    # Plan 07-03: demos page + card-grid hub
+    print("--- demos page ---")
+    build_demos()
+    print()
+
+    print("--- hub (index.html) ---")
+    build_hub(manifest)
     print()
 
 

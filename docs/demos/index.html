@@ -1,0 +1,304 @@
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noindex,nofollow">
+        <title>Hands-On Demos — GE Vernova Virtual Sensing Study Site</title>
+        <link rel="stylesheet" href="../assets/site.css">
+        <link rel="stylesheet" href="../assets/pygments.css">
+        </head>
+        <body>
+        <div class="wrap">
+          <header class="masthead">
+            <h1>Hands-On Demos</h1>
+            <div class="meta">Three from-scratch NumPy demos — EKF line temperature, DC
+            power-flow bad-data detection, and federated learning robustness.</div>
+          </header>
+          <nav class="toc">
+            <h2>Contents</h2>
+            <a href="#ekf">1. EKF Line Temperature</a>
+            <a href="#dc">2. DC Power-Flow Bad-Data</a>
+            <a href="#fed">3. Federated Learning</a>
+          </nav>
+          <main>
+
+        <!-- ================================================================
+             Demo 1: EKF Line Temperature
+             ================================================================ -->
+        <section class="card" id="ekf">
+          <h2 class="sec">1. EKF Line-Temperature / Dynamic Line Rating</h2>
+
+          <h3 class="sub">What it is</h3>
+          <p>A from-scratch <strong>Extended Kalman Filter (EKF)</strong> — NumPy/SciPy only,
+          no external KF library — that estimates overhead conductor temperature from simulated
+          current telemetry, demonstrating the core idea behind <strong>Dynamic Line Rating
+          (DLR)</strong> virtual sensing.</p>
+
+          <h3 class="sub">Why it was built (interview gap it closes)</h3>
+          <p>The role requires virtual-sensing experience: inferring unmeasured physical
+          quantities from indirect measurements.  This demo shows the EKF predict-update
+          loop applied to a conductor thermal model — the same first-order thermal ODE
+          structure used in building energy management (Juan's OSED work), just with Drake
+          ACSR parameters instead of building RC parameters.</p>
+          <div class="juan"><strong>&#9658; Juan:</strong> The bridge story: <em>"My OSED
+          building thermal model is <code>C&middot;dT/dt = Q_HVAC &minus; UA&middot;(T&minus;Ta)</code>
+          — structurally identical to the IEEE&nbsp;738 conductor ODE.  Swapping building RC
+          parameters for Drake ACSR parameters is a parameter substitution, not a conceptual
+          leap."</em></div>
+
+          <h3 class="sub">What it demonstrates</h3>
+          <ul>
+            <li>Simulates a Drake ACSR conductor heating up as current ramps 400&nbsp;A&nbsp;&rarr;&nbsp;600&nbsp;A over one hour using the <strong>IEEE&nbsp;738 thermal ODE</strong> as the physics engine.</li>
+            <li>Generates noisy apparent-resistance measurements (<code>z&nbsp;=&nbsp;R25&middot;(1&nbsp;+&nbsp;&alpha;&middot;(Tc&minus;25))</code>) mimicking current + voltage-drop observations.</li>
+            <li>Runs the <strong>EKF predict-update loop</strong> — IEEE&nbsp;738 ODE as the predict step; resistance model as the update step.</li>
+            <li>Computes a <strong>Dynamic Line Rating ampacity</strong> at the estimated temperature, showing available capacity vs. the 75&nbsp;&deg;C thermal limit.</li>
+            <li>Monitors filter health via a <strong>Normalized Innovation Squared (NIS) / chi-squared gate</strong> — only 0.3&nbsp;% of steps trigger (well below the expected 5&nbsp;% false-alarm rate).</li>
+          </ul>
+
+          <figure>
+            <img src="ekf_line_temp.png"
+                 alt="EKF line-temperature estimation: three-subplot figure showing true Tc vs EKF estimate with uncertainty band, innovation sequence, and posterior uncertainty convergence">
+            <figcaption>EKF output: true conductor temperature vs estimate with &plusmn;2&sigma;
+            band (top), innovation sequence (middle), and posterior uncertainty showing rapid
+            convergence from &plusmn;10&nbsp;&deg;C to &lt;0.2&nbsp;&deg;C (bottom).</figcaption>
+          </figure>
+
+          <h3 class="sub">Key function: <code>ekf_step</code></h3>
+          <p>One complete predict-update cycle (scalar state).  The IEEE&nbsp;738 ODE is the
+          predict step; the apparent-resistance model is the update step.</p>
+        <!-- embedded: def ekf_step -->
+        <div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">ekf_step</span><span class="p">(</span><span class="n">Tc_hat</span><span class="p">,</span> <span class="n">P</span><span class="p">,</span> <span class="n">I</span><span class="p">,</span> <span class="n">Ta</span><span class="p">,</span> <span class="n">z_meas</span><span class="p">,</span> <span class="n">Q</span><span class="p">,</span> <span class="n">R_noise</span><span class="p">,</span> <span class="n">dt</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;One EKF predict-update cycle (scalar state).</span>
+
+<span class="sd">    State       : Tc (°C)</span>
+<span class="sd">    Inputs      : I (A), Ta (°C)</span>
+<span class="sd">    Measurement : z = apparent resistance R_meas = R25*(1+alpha_R*(Tc-25))  [Ω/m]</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    Tc_hat  : float  prior state estimate (°C)</span>
+<span class="sd">    P       : float  prior state covariance (°C²)</span>
+<span class="sd">    I       : float  current (A)</span>
+<span class="sd">    Ta      : float  ambient temperature (°C)</span>
+<span class="sd">    z_meas  : float  measured apparent resistance (Ω/m)</span>
+<span class="sd">    Q       : float  process noise variance (°C²/step)</span>
+<span class="sd">    R_noise : float  measurement noise variance ((Ω/m)²)</span>
+<span class="sd">    dt      : float  time step (s)</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Tc_post : float  updated state estimate</span>
+<span class="sd">    P_post  : float  updated covariance</span>
+<span class="sd">    innov   : float  innovation  y_k = z_meas - z_pred</span>
+<span class="sd">    S       : float  innovation covariance</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># === PREDICT ===</span>
+    <span class="n">rhs</span> <span class="o">=</span> <span class="n">ieee738_rhs</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">Tc_hat</span><span class="p">,</span> <span class="n">I</span><span class="p">,</span> <span class="n">Ta</span><span class="p">)</span>
+    <span class="n">Tc_pred</span> <span class="o">=</span> <span class="n">Tc_hat</span> <span class="o">+</span> <span class="n">dt</span> <span class="o">*</span> <span class="n">rhs</span>              <span class="c1"># Euler step</span>
+
+    <span class="n">A</span> <span class="o">=</span> <span class="n">_process_jacobian</span><span class="p">(</span><span class="n">Tc_hat</span><span class="p">,</span> <span class="n">I</span><span class="p">,</span> <span class="n">Ta</span><span class="p">,</span> <span class="n">dt</span><span class="p">)</span>
+    <span class="n">P_pred</span> <span class="o">=</span> <span class="n">A</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">P</span> <span class="o">+</span> <span class="n">Q</span>                    <span class="c1"># scalar covariance propagation</span>
+
+    <span class="c1"># === UPDATE ===</span>
+    <span class="c1"># Measurement Jacobian: H = d/dTc [R25*(1+alpha_R*(Tc-25))] = R25*alpha_R</span>
+    <span class="n">H</span> <span class="o">=</span> <span class="n">R25</span> <span class="o">*</span> <span class="n">ALPHA_R</span>                        <span class="c1"># constant scalar ≈ 2.93e-7 Ω/(m·°C)</span>
+
+    <span class="n">z_pred</span> <span class="o">=</span> <span class="n">R25</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="n">ALPHA_R</span> <span class="o">*</span> <span class="p">(</span><span class="n">Tc_pred</span> <span class="o">-</span> <span class="mf">25.0</span><span class="p">))</span>
+    <span class="n">innov</span> <span class="o">=</span> <span class="n">z_meas</span> <span class="o">-</span> <span class="n">z_pred</span>                  <span class="c1"># innovation y_k</span>
+
+    <span class="n">S</span> <span class="o">=</span> <span class="n">H</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">P_pred</span> <span class="o">+</span> <span class="n">R_noise</span>              <span class="c1"># innovation covariance</span>
+    <span class="n">K</span> <span class="o">=</span> <span class="n">H</span> <span class="o">*</span> <span class="n">P_pred</span> <span class="o">/</span> <span class="n">S</span>                       <span class="c1"># Kalman gain</span>
+
+    <span class="n">Tc_post</span> <span class="o">=</span> <span class="n">Tc_pred</span> <span class="o">+</span> <span class="n">K</span> <span class="o">*</span> <span class="n">innov</span>
+    <span class="n">P_post</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">K</span> <span class="o">*</span> <span class="n">H</span><span class="p">)</span> <span class="o">*</span> <span class="n">P_pred</span>         <span class="c1"># standard form</span>
+
+    <span class="k">return</span> <span class="n">Tc_post</span><span class="p">,</span> <span class="n">P_post</span><span class="p">,</span> <span class="n">innov</span><span class="p">,</span> <span class="n">S</span>
+</pre></div>
+
+
+          <p><a href="ekf_line_temp_demo.py">View full source &rarr;</a></p>
+        </section>
+
+        <!-- ================================================================
+             Demo 2: DC Power-Flow Bad-Data Detection
+             ================================================================ -->
+        <section class="card" id="dc">
+          <h2 class="sec">2. DC Power-Flow Bad-Data Detection</h2>
+
+          <h3 class="sub">What it is</h3>
+          <p>A from-scratch <strong>Weighted-Least-Squares (WLS) state estimator</strong>
+          for a 3-bus DC power-flow network — NumPy/SciPy only, no power-flow library —
+          that infers bus voltage angles from a redundant measurement set, then
+          <strong>detects and removes a single corrupted measurement</strong> using the
+          chi-squared test and the largest normalized residual.</p>
+
+          <h3 class="sub">Why it was built (interview gap it closes)</h3>
+          <p>The role names state estimation and bad-data detection as core competencies.
+          This demo is the textbook TVS-02&nbsp;+&nbsp;TVS-03 illustration: the DC model
+          <code>h(&theta;)&nbsp;=&nbsp;H&theta;</code> is linear, so the Gauss-Newton
+          iteration from Phase&nbsp;1 collapses to a single normal-equations solve
+          — demonstrating the same WLS machinery Juan already uses, now applied to a
+          grid power network.</p>
+
+          <h3 class="sub">What it demonstrates</h3>
+          <ul>
+            <li>Builds a <strong>3-bus DC network</strong> and solves the reduced power flow for ground-truth angles.</li>
+            <li>Estimates two voltage angles via <strong>one-shot linear WLS</strong> from 5 redundant measurements (injections + line flows).</li>
+            <li>Injects a <strong>gross error (+15&sigma;)</strong> on the line-flow 2&rarr;3 measurement.</li>
+            <li>Runs the <strong>chi-squared test</strong> (<em>J&nbsp;=&nbsp;176.7 vs threshold&nbsp;7.8</em>) to detect bad data.</li>
+            <li>Uses the <strong>largest normalized residual</strong> (<em>rN&nbsp;=&nbsp;13.2 on measurement&nbsp;5</em>) to identify the culprit.</li>
+            <li><strong>Removes the suspect and re-solves</strong>: <em>J&nbsp;=&nbsp;1.8</em>, angles within 7&times;10<sup>&minus;4</sup>&nbsp;rad of truth.</li>
+          </ul>
+
+          <figure>
+            <img src="dc_powerflow_baddata.png"
+                 alt="DC power-flow bad-data detection: normalized residuals bar chart with flagged measurement highlighted in red (left), true vs estimated angles before and after bad-data removal (right)">
+            <figcaption>Bad-data detection output: normalized residuals with the 3&sigma; line
+            and flagged measurement #5 in red (left); true vs estimated angles before/after
+            bad-data removal (right).</figcaption>
+          </figure>
+
+          <h3 class="sub">Key functions</h3>
+          <p><strong><code>wls_solve</code></strong> — one-shot linear WLS (the linear
+          collapse of KAL-01's normal equations):</p>
+        <div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">wls_solve</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">W</span><span class="p">,</span> <span class="n">z</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;One-shot linear WLS (DC collapse of KAL-01&#39;s normal equations).&quot;&quot;&quot;</span>
+    <span class="n">G</span> <span class="o">=</span> <span class="n">H</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">W</span> <span class="o">@</span> <span class="n">H</span>                          <span class="c1"># gain / information matrix</span>
+    <span class="n">theta_hat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">H</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">W</span> <span class="o">@</span> <span class="n">z</span><span class="p">)</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="n">z</span> <span class="o">-</span> <span class="n">H</span> <span class="o">@</span> <span class="n">theta_hat</span>                    <span class="c1"># residuals</span>
+    <span class="n">J</span> <span class="o">=</span> <span class="n">r</span> <span class="o">@</span> <span class="n">W</span> <span class="o">@</span> <span class="n">r</span>                            <span class="c1"># weighted residual cost ~ chi2(m-n)</span>
+    <span class="k">return</span> <span class="n">theta_hat</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">J</span><span class="p">,</span> <span class="n">G</span>
+</pre></div>
+
+
+          <p><strong><code>chi2_test</code></strong> — detection: is there bad data?</p>
+        <div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">chi2_test</span><span class="p">(</span><span class="n">J</span><span class="p">,</span> <span class="n">df</span><span class="p">,</span> <span class="n">confidence</span><span class="o">=</span><span class="mf">0.95</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Detection: is there bad data? J &gt; chi2.ppf(0.95, df) flags an inconsistency.&quot;&quot;&quot;</span>
+    <span class="n">threshold</span> <span class="o">=</span> <span class="n">chi2</span><span class="o">.</span><span class="n">ppf</span><span class="p">(</span><span class="n">confidence</span><span class="p">,</span> <span class="n">df</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">threshold</span><span class="p">,</span> <span class="nb">bool</span><span class="p">(</span><span class="n">J</span> <span class="o">&gt;</span> <span class="n">threshold</span><span class="p">)</span>
+</pre></div>
+
+
+          <p><strong><code>normalized_residuals</code></strong> — identification: which
+          measurement is the culprit?</p>
+        <div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">normalized_residuals</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">H</span><span class="p">,</span> <span class="n">G</span><span class="p">,</span> <span class="n">W</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Identification: largest normalized residual names the suspect measurement.</span>
+
+<span class="sd">    Omega = R - H G^-1 H^T is the residual covariance; rN_i = |r_i| / sqrt(Omega_ii).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">Omega</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">W</span><span class="p">))</span> <span class="o">-</span> <span class="n">H</span> <span class="o">@</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">G</span><span class="p">)</span> <span class="o">@</span> <span class="n">H</span><span class="o">.</span><span class="n">T</span>   <span class="c1"># R - H G^-1 H^T</span>
+    <span class="n">rN</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">r</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">Omega</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">rN</span>
+</pre></div>
+
+
+          <p><a href="dc_powerflow_baddata_demo.py">View full source &rarr;</a></p>
+        </section>
+
+        <!-- ================================================================
+             Demo 3: Federated Learning — FedAvg / FedProx / Byzantine Robustness
+             ================================================================ -->
+        <section class="card" id="fed">
+          <h2 class="sec">3. Federated Learning — FedAvg / FedProx / Byzantine Robustness</h2>
+
+          <h3 class="sub">What it is</h3>
+          <p>A from-scratch implementation of <strong>FedAvg</strong>, <strong>FedProx</strong>
+          (proximal regularization), <strong>Krum</strong>, and <strong>coordinate-wise
+          median</strong> entirely in NumPy — no Flower, no PySyft, no framework
+          dependency.  Six simulated substations with non-IID data distributions demonstrate
+          client drift, FedProx's proximal damping, and Byzantine-robust aggregation.</p>
+
+          <h3 class="sub">Why it was built (interview gap it closes)</h3>
+          <p>The role names <em>"federated control frameworks"</em> and edge-ML expertise.
+          This demo shows FedAvg aggregation math, the proximal term that keeps substation
+          models tethered to the global fleet model, and Krum's distance-based rejection of
+          a poisoned client — all the algorithmic pieces that underpin a production federated
+          virtual-sensing system without ever shipping raw telemetry.</p>
+
+          <h3 class="sub">What it demonstrates</h3>
+          <ul>
+            <li><strong>Non-IID clients:</strong> six substations with different local data distributions (feeder means 0.0&nbsp;&hellip;&nbsp;2.5).</li>
+            <li><strong>FedAvg convergence</strong> over 20 communication rounds: <em>weighted average w&nbsp;=&nbsp;&sum;(n_k/n)&middot;w_k</em>.</li>
+            <li><strong>FedProx damps client drift:</strong> proximal term +(&mu;/2)&Vert;w&minus;w_t&Vert;&sup2; lives in the <em>client's local objective</em> (not the server aggregation — a common interview pitfall).</li>
+            <li><strong>Byzantine injection:</strong> client&nbsp;0 sends a poisoned update (shift &minus;5.0). Plain FedAvg averages the poison in; Krum and coordinate-wise median reject it.</li>
+          </ul>
+
+          <h3 class="sub">Key numeric output (seed&nbsp;42, reproducible)</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Method</th>
+                <th>Final estimate</th>
+                <th>Error vs true optimum (1.22)</th>
+                <th>Notes</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Plain FedAvg</td>
+                <td>+0.5826</td>
+                <td>&minus;0.64</td>
+                <td>Poisoned — client&nbsp;0 pulled it off</td>
+              </tr>
+              <tr>
+                <td>FedProx (&mu;&nbsp;=&nbsp;0.5)</td>
+                <td>+1.2237</td>
+                <td>+0.006</td>
+                <td>Proximal term kept local models near global</td>
+              </tr>
+              <tr>
+                <td>Krum (f&nbsp;=&nbsp;1)</td>
+                <td>+1.4743</td>
+                <td>+0.26</td>
+                <td>Rejected client&nbsp;0; selected honest update</td>
+              </tr>
+              <tr>
+                <td>Coord&nbsp;Median</td>
+                <td>+1.2548</td>
+                <td>+0.04</td>
+                <td>Median ignores outlier</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h3 class="sub">Key functions</h3>
+          <p><strong><code>fedavg_aggregate</code></strong> — server-side weighted-average
+          aggregation (McMahan et al.&nbsp;2017):</p>
+        <div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">fedavg_aggregate</span><span class="p">(</span><span class="n">local_models</span><span class="p">,</span> <span class="n">n_samples</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Server aggregation: weighted average sum((n_k / n) * w_k).&quot;&quot;&quot;</span>
+    <span class="n">n_total</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">n_samples</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">sum</span><span class="p">((</span><span class="n">n</span> <span class="o">/</span> <span class="n">n_total</span><span class="p">)</span> <span class="o">*</span> <span class="n">w</span> <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">w</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">n_samples</span><span class="p">,</span> <span class="n">local_models</span><span class="p">))</span>
+</pre></div>
+
+
+          <p><strong><code>krum_select</code></strong> — Byzantine-robust update selection
+          (Blanchard et al.&nbsp;2017): picks the update with the minimum sum of distances
+          to its nearest neighbors — honest updates cluster, the poisoned update is distant:</p>
+        <div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">krum_select</span><span class="p">(</span><span class="n">updates</span><span class="p">,</span> <span class="n">f</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Krum: pick the update with minimum sum-of-distances to its n-f-2 nearest neighbors.</span>
+
+<span class="sd">    Blanchard et al. NIPS 2017 — honest updates cluster together; the poisoned</span>
+<span class="sd">    update is far from the cluster so its Krum score is high (never selected).</span>
+<span class="sd">    Returns the index of the selected (most trustworthy) update.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">updates</span><span class="p">)</span>
+    <span class="n">n_neighbors</span> <span class="o">=</span> <span class="n">n</span> <span class="o">-</span> <span class="n">f</span> <span class="o">-</span> <span class="mi">2</span>
+    <span class="n">scores</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">u_i</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">updates</span><span class="p">):</span>
+        <span class="n">dists</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span>
+            <span class="p">[(</span><span class="n">u_i</span> <span class="o">-</span> <span class="n">u_j</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">u_j</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">updates</span><span class="p">)</span> <span class="k">if</span> <span class="n">j</span> <span class="o">!=</span> <span class="n">i</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="n">scores</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">dists</span><span class="p">[:</span><span class="n">n_neighbors</span><span class="p">]))</span>
+    <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">scores</span><span class="p">))</span>
+</pre></div>
+
+
+          <p><a href="fedavg_fedprox_krum_demo.py">View full source &rarr;</a></p>
+        </section>
+
+            <footer><a href="../index.html">&larr; Back to study hub</a></footer>
+          </main>
+        </div>
+        </body>
+        </html>
