@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The AGMS Architecture — A Full, Conceptual Walkthrough</title>
+<style>
+  :root{--panel:#fff;--ink:#1a2230;--muted:#5c6b7a;--line:#e3e8ee;--accent:#0b6e4f;--accent-soft:#e7f4ee;--gold:#b8860b;--code-bg:#f4f6f8;--callout:#fff8e6;--callout-line:#e0b84c;--juan-bg:#eef7f1;--juan-line:#0b6e4f;}
+  *{box-sizing:border-box;} html{scroll-behavior:smooth;}
+  body{margin:0;background:#eef1f5;color:var(--ink);font:16px/1.7 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 20px 80px;display:grid;grid-template-columns:250px 1fr;gap:36px;}
+  @media (max-width:900px){.wrap{grid-template-columns:1fr;}nav.toc{position:static!important;max-height:none!important;}}
+  header.masthead{grid-column:1/-1;background:linear-gradient(135deg,#0f1f2e 0%,#11342a 100%);color:#fff;border-radius:14px;padding:30px 36px;margin:28px 0 6px;box-shadow:0 8px 30px rgba(15,31,46,.25);}
+  header.masthead h1{margin:0;font-size:28px;letter-spacing:.2px;line-height:1.25;}
+  nav.toc{position:sticky;top:18px;align-self:start;max-height:calc(100vh - 36px);overflow:auto;font-size:13.5px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 14px;}
+  nav.toc h2{font-size:11px;text-transform:uppercase;letter-spacing:1.4px;color:var(--muted);margin:0 0 10px;}
+  nav.toc a{display:block;color:var(--muted);text-decoration:none;padding:5px 8px;border-radius:6px;border-left:2px solid transparent;}
+  nav.toc a:hover{color:var(--accent);background:var(--accent-soft);border-left-color:var(--accent);}
+  main{min-width:0;}
+  section.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 30px 26px;margin:18px 0;box-shadow:0 1px 3px rgba(20,30,45,.04);}
+  h2.sec{font-size:22px;margin:10px 0 6px;padding-bottom:10px;border-bottom:2px solid var(--accent-soft);color:#0c2a20;scroll-margin-top:16px;}
+  h3.sub{font-size:17px;margin:22px 0 4px;color:#13433a;}
+  p{margin:12px 0;} strong{color:#0c2233;} em{color:#33324a;} a{color:var(--accent);}
+  code{background:var(--code-bg);border:1px solid var(--line);border-radius:5px;padding:1px 5px;font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace;font-size:13px;color:#33424f;}
+  pre.diagram{background:#0f1722;color:#d6e3ee;border-radius:10px;padding:18px 20px;overflow-x:auto;font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;line-height:1.5;border:1px solid #1c2a3a;}
+  table{width:100%;border-collapse:collapse;margin:14px 0;font-size:14.5px;}
+  th,td{text-align:left;vertical-align:top;padding:9px 12px;border-bottom:1px solid var(--line);}
+  thead th{background:var(--accent-soft);color:#0c2a20;border-bottom:2px solid #cfe7dc;font-size:13px;}
+  tbody tr:nth-child(even){background:#fafbfc;} td code{font-size:12.5px;}
+  ul,ol{margin:12px 0;padding-left:24px;} li{margin:7px 0;}
+  .callout{background:var(--callout);border-left:4px solid var(--callout-line);border-radius:0 8px 8px 0;padding:12px 18px;margin:16px 0;}
+  .callout p{margin:0;}
+  .juan{background:var(--juan-bg);border-left:4px solid var(--juan-line);border-radius:0 8px 8px 0;padding:11px 18px;margin:14px 0;font-size:14.5px;}
+  footer{grid-column:1/-1;text-align:center;color:var(--muted);font-size:12.5px;margin-top:24px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="masthead"><h1>Source: Distributed FLISR as a Finite-State Machine over IEC 61850</h1></header>
+  <nav class="toc">
+    <h2>Contents</h2>
+    <a href="#p1">Citation</a>
+    <a href="#p2">What it is (one paragraph)</a>
+    <a href="#p3">Key technical content</a>
+    <a href="#p4">Why it matters for our notes / the role</a>
+    <a href="#p5">Interview talking points</a>
+    <a href="#p6">Where it is cited in our notes</a>
+  </nav>
+  <main>
+<section class="card">
+<h2 class="sec" id="p1">Citation</h2>
+<div class="callout"><p>Cosmin Koch-Ciobotaru, Mehdi Monadi, Alvaro Luna, Pedro Rodriguez, <strong>"Distributed FLISR Algorithm for Smart Grid Self-Reconfiguration based on IEC 61850,"</strong> 3rd International Conference on Renewable Energy Research and Applications (ICRERA), Milwaukee, USA, 19–22 Oct 2014. IEEE, pp. 418–423. Affiliations: Technical University of Catalonia (UPC), SEER Center; Abengoa Research.</p></div>
+<p>Source file: <code>docs/flisr.pdf</code> (6 pages, text-native — no OCR needed).</p>
+</section>
+<section class="card">
+<h2 class="sec" id="p2">What it is (one paragraph)</h2>
+<p>A concrete, published design for <strong>decentralized self-healing of a distribution feeder.</strong> Instead of a central controller computing the restoration switching, <strong>each circuit breaker runs the <em>same</em> algorithm, implemented as an event-driven finite-state machine</strong>, and the breakers cooperate by exchanging <strong>IEC 61850 GOOSE messages</strong> with their immediate neighbors only. Collectively, the local machines reconfigure the grid to re-energize the maximum number of loads after a fault — no central brain, no global model.</p>
+</section>
+<section class="card">
+<h2 class="sec" id="p3">Key technical content</h2>
+<p><strong>Three breaker "agents," each its own finite-state machine (Fig. 2 a/b/c):</strong></p>
+<ul><li><strong>Circuit breaker</strong> — connects the feeder to the transformer.</li><li><strong>Sectionalizing breaker</strong> — separates sections on the same feeder.</li><li><strong>Tie breaker</strong> — interconnects neighboring feeders (the alternate-supply path).</li></ul>
+<p>The states are grouped into <strong>7 numbered states</strong> (State1 = nominal/initial; State7 = idle/no-action; after a crew clears the fault and resets, the FSM returns to State1). Transitions are <strong>event-driven</strong>, fired by <em>local measurements</em> (overcurrent) or <em>messages from neighbors</em>.</p>
+<p><strong>The global behavior unfolds in three phases:</strong></p>
+<ol><li><strong>Phase I — fault isolation (cascade downstream).</strong> A breaker detects overcurrent, opens, and sends two GOOSE messages downstream: a <em>trip</em> message and the <em>measured current</em> prior to the fault. Each downstream breaker opens on receiving the trip and forwards the pair — cascading to the end of the feeder.</li><li><strong>Phase II — search upstream.</strong> Starting from the last breaker, the feeder is "covered" upstream to find a <strong>tie breaker</strong> connected to a neighboring feeder with <strong>spare current capacity.</strong></li><li><strong>Phase III — restore.</strong> The qualifying tie breaker closes and energizes the recoverable section from the neighboring feeder — repeated until the feeder is restored or the neighbor's capacity is reached.</li></ol>
+<p><strong>Communication:</strong> IEC 61850 <strong>GOOSE</strong>, with the standard's <strong>~5 ms</strong> peer-to-peer delivery; signals (Table I) include <code>OverCurrent</code>, <code>RecTrip</code>, <code>SendTrip</code>, <code>SendPrimaryTrip</code>, section-load values, tie-breaker exchanges, and cover-direction flags — to be mapped to IEC 61850 <strong>Logical Nodes.</strong></p>
+<p><strong>KPIs:</strong> SAIDI (System Average Interruption Duration Index), <strong>CARTI</strong> (Customers' Average Restoration Time Index), and <strong>FoS</strong> (Fraction of Served nodes) — FoS is the paper's efficiency indicator.</p>
+<p><strong>The honest tradeoff (important):</strong> the distributed approach computes a <strong>fast local optimum</strong>, not the global optimum. Grid reconfiguration is <strong>NP-complete</strong> — the true optimum needs a holistic, centralized view exploring all configurations. So: <em>centralized = global-optimal but slow and needs full observability; distributed = sub-optimal but fast, modular, and needs only neighbor data.</em></p>
+</section>
+<section class="card">
+<h2 class="sec" id="p4">Why it matters for our notes / the role</h2>
+<p>This single paper independently validates several of the architecture's central claims with a real, citable engineering design:</p>
+<ul><li><strong>"Decentralized self-healing as a state machine" is real, not hand-waving.</strong> AGMS's distributed FLISR / loop schemes (study note Appendix C/E.7) and the whole "operating cells run a state machine locally" thesis (AGMS-architecture Part 3, Appendix F meaning ③) are exactly what this paper builds — an FSM per device, driven by local events and neighbor messages.</li><li><strong>It grounds the centralized-vs-decentralized tradeoff</strong> the notes lean on (Appendix C, Part 0/7): the paper states plainly that distributed FLISR trades global optimality for speed and modularity. AGMS's "act locally in seconds, survive loss of the center" bet is the same tradeoff, made deliberately.</li><li><strong>It ties FLISR to IEC 61850 / GOOSE</strong> — a <em>preferred qualification</em> in the job description. Being able to say "distributed FLISR is implemented as an FSM exchanging GOOSE messages between breakers, ~5 ms" shows real T&amp;D fluency.</li><li><strong>It is the simplest concrete instance of an AGMS scout/operating-cell idea</strong>: same algorithm on every field device, neighbor-only messaging, collective self-reconfiguration — a 2014 special-purpose ancestor of the generalized, learning-driven version the patents describe.</li></ul>
+</section>
+<section class="card">
+<h2 class="sec" id="p5">Interview talking points</h2>
+<ul><li>"FLISR can be centralized in the ADMS or distributed across the breakers. The distributed version is literally a finite-state machine per breaker exchanging IEC 61850 GOOSE with its neighbors — that's the decentralized self-healing the role is generalizing."</li><li>"The catch is that reconfiguration is NP-complete, so distributed FLISR gets a fast <em>local</em> optimum, not the global one — which is exactly the speed-vs-optimality tradeoff behind decentralized grid operations."</li><li>"Where AGMS goes further: instead of a <em>fixed</em> FSM hard-coded into each breaker, the response state machine is selected/built from learned patterns per situation — fixed logic becomes reasoning."</li></ul>
+</section>
+<section class="card">
+<h2 class="sec" id="p6">Where it is cited in our notes</h2>
+<ul><li>Study note <a href="../grid-operations-and-role.html" target="_blank" rel="noopener"><code>grid-operations-and-role.md</code></a> — Appendix E.7 (distributed FLISR).</li><li>Relates to <a href="../AGMS-architecture.html" target="_blank" rel="noopener"><code>patents/AGMS-architecture.md</code></a> Part 3 (the CaCSM as a state machine) and Appendix F (meaning ③, the plan-step state machine).</li></ul>
+</section>
+    <footer>Rendered from the Markdown source — content unchanged.</footer>
+  </main>
+</div>
+</body>
+</html>

@@ -3,7 +3,9 @@
 build_site.py — Idempotent build script for the GE Vernova Virtual Sensing study site.
 
 Plan 07-01 scope: note discovery, MD→HTML conversion, shared HTML shell, pygments highlight.
-Later plans (07-02/03/04) will extend this file with architecture copy, hub, demos, publish.
+Plan 07-02 scope: copy research trio + sources + diagram into docs/architecture/; rewrite
+                  cross-links; emit diagram.html viewer.
+Later plans (07-03/04) will extend this file with demos page and hub.
 
 Usage:
     .venv-site/bin/python docs/build_site.py
@@ -11,6 +13,7 @@ Usage:
 
 import json
 import pathlib
+import shutil
 import sys
 import textwrap
 
@@ -159,6 +162,159 @@ def write_manifest(manifest: dict) -> None:
 
 
 # ---------------------------------------------------------------------------
+# Architecture copy + link rewriting (Plan 07-02)
+# ---------------------------------------------------------------------------
+RESEARCH = REPO_ROOT / ".planning" / "research"
+
+# Source paths (read-only originals — never modified)
+_TRIO_SRCS = {
+    "AGMS-architecture.html":     RESEARCH / "patents"  / "AGMS-architecture.html",
+    "grid-operations-and-role.html": RESEARCH / "grid-operations-and-role.html",
+    "INDEX.html":                 RESEARCH / "patents"  / "INDEX.html",
+}
+_SOURCES_SRCS = {
+    "flisr-distributed-fsm-2014.html": RESEARCH / "sources" / "flisr-distributed-fsm-2014.html",
+    "mapek-aware-2025.html":           RESEARCH / "sources" / "mapek-aware-2025.html",
+}
+_ASSET_SRCS = {
+    "AGMS-architecture.svg":         RESEARCH / "patents" / "AGMS-architecture.svg",
+    "AGMS-architecture.drawio.png":  RESEARCH / "patents" / "AGMS-architecture.drawio.png",
+}
+
+# Link-rewrite map — keyed by target filename, value is list of (old, new) string pairs.
+# Applied to the trio + sources pages. (D-07/D-08; T-07-05)
+_REWRITES: dict[str, list[tuple[str, str]]] = {
+    "grid-operations-and-role.html": [
+        # Flatten patents/ prefix (was 2 dirs deep; now siblings in architecture/)
+        ('href="patents/AGMS-architecture.html"', 'href="AGMS-architecture.html"'),
+        ('href="patents/INDEX.html"',              'href="INDEX.html"'),
+        # sources/ hrefs stay unchanged — sources/ dir is copied to architecture/sources/
+    ],
+    "AGMS-architecture.html": [
+        # Was ../grid-operations-and-role.html (relative to patents/ subdir); now sibling
+        ('href="../grid-operations-and-role.html"', 'href="grid-operations-and-role.html"'),
+        # href="INDEX.html" stays unchanged (already sibling)
+    ],
+    "INDEX.html": [
+        # href="AGMS-architecture.html" stays unchanged (already sibling)
+        # D-08 verified: no real <a href="...patent-*.pdf"> links in INDEX.html;
+        # patent PDFs appear only inside <code> labels — no rewrite needed.
+    ],
+    "flisr-distributed-fsm-2014.html": [
+        # Was ../patents/AGMS-architecture.html (relative to sources/ one level up)
+        ('href="../patents/AGMS-architecture.html"', 'href="../AGMS-architecture.html"'),
+        # href="../grid-operations-and-role.html" stays unchanged
+    ],
+    "mapek-aware-2025.html": [
+        ('href="../patents/AGMS-architecture.html"', 'href="../AGMS-architecture.html"'),
+        # href="../grid-operations-and-role.html" stays unchanged
+    ],
+}
+
+
+def _copy_and_rewrite(src: pathlib.Path, dst: pathlib.Path, rewrites: list[tuple[str, str]]) -> None:
+    """Read src HTML, apply string-replacement rewrites, write to dst."""
+    text = src.read_text(encoding="utf-8")
+    for old, new in rewrites:
+        text = text.replace(old, new)
+    dst.write_text(text, encoding="utf-8")
+
+
+def build_architecture() -> None:
+    """Copy research trio + source siblings + diagram assets into docs/architecture/.
+
+    Layout:
+      docs/architecture/AGMS-architecture.html
+      docs/architecture/grid-operations-and-role.html
+      docs/architecture/INDEX.html
+      docs/architecture/sources/flisr-distributed-fsm-2014.html
+      docs/architecture/sources/mapek-aware-2025.html
+      docs/architecture/AGMS-architecture.svg
+      docs/architecture/AGMS-architecture.drawio.png
+    """
+    arch_dir = DOCS / "architecture"
+    arch_dir.mkdir(parents=True, exist_ok=True)
+    (arch_dir / "sources").mkdir(parents=True, exist_ok=True)
+
+    # Copy + rewrite the trio
+    for fname, src in _TRIO_SRCS.items():
+        dst = arch_dir / fname
+        rewrites = _REWRITES.get(fname, [])
+        _copy_and_rewrite(src, dst, rewrites)
+        print(f"  copied+relinked  {src.relative_to(REPO_ROOT)!s:<60s}  ->  architecture/{fname}")
+
+    # Copy + rewrite source siblings into architecture/sources/
+    for fname, src in _SOURCES_SRCS.items():
+        dst = arch_dir / "sources" / fname
+        rewrites = _REWRITES.get(fname, [])
+        _copy_and_rewrite(src, dst, rewrites)
+        print(f"  copied+relinked  {src.relative_to(REPO_ROOT)!s:<60s}  ->  architecture/sources/{fname}")
+
+    # Copy diagram assets (binary — no rewrite, use shutil.copy2)
+    for fname, src in _ASSET_SRCS.items():
+        dst = arch_dir / fname
+        shutil.copy2(src, dst)
+        print(f"  copied asset     {src.relative_to(REPO_ROOT)!s:<60s}  ->  architecture/{fname}")
+
+    print(f"  architecture/: {len(_TRIO_SRCS)} trio + {len(_SOURCES_SRCS)} sources + {len(_ASSET_SRCS)} assets")
+
+
+# ---------------------------------------------------------------------------
+# Diagram viewer page (Plan 07-02)
+# ---------------------------------------------------------------------------
+
+def build_diagram_page() -> None:
+    """Emit docs/architecture/diagram.html — shared-shell viewer for the AGMS SVG.
+
+    Uses the same .wrap shell as note pages; no MathJax (no math on this page).
+    Paths: ../assets/site.css, ../assets/pygments.css (one level up from architecture/).
+    """
+    arch_dir = DOCS / "architecture"
+    arch_dir.mkdir(parents=True, exist_ok=True)
+
+    html = textwrap.dedent("""\
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noindex,nofollow">
+        <title>AGMS Architecture Diagram</title>
+        <link rel="stylesheet" href="../assets/site.css">
+        <link rel="stylesheet" href="../assets/pygments.css">
+        </head>
+        <body>
+        <div class="wrap">
+          <header class="masthead"><h1>AGMS Architecture Diagram</h1></header>
+          <nav class="toc">
+            <h2>On this page</h2>
+            <a href="#diagram">AGMS reference architecture</a>
+          </nav>
+          <main>
+            <section class="card" id="diagram">
+              <h2 class="sec">AGMS reference architecture</h2>
+              <p>The self-organizing grid-management platform: perceive (GWM) &rarr; reason
+              (CaCSM) &rarr; orchestrate (Logistician/GWCH) &rarr; deploy autonomous scouts.
+              SVG below; <a href="AGMS-architecture.drawio.png">PNG fallback</a>.</p>
+              <figure>
+                <img src="AGMS-architecture.svg" alt="AGMS reference architecture diagram">
+                <figcaption>AGMS architecture (source: director&#x27;s patent family walkthrough).
+                Crisp SVG render.</figcaption>
+              </figure>
+            </section>
+            <footer><a href="../index.html">&larr; Back to study hub</a></footer>
+          </main>
+        </div>
+        </body>
+        </html>
+        """)
+
+    out = arch_dir / "diagram.html"
+    out.write_text(html, encoding="utf-8")
+    print(f"  generated         diagram viewer                                            ->  architecture/diagram.html")
+
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 
@@ -186,6 +342,12 @@ def main() -> None:
     write_manifest(manifest)
     print(f"\n  manifest written -> {MANIFEST_PATH.relative_to(REPO_ROOT)}")
     print(f"  total: {len(note_paths)} notes converted\n")
+
+    # Plan 07-02: copy architecture research pages + diagram viewer
+    print("--- architecture copy ---")
+    build_architecture()
+    build_diagram_page()
+    print()
 
 
 if __name__ == "__main__":
