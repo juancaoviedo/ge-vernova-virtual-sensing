@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
+status: verifying
 stopped_at: Phase 7 UI-SPEC approved
-last_updated: "2026-06-15T07:03:52.645Z"
+last_updated: "2026-06-15T07:12:31.315Z"
 last_activity: 2026-06-15
 progress:
   total_phases: 8
   completed_phases: 5
   total_plans: 17
-  completed_plans: 15
-  percent: 88
+  completed_plans: 16
+  percent: 94
 ---
 
 # Project State
@@ -27,10 +27,10 @@ See: .planning/PROJECT.md (updated 2026-06-13)
 
 Phase: 7 (integrated-html-study-site) — EXECUTING
 Plan: 4 of 4
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-06-15
 
-Progress: [█████████░] 88%
+Progress: [█████████░] 94%
 
 ## Performance Metrics
 
@@ -64,6 +64,7 @@ Progress: [█████████░] 88%
 | Phase 04 P03 | 8 | 1 tasks | 1 files |
 | Phase 05 P01 | 3 | 2 tasks | 2 files |
 | Phase 7 P01 | 90 | 3 tasks | 23 files |
+| Phase 07 P03 | 4 | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -91,6 +92,8 @@ Recent decisions affecting current work:
 - [Phase 05-03]: Phase 5 complete — 3 notes (FED-01/02/03) + 1 NumPy demo (FedAvg/FedProx/Krum/coord-median); FED-01 and FED-02a 'I ran this from scratch' credibility established
 - [Phase 07-integrated-html-study-site]: D-13: MathJax 3.2.2 full es5/ tree vendored into docs/vendor/mathjax/ for offline file:// rendering — CHTML fonts co-located; HTML-04 confirmed by user
 - [Phase 07-integrated-html-study-site]: D-01: docs/build_site.py is the single re-runnable note-conversion build entry point; plans 02-04 extend the same file (not create new scripts)
+- [Phase ?]: D-11: AST-based _slice_function() embeds key functions only — no whole files
+- [Phase ?]: Hub index.html is manifest-driven (no hardcoded slugs) — prevents slug drift
 
 ### Roadmap Evolution
 
@@ -118,6 +121,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-06-15T07:03:52.630Z
+Last session: 2026-06-15T07:12:26.369Z
 Stopped at: Phase 7 UI-SPEC approved
 Resume file: None
