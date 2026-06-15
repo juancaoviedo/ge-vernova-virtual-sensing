@@ -1,0 +1,55 @@
+/* ============================================================
+   GE Vernova Virtual Sensing — Study Site
+   Shared design system (verbatim from AGMS-architecture.html)
+   + INDEX.html carry-overs + additive rule sets
+   ============================================================ */
+
+/* --- Verbatim design-system block (D-03) --- */
+:root{--panel:#fff;--ink:#1a2230;--muted:#5c6b7a;--line:#e3e8ee;--accent:#0b6e4f;--accent-soft:#e7f4ee;--gold:#b8860b;--code-bg:#f4f6f8;--callout:#fff8e6;--callout-line:#e0b84c;--juan-bg:#eef7f1;--juan-line:#0b6e4f;}
+*{box-sizing:border-box;} html{scroll-behavior:smooth;}
+body{margin:0;background:#eef1f5;color:var(--ink);font:16px/1.7 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+.wrap{max-width:1180px;margin:0 auto;padding:0 20px 80px;display:grid;grid-template-columns:250px 1fr;gap:36px;}
+@media (max-width:900px){.wrap{grid-template-columns:1fr;}nav.toc{position:static!important;max-height:none!important;}}
+header.masthead{grid-column:1/-1;background:linear-gradient(135deg,#0f1f2e 0%,#11342a 100%);color:#fff;border-radius:14px;padding:30px 36px;margin:28px 0 6px;box-shadow:0 8px 30px rgba(15,31,46,.25);}
+header.masthead h1{margin:0;font-size:28px;letter-spacing:.2px;line-height:1.25;}
+nav.toc{position:sticky;top:18px;align-self:start;max-height:calc(100vh - 36px);overflow:auto;font-size:13.5px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 14px;}
+nav.toc h2{font-size:11px;text-transform:uppercase;letter-spacing:1.4px;color:var(--muted);margin:0 0 10px;}
+nav.toc a{display:block;color:var(--muted);text-decoration:none;padding:5px 8px;border-radius:6px;border-left:2px solid transparent;}
+nav.toc a:hover{color:var(--accent);background:var(--accent-soft);border-left-color:var(--accent);}
+main{min-width:0;}
+section.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 30px 26px;margin:18px 0;box-shadow:0 1px 3px rgba(20,30,45,.04);}
+h2.sec{font-size:22px;margin:10px 0 6px;padding-bottom:10px;border-bottom:2px solid var(--accent-soft);color:#0c2a20;scroll-margin-top:16px;}
+h3.sub{font-size:17px;margin:22px 0 4px;color:#13433a;}
+p{margin:12px 0;} strong{color:#0c2233;} em{color:#33324a;} a{color:var(--accent);}
+code{background:var(--code-bg);border:1px solid var(--line);border-radius:5px;padding:1px 5px;font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace;font-size:13px;color:#33424f;}
+pre.diagram{background:#0f1722;color:#d6e3ee;border-radius:10px;padding:18px 20px;overflow-x:auto;font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;line-height:1.5;border:1px solid #1c2a3a;}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:14.5px;}
+th,td{text-align:left;vertical-align:top;padding:9px 12px;border-bottom:1px solid var(--line);}
+thead th{background:var(--accent-soft);color:#0c2a20;border-bottom:2px solid #cfe7dc;font-size:13px;}
+tbody tr:nth-child(even){background:#fafbfc;} td code{font-size:12.5px;}
+ul,ol{margin:12px 0;padding-left:24px;} li{margin:7px 0;}
+.callout{background:var(--callout);border-left:4px solid var(--callout-line);border-radius:0 8px 8px 0;padding:12px 18px;margin:16px 0;}
+.callout p{margin:0;}
+.juan{background:var(--juan-bg);border-left:4px solid var(--juan-line);border-radius:0 8px 8px 0;padding:11px 18px;margin:14px 0;font-size:14.5px;}
+footer{grid-column:1/-1;text-align:center;color:var(--muted);font-size:12.5px;margin-top:24px;}
+
+/* --- INDEX.html carry-overs (hub masthead with .meta subtitle) --- */
+:root{--start-bg:#eaf3ff;--start-line:#4a90d9;}
+header.masthead h1{margin:0 0 14px;}
+header.masthead .meta{font-size:15px;line-height:1.7;color:#d7e3dd;}
+header.masthead .meta strong{color:#fff;}
+
+/* --- Hub card grid (D-09) --- */
+.card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:18px;margin:14px 0;}
+.hub-card{display:block;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 20px;text-decoration:none;color:var(--ink);box-shadow:0 1px 3px rgba(20,30,45,.04);border-left:2px solid transparent;}
+.hub-card:hover{color:var(--accent);background:var(--accent-soft);border-left-color:var(--accent);}
+.hub-card h3{margin:0 0 6px;font-size:16px;color:#13433a;}
+.hub-card p{margin:0;font-size:13.5px;color:var(--muted);}
+
+/* --- Demo result figures (D-10) --- */
+figure{margin:16px 0;}
+figure img{max-width:100%;border:1px solid var(--line);border-radius:10px;}
+figcaption{font-size:13.5px;color:var(--muted);margin-top:6px;}
+
+/* --- Pygments host tuning so highlighted code sits alongside pre.diagram --- */
+div.highlight pre{font-size:12.5px;line-height:1.5;background:var(--code-bg);border:1px solid var(--line);border-radius:10px;padding:14px 16px;overflow-x:auto;}
