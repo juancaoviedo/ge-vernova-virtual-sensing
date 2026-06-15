@@ -1,0 +1,224 @@
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noindex,nofollow">
+        <title>TVS-03: Observability & Bad-Data Detection</title>
+        <link rel="stylesheet" href="../assets/site.css">
+        <link rel="stylesheet" href="../assets/pygments.css">
+        <script>
+window.MathJax = {
+  tex: { inlineMath: [["\\(","\\)"]], displayMath: [["\\[","\\]"]],
+         processEscapes: true, processEnvironments: true },
+  options: { ignoreHtmlClass: ".*", processHtmlClass: "arithmatex" }
+};
+</script>
+<script defer src="../vendor/mathjax/tex-chtml.js"></script>
+        </head>
+        <body>
+        <div class="wrap">
+          <header class="masthead"><h1>TVS-03: Observability & Bad-Data Detection</h1></header>
+          <nav class="toc"><h2>Contents</h2><div class="toc">
+<ul>
+<li><a href="#1-observability-via-the-measurement-jacobian-rank">1. Observability via the Measurement Jacobian Rank</a></li>
+<li><a href="#2-chi-squared-detection-is-there-bad-data">2. Chi-Squared Detection — "Is There Bad Data?"</a></li>
+<li><a href="#3-largest-normalized-residual-rn-identification-which-one">3. Largest-Normalized-Residual (\(r^N\)) Identification — "Which One?"</a></li>
+<li><a href="#4-the-critical-limitation-leverage-measurements-awareness-but-interview-gold">4. The Critical Limitation — Leverage Measurements (Awareness, but Interview Gold)</a></li>
+<li><a href="#3-min-say-aloud-version">&lt;3-min say-aloud version</a></li>
+<li><a href="#bridge-to-your-work">→ Bridge to your work</a></li>
+<li><a href="#quick-recall-card-recite-before-the-interview">Quick-Recall Card (Recite Before the Interview)</a></li>
+</ul>
+</div>
+</nav>
+          <main>
+        <h1 id="tvs-03-observability-bad-data-detection">TVS-03: Observability &amp; Bad-Data Detection</h1>
+<p><strong>For:</strong> Oral rehearsal — speak each section aloud before the interview.
+<strong>Purpose:</strong> Own the observability and bad-data vocabulary — Jacobian-rank observability, the
+chi-squared detection test, normalized-residual identification, and the leverage-measurement
+blind spot — so you can answer "how do you know your state estimate is trustworthy?" with the
+exact production machinery, not generalities.</p>
+<hr />
+<blockquote>
+<p><strong>This note specializes KAL-01 §4 to the linear DC case.</strong> KAL-01 already owns the WLS
+objective, the chi-squared test, the largest-normalized-residual (LNR) test, and the leverage
+trap for the nonlinear AC estimator. Here the measurement model is <strong>linear</strong> (<span class="arithmatex">\(z = H\theta + e\)</span>,
+from TVS-02's DC power flow), so the Jacobian <span class="arithmatex">\(H\)</span> is <em>constant</em> — no relinearization. Everything
+below is the same residual machinery, just with a fixed <span class="arithmatex">\(H\)</span>. <strong>Do not re-derive WLS</strong> — it is
+the one-shot solve <span class="arithmatex">\(\hat\theta = (H^\top W H)^{-1}H^\top W z\)</span> from TVS-02.</p>
+</blockquote>
+<h2 id="1-observability-via-the-measurement-jacobian-rank">1. Observability via the Measurement Jacobian Rank</h2>
+<p><strong>Mental model first.</strong> Observability asks one question: <em>is the measurement set rich enough to
+pin down every state uniquely?</em> If two different state vectors could produce the same
+measurements, you cannot tell them apart — the grid is unobservable.</p>
+<p>The system is <strong>numerically observable</strong> iff the gain (information) matrix</p>
+<div class="arithmatex">\[G = H^\top W H\]</div>
+<p>is nonsingular — equivalently, iff <span class="arithmatex">\(H\)</span> has <strong>full column rank</strong>:</p>
+<div class="arithmatex">\[\operatorname{rank}(H) = n \qquad (n = \text{number of states})\]</div>
+<p>If <span class="arithmatex">\(\operatorname{rank}(H) &lt; n\)</span>, the gain matrix is singular, the normal equations have no unique
+solution, and you have <strong>unobservable states or islands</strong> — buses (or whole regions) that no
+combination of measurements can determine. The control center flags these and falls back to
+pseudo-measurements (historical/forecast injections) or skips the region.</p>
+<p><strong>The practical check is one line:</strong></p>
+<div class="highlight"><pre><span></span><code><span class="n">observable</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">matrix_rank</span><span class="p">(</span><span class="n">H</span><span class="p">)</span> <span class="o">==</span> <span class="n">n</span>   <span class="c1"># full column rank?</span>
+</code></pre></div>
+
+<p><strong>Topological vs. numerical observability.</strong> <em>Topological</em> observability is a graph argument —
+does a spanning tree of measured branches reach every bus? <em>Numerical</em> observability is the
+actual rank of <span class="arithmatex">\(H\)</span> at the operating point (it can fail even when the graph looks fine, e.g. when
+measurements are linearly dependent). Name both; <strong>the rank test is the operational one</strong> you run.</p>
+<p><strong>Interview sentence:</strong> "Observability is whether the Jacobian <span class="arithmatex">\(H\)</span> has full column rank — whether
+the measurements are independent enough to uniquely pin down every angle. In the linear DC case I
+literally check <code>numpy.linalg.matrix_rank(H) == n</code>."</p>
+<hr />
+<h2 id="2-chi-squared-detection-is-there-bad-data">2. Chi-Squared Detection — "Is There Bad Data?"</h2>
+<p><strong>Mental model first.</strong> Because there is <strong>redundancy</strong> (<span class="arithmatex">\(m\)</span> measurements, <span class="arithmatex">\(n\)</span> states, <span class="arithmatex">\(m &gt; n\)</span>),
+the residuals carry information. If every sensor is clean, the weighted residual cost is small and
+statistically predictable. If one is grossly wrong, the cost spikes. The chi-squared test turns
+that into a hypothesis test.</p>
+<p>After the WLS solve, the weighted residual cost</p>
+<div class="arithmatex">\[J(\hat\theta) = r^\top W r, \qquad r = z - H\hat\theta\]</div>
+<p>follows a <strong>chi-squared distribution</strong> with <span class="arithmatex">\(m - n\)</span> degrees of freedom (<span class="arithmatex">\(m\)</span> measurements minus
+<span class="arithmatex">\(n\)</span> states = degrees of redundancy).</p>
+<p><strong>Detection rule:</strong> if</p>
+<div class="arithmatex">\[J(\hat\theta) &gt; \chi^2_{(m-n,\,1-\alpha)} \qquad (\text{e.g. } \alpha = 0.05,\ 95\%\ \text{confidence})\]</div>
+<p>then <strong>at least one measurement is bad</strong>.</p>
+<p>The critical caveat: <strong>chi-squared tells you THAT bad data exists — not WHICH measurement is the
+culprit.</strong> It is a detector, not an identifier. That is the next section's job.</p>
+<p>In code the threshold is <code>scipy.stats.chi2.ppf(0.95, df=m-n)</code> — auditable, no hard-coded table.</p>
+<hr />
+<h2 id="3-largest-normalized-residual-rn-identification-which-one">3. Largest-Normalized-Residual (<span class="arithmatex">\(r^N\)</span>) Identification — "Which One?"</h2>
+<p><strong>Mental model first.</strong> Raw residuals are not directly comparable: a measurement that the
+estimator leans on heavily will <em>always</em> have a small residual, so you must <strong>normalize by each
+measurement's expected residual spread</strong> before ranking. That spread is the residual covariance.</p>
+<p><strong>Residual covariance:</strong></p>
+<div class="arithmatex">\[\Omega = R - H\,(H^\top W H)^{-1} H^\top = R - H\,G^{-1}H^\top\]</div>
+<p>(Equivalently the residual-sensitivity matrix <span class="arithmatex">\(S = I - H G^{-1} H^\top W\)</span> maps measurement errors
+to residuals via <span class="arithmatex">\(r = S\,e\)</span>.)</p>
+<p><strong>Normalized residual</strong> for each measurement <span class="arithmatex">\(i\)</span>:</p>
+<div class="arithmatex">\[r_i^N = \frac{|r_i|}{\sqrt{\Omega_{ii}}}\]</div>
+<p><strong>Identification rule:</strong> the measurement with the <strong>largest <span class="arithmatex">\(r_i^N\)</span> above a threshold ≈ 3</strong> (3σ) is
+the prime suspect. Remove it, <strong>re-run WLS</strong>, and re-test with chi-squared. Repeat until the
+chi-squared test passes (no bad data remains).</p>
+<p><strong>Encode the division of labor explicitly (the classic pitfall):</strong></p>
+<table>
+<thead>
+<tr>
+<th>Test</th>
+<th>Question it answers</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Chi-squared on <span class="arithmatex">\(J(\hat\theta)\)</span></td>
+<td><strong>"Is there bad data?"</strong> (detection)</td>
+</tr>
+<tr>
+<td>Largest normalized residual <span class="arithmatex">\(r_i^N\)</span></td>
+<td><strong>"Which measurement?"</strong> (identification)</td>
+</tr>
+</tbody>
+</table>
+<p>Conflating these is the standard mistake — chi-squared <strong>never</strong> names the culprit; the
+normalized-residual test does.</p>
+<p><strong>Interview sentence:</strong> "Chi-squared detects that something is wrong; the largest-normalized-residual
+test, with <span class="arithmatex">\(\Omega = R - HG^{-1}H^\top\)</span> and threshold around three sigma, identifies which one,
+then you drop it and re-solve."</p>
+<hr />
+<h2 id="4-the-critical-limitation-leverage-measurements-awareness-but-interview-gold">4. The Critical Limitation — Leverage Measurements (Awareness, but Interview Gold)</h2>
+<p>This is the trap interviewers who have <em>built</em> state estimators will probe.</p>
+<p><strong>Leverage measurements</strong> sit at buses whose observability depends <strong>entirely</strong> on them — remove
+the measurement and the bus goes unobservable. Because the estimator has no independent reading to
+contradict it, it fits that measurement essentially perfectly: its residual is <strong>structurally
+near-zero</strong>. So a <strong>gross error in a leverage measurement is invisible to the <span class="arithmatex">\(r^N\)</span> test</strong> — you
+get a <em>wrong-but-consistent</em> estimate that passes every check.</p>
+<p>A second failure mode: <strong>multiple interacting + conforming bad data</strong>. When two corrupted
+measurements agree with each other, their errors mask one another and the single-largest-<span class="arithmatex">\(r^N\)</span>
+test can be fooled.</p>
+<p>The fix is structural, not algorithmic: <strong>redundant measurement placement at critical buses</strong> so
+no single reading has unchecked leverage.</p>
+<p><strong>Interview sentence (lifted from KAL-01, reworded):</strong> "The normalized-residual test has a
+structural blind spot — leverage measurements at sparsely instrumented buses have near-zero
+residuals even when corrupted, because the estimator has no independent measurement to contradict
+them. That is the key limitation of chi-squared bad-data detection, and it is why critical buses
+need redundant measurement placement."</p>
+<hr />
+<h2 id="3-min-say-aloud-version">&lt;3-min say-aloud version</h2>
+<blockquote>
+<p>"Bad-data handling has three layers. First, <strong>observability</strong>: can the measurements even pin
+down the state? That's whether the Jacobian <span class="arithmatex">\(H\)</span> has full column rank — in the linear DC case I
+just check <code>matrix_rank(H) == n</code>; if it's short, I have unobservable islands. Second,
+<strong>detection</strong>: after the weighted-least-squares solve, the weighted residual cost <span class="arithmatex">\(J = r^\top W r\)</span>
+is chi-squared with <span class="arithmatex">\(m\)</span> minus <span class="arithmatex">\(n\)</span> degrees of freedom. If it exceeds the 95% threshold, there's
+bad data — but chi-squared only tells me <em>that</em> something's wrong, not <em>which</em>. Third,
+<strong>identification</strong>: I normalize each residual by its own covariance, <span class="arithmatex">\(r_i^N = |r_i|/\sqrt{\Omega_{ii}}\)</span>
+with <span class="arithmatex">\(\Omega = R - HG^{-1}H^\top\)</span>, and the biggest one above about three sigma is the culprit —
+drop it, re-solve, re-test. The catch I always flag is <strong>leverage measurements</strong>: at a bus that
+depends entirely on one reading, the residual is near-zero even when that reading is corrupt, so
+the test is blind to it — which is exactly why you place redundant measurements at critical buses."</p>
+</blockquote>
+<hr />
+<h2 id="bridge-to-your-work">→ Bridge to your work</h2>
+<blockquote>
+<p><strong>"Bad-data detection at substation scale is literally what I did analyzing baseline-estimation
+errors across billions of data points from multiple substations — finding the corrupted or
+anomalous measurements that throw off the estimate is the chi-squared / normalized-residual
+problem in production."</strong></p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>Power-System Bad-Data Detection</th>
+<th>My substation-scale error analysis (CV)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Detect: <span class="arithmatex">\(J(\hat\theta) &gt; \chi^2_{(m-n,0.95)}\)</span></td>
+<td>Detect: aggregate error metrics flag a substation/feeder out of statistical bounds</td>
+</tr>
+<tr>
+<td>Identify: largest <span class="arithmatex">\(r_i^N\)</span> above 3σ</td>
+<td>Identify: pinpoint the corrupted/anomalous points driving the baseline error</td>
+</tr>
+<tr>
+<td>Re-solve after removing the bad reading</td>
+<td>Re-estimate the baseline with the bad points excluded</td>
+</tr>
+<tr>
+<td>Leverage blind spot → place redundant sensors</td>
+<td>Coverage gaps → some sites have too little redundancy to validate</td>
+</tr>
+</tbody>
+</table>
+<p>This is the <strong>strongest bridge in the phase</strong>: the CV line "<em>Analyzed errors in baseline
+consumption estimation by processing billions of data points across multiple substations</em>" <strong>is</strong>
+bad-data detection — the same detect-then-identify-then-re-estimate loop, at production scale on
+real grid telemetry.</p>
+<p><strong>How to say this in the interview:</strong></p>
+<blockquote>
+<p>"I have run exactly this loop in production, just at a much larger scale: I analyzed baseline
+consumption-estimation errors across billions of data points from multiple substations. The work
+was finding the corrupted and anomalous measurements that were throwing off the baseline — which
+is precisely the chi-squared-detect, normalized-residual-identify, re-estimate pipeline of grid
+bad-data detection. So observability and bad-data handling aren't new vocabulary for me; they're
+the formal name for data-quality work I've already shipped at substation scale."</p>
+</blockquote>
+<hr />
+<h2 id="quick-recall-card-recite-before-the-interview">Quick-Recall Card (Recite Before the Interview)</h2>
+<ol>
+<li><strong>Observability:</strong> <span class="arithmatex">\(H\)</span> full column rank ⟺ <span class="arithmatex">\(G = H^\top W H\)</span> nonsingular ⟺ <code>matrix_rank(H) == n</code>; else unobservable islands. Topological (graph) vs numerical (rank) — rank is operational.</li>
+<li><strong>DC specialization:</strong> <span class="arithmatex">\(H\)</span> is <em>constant</em> (linear DC), so the WLS solve is one-shot — no relinearization (this is KAL-01 §4 in the linear case).</li>
+<li><strong>Chi-squared detection:</strong> <span class="arithmatex">\(J(\hat\theta) = r^\top W r \sim \chi^2(m-n)\)</span>; if <span class="arithmatex">\(J &gt; \chi^2_{(m-n,0.95)}\)</span>, bad data exists. Answers <strong>"is there bad data?"</strong>, not which.</li>
+<li><strong>Normalized residual:</strong> <span class="arithmatex">\(r_i^N = |r_i|/\sqrt{\Omega_{ii}}\)</span>, <span class="arithmatex">\(\Omega = R - HG^{-1}H^\top\)</span>; largest above ≈3σ is the suspect → remove, re-solve, re-test. Answers <strong>"which one?"</strong></li>
+<li><strong>Division of labor:</strong> χ² detects; <span class="arithmatex">\(r^N\)</span> identifies. Never conflate them.</li>
+<li><strong>Leverage-measurement trap:</strong> near-zero residual even when corrupt → invisible to <span class="arithmatex">\(r^N\)</span>; interacting+conforming bad data also defeats single-<span class="arithmatex">\(r^N\)</span> → place redundant measurements at critical buses.</li>
+<li><strong>My bridge:</strong> analyzing baseline-estimation errors across billions of points from multiple substations IS bad-data detection at scale — the strongest bridge in the phase.</li>
+</ol>
+<hr />
+<p><em>Sources: Abur &amp; Expósito, "Power System State Estimation" Ch. 5 (Network Observability) &amp; Ch. 6 (Bad Data Detection); KAL-01 §4 (chi-squared / LNR / leverage trap); CV (substation-scale baseline-error analysis).</em></p>
+            <footer><a href="../index.html">&larr; Back to study hub</a></footer>
+          </main>
+        </div>
+        </body>
+        </html>

@@ -1,0 +1,211 @@
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noindex,nofollow">
+        <title>FED-01: Federated vs Distributed — FedAvg, FedProx & Non-IID</title>
+        <link rel="stylesheet" href="../assets/site.css">
+        <link rel="stylesheet" href="../assets/pygments.css">
+        <script>
+window.MathJax = {
+  tex: { inlineMath: [["\\(","\\)"]], displayMath: [["\\[","\\]"]],
+         processEscapes: true, processEnvironments: true },
+  options: { ignoreHtmlClass: ".*", processHtmlClass: "arithmatex" }
+};
+</script>
+<script defer src="../vendor/mathjax/tex-chtml.js"></script>
+        </head>
+        <body>
+        <div class="wrap">
+          <header class="masthead"><h1>FED-01: Federated vs Distributed — FedAvg, FedProx & Non-IID</h1></header>
+          <nav class="toc"><h2>Contents</h2><div class="toc">
+<ul>
+<li><a href="#1-federated-distributed-the-crisp-distinction">1. Federated ≠ Distributed — The Crisp Distinction</a></li>
+<li><a href="#2-fedavg-weighted-average-aggregation">2. FedAvg — Weighted-Average Aggregation</a><ul>
+<li><a href="#term-by-term">Term-by-term</a></li>
+</ul>
+</li>
+<li><a href="#3-fedprox-the-fix-for-non-iid-client-drift">3. FedProx — The Fix for Non-IID Client Drift</a></li>
+<li><a href="#4-stk-05-agms-connection">4. → STK-05 / AGMS Connection</a></li>
+<li><a href="#3-min-say-aloud-version">&lt;3-min say-aloud version</a></li>
+<li><a href="#bridge-to-your-work">→ Bridge to your work</a></li>
+<li><a href="#quick-recall-card-recite-before-the-interview">Quick-Recall Card (Recite Before the Interview)</a></li>
+</ul>
+</div>
+</nav>
+          <main>
+        <h1 id="fed-01-federated-vs-distributed-fedavg-fedprox-non-iid">FED-01: Federated vs Distributed — FedAvg, FedProx &amp; Non-IID</h1>
+<p><strong>For:</strong> Oral rehearsal — speak each section aloud before the interview.
+<strong>Purpose:</strong> Precisely distinguish federated from distributed learning (the "no central coordinator" constraint), recite the FedAvg weighted-average aggregation rule and the FedProx proximal term, explain why non-IID substation load profiles cause client drift — and tie each to Juan's closest real work.</p>
+<hr />
+<blockquote>
+<p><strong>Depth strategy:</strong> FULL/explain-why depth throughout — federated-vs-distributed distinction, FedAvg update rule, FedProx proximal term, and non-IID client drift are all criteria-named and interviewer-probed. No convergence-proof math (that ceiling is awareness-only per D-05).</p>
+</blockquote>
+<h2 id="1-federated-distributed-the-crisp-distinction">1. Federated ≠ Distributed — The Crisp Distinction</h2>
+<p><strong>The one-liner:</strong> "Distributed splits computation across workers with a coordinator owning all the data; federated has <strong>no central coordinator owning the data</strong> — each client trains locally and only <strong>weights/gradients leave</strong>, never raw training data."</p>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Distributed (classic)</th>
+<th>Federated</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Data location</td>
+<td>Central store; workers fetch shards</td>
+<td>Data stays permanently at each client</td>
+</tr>
+<tr>
+<td>Coordinator role</td>
+<td>Splits data, assigns work, knows everything</td>
+<td>Aggregates updates; never sees raw data</td>
+</tr>
+<tr>
+<td>What moves on the wire</td>
+<td>Data shards</td>
+<td>Model weights / gradient updates only</td>
+</tr>
+<tr>
+<td>Privacy model</td>
+<td>Trust the coordinator</td>
+<td>Coordinator learns nothing about raw data</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Common gotcha:</strong> "Isn't Spark/MapReduce also federated?" — No. Spark splits a central dataset across workers; the driver owns the data. Federated learning starts from the premise that data <strong>cannot</strong> leave its origination point (regulatory, privacy, or operational reason).</p>
+<p><strong>Grid grounding (concrete):</strong> Each substation has a different load profile — industrial vs. residential feeders, different DER penetration, different climate zone — so their training data are inherently heterogeneous (non-IID). Sending raw PMU readings or load telemetry to a central server would expose commercially sensitive and security-critical operational data. Federated learning lets each substation train a local model and share only the weight delta.</p>
+<hr />
+<h2 id="2-fedavg-weighted-average-aggregation">2. FedAvg — Weighted-Average Aggregation</h2>
+<p><strong>Mental model first.</strong> Each client runs several local SGD epochs on its own data, then the server averages their resulting models weighted by each client's sample count.</p>
+<div class="arithmatex">\[w_{t+1} = \sum_{k=1}^{K} \frac{n_k}{n} \, w_t^k\]</div>
+<h3 id="term-by-term">Term-by-term</h3>
+<table>
+<thead>
+<tr>
+<th>Term</th>
+<th>Name</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><span class="arithmatex">\(w_{t+1}\)</span></td>
+<td>New global model</td>
+<td>Weighted-average aggregate sent back to all clients for round <span class="arithmatex">\(t+1\)</span></td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(n_k\)</span></td>
+<td>Client <span class="arithmatex">\(k\)</span> sample count</td>
+<td>Number of local training samples at client <span class="arithmatex">\(k\)</span></td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(n\)</span></td>
+<td>Total samples</td>
+<td><span class="arithmatex">\(n = \sum_k n_k\)</span>; normalizes the weights to sum to 1</td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(w_t^k\)</span></td>
+<td>Client <span class="arithmatex">\(k\)</span> local model</td>
+<td>Model at client <span class="arithmatex">\(k\)</span> after <span class="arithmatex">\(E\)</span> local SGD epochs from the global model <span class="arithmatex">\(w_t\)</span></td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(K\)</span></td>
+<td>Number of clients</td>
+<td>Total clients participating in this round</td>
+</tr>
+</tbody>
+</table>
+<p><strong>The two-nested-loop structure:</strong></p>
+<div class="highlight"><pre><span></span><code>For each communication round t = 1, 2, ..., T:
+    1. Server broadcasts w_t to sampled subset of clients
+    2. Each sampled client k:
+       a. Initialize local model from w_t
+       b. Run E local SGD epochs on its own data D_k  →  produces w_t^k
+       c. Send w_t^k (or delta w_t^k − w_t) back to server
+    3. Server computes weighted average  →  w_{t+1}
+</code></pre></div>
+
+<p><strong>Why it is communication-efficient:</strong> Clients do <span class="arithmatex">\(E &gt; 1\)</span> local epochs per round (not just one gradient step). More local epochs = fewer communication rounds needed. But more local epochs also <em>increase client drift</em> under non-IID data — the FedProx motivation.</p>
+<hr />
+<h2 id="3-fedprox-the-fix-for-non-iid-client-drift">3. FedProx — The Fix for Non-IID Client Drift</h2>
+<p><strong>The one-liner:</strong> FedProx = FedAvg + a proximal term in the <em>client's local objective</em> that penalizes drift from the global model.</p>
+<p>Each client <span class="arithmatex">\(k\)</span> minimizes this modified objective instead of pure <span class="arithmatex">\(F_k(w)\)</span>:</p>
+<div class="arithmatex">\[\min_{w} \; F_k(w) \;+\; \frac{\mu}{2}\lVert w - w_t \rVert^2\]</div>
+<p><strong>What the proximal term does:</strong></p>
+<ul>
+<li><span class="arithmatex">\(\mu = 0\)</span>: reduces exactly to FedAvg — no proximal constraint.</li>
+<li>Small <span class="arithmatex">\(\mu\)</span> (e.g., 0.01): gentle anchor; clients still converge close to their local optimum.</li>
+<li>Large <span class="arithmatex">\(\mu\)</span> (e.g., 1.0): client barely moves from <span class="arithmatex">\(w_t\)</span> — underfits local data.</li>
+<li>Typical <span class="arithmatex">\(\mu \in [0.01, 1.0]\)</span> in practice; <span class="arithmatex">\(\mu = 0.5\)</span> is a common starting point for legible contrast.</li>
+</ul>
+<p><strong>CRITICAL — where the proximal term lives:</strong> The proximal term is in the <strong>client's local optimization objective, NOT the server aggregation step.</strong> Each client minimizes <span class="arithmatex">\(F_k(w) + \frac{\mu}{2}\lVert w - w_t \rVert^2\)</span> locally before sending anything to the server. The server's aggregation step (<span class="arithmatex">\(w_{t+1} = \sum_k \frac{n_k}{n} w_t^k\)</span>) is identical to FedAvg. Misplacing this term on the aggregation step is a common pitfall.</p>
+<p><strong>Non-IID substation framing:</strong></p>
+<blockquote>
+<p>"Every substation is non-IID by definition: feeder 1 is predominantly residential with evening peak, feeder 2 is industrial with daytime flat load, feeder 3 has 40% solar DER with midday export. Naive FedAvg over many local epochs lets each substation's model drift toward its own feeder's optimum; the weighted average then fails the substations with atypical load shapes. FedProx's proximal term forces each local update to stay within a trust region around the global model, so the aggregated result generalizes across the fleet."</p>
+</blockquote>
+<hr />
+<h2 id="4-stk-05-agms-connection">4. → STK-05 / AGMS Connection</h2>
+<blockquote>
+<p><strong>STK-05 loop:</strong> The non-IID / FedProx material is the algorithm-depth behind the <strong>STK-05 "fog/federated" tier</strong> — Phase 4 named it; Phase 5 owns its depth. In that four-tier diagram, the fog/federated aggregator is the entity that receives <span class="arithmatex">\(w_t^k\)</span> updates from substation K3s edge nodes, runs FedAvg (or FedProx-constrained), and broadcasts <span class="arithmatex">\(w_{t+1}\)</span> back. Cross-reference: <code>.planning/phases/04-protocols-stack-architecture/notes/STK-05-reference-architecture.md</code></p>
+<p><strong>AGMS tie:</strong> Two AGMS patent analogs apply here. (a) <strong>Scout Command</strong> (US 12,596,341) — deploying scouts to FADs is <em>federated decisioning</em>: each FAD operates autonomously (island mode), sharing status commands via NATS, not raw sensor data. Each FAD is a "federated client" making local decisions; GWCH aggregates their status. (b) <strong>Operation Loop</strong> simulate-before-commit (US 12,596,341 B2 claim 3) — propose a formation, simulate the operation loop, <em>then</em> commit — the same "compute before acting" principle that makes FedProx safe to deploy: each local update is bounded before it enters the global average. Cross-reference: <code>.planning/research/patents/operation-loop.md</code></p>
+</blockquote>
+<hr />
+<h2 id="3-min-say-aloud-version">&lt;3-min say-aloud version</h2>
+<blockquote>
+<p>"Federated learning is not the same as distributed computing. In distributed, a coordinator owns all the data and ships shards to workers. In federated, there is <strong>no central coordinator owning the data</strong> — each substation trains locally on its own load telemetry, and only the weight delta leaves the node, never the raw PMU readings. The server aggregates those weights: <span class="arithmatex">\(w_{t+1} = \sum_k \frac{n_k}{n} w_t^k\)</span> — that's <strong>FedAvg</strong>, a weighted average by sample count. Now, substations are <strong>non-IID by definition</strong> — residential feeders, industrial feeders, high-DER feeders each have completely different load profiles. So if you run many local SGD epochs, each substation's model drifts toward its own local optimum, and averaging drifted models gives you a global model that fails everyone with an atypical load shape. That's <strong>client drift</strong>. <strong>FedProx</strong> fixes it by adding a proximal term, <span class="arithmatex">\(+\frac{\mu}{2}\lVert w - w_t \rVert^2\)</span>, to the <em>client's</em> local objective — it penalizes the local model for straying too far from the global model <span class="arithmatex">\(w_t\)</span>. The server's aggregation step is unchanged. <span class="arithmatex">\(\mu = 0\)</span> collapses back to FedAvg; larger <span class="arithmatex">\(\mu\)</span> keeps clients tethered to the global model at the cost of local fit. The result: the aggregated model generalizes across the whole substation fleet instead of being pulled toward the biggest or most extreme feeder."</p>
+</blockquote>
+<hr />
+<h2 id="bridge-to-your-work">→ Bridge to your work</h2>
+<blockquote>
+<p><strong>"In OSED I ran distributed edge inference across DER nodes — no cloud round-trip for local decisions. I haven't run federated <em>learning</em> in production, but that's the natural next step: keep the local inference, add FedAvg so the fleet improves a shared model without ever shipping raw telemetry — and Krum so one bad node can't poison it."</strong></p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>Federated learning concept</th>
+<th>Juan's CV analog (OSED / DER work)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>No central coordinator owns data</td>
+<td>OSED: DER edge nodes make local control decisions without cloud round-trip</td>
+</tr>
+<tr>
+<td>Weights/gradients leave, never raw data</td>
+<td>MQTT telemetry fleet: aggregated metrics, not raw sensor dumps, flow to the platform</td>
+</tr>
+<tr>
+<td>FedAvg global model</td>
+<td>The "shared model" upgrade: fleet improves one virtual-sensing model without raw data movement</td>
+</tr>
+<tr>
+<td>Non-IID substations</td>
+<td>Heterogeneous DER sites (rooftop solar, BESS, EV charging) — already known to behave differently</td>
+</tr>
+<tr>
+<td>K8s / K3s orchestration</td>
+<td>Juan's K8s background → K3s substation edge nodes as FL clients</td>
+</tr>
+</tbody>
+</table>
+<p>Honest about the gap, but demonstrates the delta is concrete and implementable.</p>
+<hr />
+<h2 id="quick-recall-card-recite-before-the-interview">Quick-Recall Card (Recite Before the Interview)</h2>
+<ul>
+<li><strong>Federated vs distributed:</strong> Distributed = coordinator owns data, ships shards. Federated = <strong>no central coordinator owns data</strong>, only weights/gradients leave each client. Spark/MapReduce is distributed, not federated.</li>
+<li><strong>FedAvg:</strong> <span class="arithmatex">\(w_{t+1} = \sum_{k=1}^{K} \frac{n_k}{n} w_t^k\)</span> — weighted average by sample count. Clients run <span class="arithmatex">\(E\)</span> local epochs; server averages. Communication-efficient; fails under non-IID.</li>
+<li><strong>FedProx:</strong> <span class="arithmatex">\(+\frac{\mu}{2}\lVert w - w_t\rVert^2\)</span> in the <strong>client's local objective</strong> (NOT server aggregation). <span class="arithmatex">\(\mu = 0\)</span> → FedAvg; larger <span class="arithmatex">\(\mu\)</span> → tighter anchor to global model.</li>
+<li><strong>Non-IID:</strong> Different feeders/climates/DER mixes → each client drifts toward its local optimum under many local epochs → weighted average of drifted models fails atypical clients. FedProx is the standard treatment.</li>
+<li><strong>Grid grounding:</strong> Substations are non-IID by definition (Ghosh &amp; Mittal 2025 confirms on real substation equipment). Raw PMU data must not leave → federated is the correct architecture.</li>
+</ul>
+<hr />
+<p><em>Sources: McMahan et al. 2017 (FedAvg); Li et al. 2020 (FedProx); Ghosh &amp; Mittal, Frontiers AI 2025 (substation non-IID); CV (OSED distributed edge inference)</em></p>
+            <footer><a href="../index.html">&larr; Back to study hub</a></footer>
+          </main>
+        </div>
+        </body>
+        </html>

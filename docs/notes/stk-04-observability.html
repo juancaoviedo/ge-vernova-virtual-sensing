@@ -1,0 +1,344 @@
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noindex,nofollow">
+        <title>STK-04: Observability — Prometheus, PromQL & kube-prometheus-stack</title>
+        <link rel="stylesheet" href="../assets/site.css">
+        <link rel="stylesheet" href="../assets/pygments.css">
+        <script>
+window.MathJax = {
+  tex: { inlineMath: [["\\(","\\)"]], displayMath: [["\\[","\\]"]],
+         processEscapes: true, processEnvironments: true },
+  options: { ignoreHtmlClass: ".*", processHtmlClass: "arithmatex" }
+};
+</script>
+<script defer src="../vendor/mathjax/tex-chtml.js"></script>
+        </head>
+        <body>
+        <div class="wrap">
+          <header class="masthead"><h1>STK-04: Observability — Prometheus, PromQL & kube-prometheus-stack</h1></header>
+          <nav class="toc"><h2>Contents</h2><div class="toc">
+<ul>
+<li><a href="#1-pull-vs-push-mental-model">1. Pull vs Push Mental Model</a><ul>
+<li><a href="#the-pull-models-key-implication">The Pull Model's Key Implication</a></li>
+</ul>
+</li>
+<li><a href="#2-kube-prometheus-stack-the-named-gap">2. kube-prometheus-stack — The Named Gap</a><ul>
+<li><a href="#the-five-components-pitfall-5-never-say-just-prometheus-grafana">The Five Components (Pitfall 5: Never Say "Just Prometheus + Grafana")</a></li>
+<li><a href="#the-interview-sentence-say-this-verbatim">The Interview Sentence (Say This Verbatim)</a></li>
+<li><a href="#memory-aid-for-the-five-components">Memory Aid for the Five Components</a></li>
+</ul>
+</li>
+<li><a href="#3-a-recitable-promql-query">3. A Recitable PromQL Query</a><ul>
+<li><a href="#the-primary-query-learn-this-verbatim">The Primary Query (Learn This Verbatim)</a></li>
+<li><a href="#additional-awareness-queries">Additional Awareness Queries</a></li>
+<li><a href="#promql-building-blocks-to-name">PromQL Building Blocks to Name</a></li>
+</ul>
+</li>
+<li><a href="#4-where-observability-runs-in-the-architecture">4. Where Observability Runs in the Architecture</a></li>
+<li><a href="#3-min-say-aloud-version">&lt;3-min say-aloud version</a></li>
+<li><a href="#bridge-to-your-work">→ Bridge to your work</a></li>
+<li><a href="#quick-recall-card-recite-before-the-interview">Quick-Recall Card (Recite Before the Interview)</a></li>
+</ul>
+</div>
+</nav>
+          <main>
+        <h1 id="stk-04-observability-prometheus-promql-kube-prometheus-stack">STK-04: Observability — Prometheus, PromQL &amp; kube-prometheus-stack</h1>
+<p><strong>For:</strong> Oral rehearsal — speak each section aloud before the interview.
+<strong>Purpose:</strong> Explain the Prometheus pull model vs InfluxDB push, recite a concrete PromQL
+query, and name what kube-prometheus-stack adds (all five bundled components) — so you can
+answer observability architecture questions with the specific stack name and a real query,
+not just "Prometheus plus Grafana."</p>
+<hr />
+<h2 id="1-pull-vs-push-mental-model">1. Pull vs Push Mental Model</h2>
+<p><strong>The single most important conceptual shift:</strong> Prometheus does not receive metrics — it
+goes out and <em>fetches</em> them. This is the opposite of how InfluxDB works.</p>
+<table>
+<thead>
+<tr>
+<th>Dimension</th>
+<th>Prometheus (gap)</th>
+<th>InfluxDB (Juan has)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Ingest model</td>
+<td><strong>Pull</strong> — Prometheus scrapes <code>/metrics</code> endpoints on a schedule</td>
+<td><strong>Push</strong> — services write to InfluxDB via API/line protocol</td>
+</tr>
+<tr>
+<td>Query language</td>
+<td><strong>PromQL</strong></td>
+<td>Flux / InfluxQL</td>
+</tr>
+<tr>
+<td>K8s integration</td>
+<td><strong>Native</strong> — ServiceMonitor CRDs, automatic pod discovery</td>
+<td>Manual wiring</td>
+</tr>
+<tr>
+<td>Alert rules</td>
+<td><strong>Native</strong> — alerting rules in Prometheus + Alertmanager</td>
+<td>External (Kapacitor / Grafana alerts)</td>
+</tr>
+<tr>
+<td>Default retention</td>
+<td>15 days (short; not a long-term store)</td>
+<td>Configurable (long-term)</td>
+</tr>
+<tr>
+<td>Cardinality</td>
+<td>Sensitive to high-cardinality labels</td>
+<td>Higher tolerance</td>
+</tr>
+</tbody>
+</table>
+<h3 id="the-pull-models-key-implication">The Pull Model's Key Implication</h3>
+<p>Services do not need to know where to send metrics. They expose a <code>/metrics</code> HTTP endpoint
+(e.g., FastAPI with <code>prometheus_client</code>). Prometheus finds those endpoints via Kubernetes
+service discovery — specifically, by watching <strong>ServiceMonitor</strong> custom resources — and
+scrapes them on a configurable schedule (default: 15 seconds).</p>
+<p>This is precisely why Prometheus integrates so naturally with Kubernetes: <strong>pod IPs change
+constantly</strong> (pods restart, scale up/down, roll out). With a push model, every service
+would need to know the current address of the metrics receiver. With Prometheus, the
+services don't care — they just expose <code>/metrics</code>, and Prometheus discovers them through
+the K8s API.</p>
+<p><strong>Say aloud:</strong> "Prometheus doesn't receive metrics — it scrapes them. Services just expose
+a <code>/metrics</code> endpoint. Prometheus uses a ServiceMonitor CRD to discover them in K8s
+automatically. That's why it fits Kubernetes — pod IPs change; the pull model abstracts
+that away."</p>
+<hr />
+<h2 id="2-kube-prometheus-stack-the-named-gap">2. kube-prometheus-stack — The Named Gap</h2>
+<p>CLAUDE.md's Category 4 never names <strong>kube-prometheus-stack</strong> — this is the specific gap
+the plan fills. In interviews, saying "I'd install Prometheus and Grafana and wire them
+together" signals you don't know the production-standard distribution.</p>
+<p><strong>The production answer:</strong> <code>kube-prometheus-stack</code> is a single Helm chart (current stable
+chart version ~86.2.3) that bundles <strong>five components</strong> pre-wired and ready to deploy.</p>
+<h3 id="the-five-components-pitfall-5-never-say-just-prometheus-grafana">The Five Components (Pitfall 5: Never Say "Just Prometheus + Grafana")</h3>
+<ol>
+<li>
+<p><strong>Prometheus Operator</strong> — A Kubernetes controller that watches for <code>ServiceMonitor</code>
+   and <code>PodMonitor</code> CRDs and auto-configures Prometheus scrape targets. You do NOT
+   hand-edit <code>prometheus.yml</code>. You create a <code>ServiceMonitor</code> custom resource that points
+   at your service, and the Operator rewrites the Prometheus config automatically.</p>
+</li>
+<li>
+<p><strong>node-exporter</strong> — A DaemonSet deployed on every K3s/K8s node. Exposes Linux host
+   metrics (CPU utilization, memory, disk I/O, network throughput) as <code>/metrics</code>. This
+   is how you see node-level resource usage in Grafana dashboards.</p>
+</li>
+<li>
+<p><strong>kube-state-metrics</strong> — Queries the Kubernetes API server and exposes Kubernetes
+   object states as metrics: pod running/pending/failed, deployment replica counts,
+   PersistentVolumeClaim status, etc. Without this, Prometheus only sees what's inside
+   pods, not what K8s <em>thinks</em> the cluster state is.</p>
+</li>
+<li>
+<p><strong>Grafana</strong> — Visualization layer; comes pre-loaded with Kubernetes dashboards. Reads
+   from Prometheus using PromQL queries. This is the part Juan already knows from OSED —
+   the shift is that Grafana here reads via PromQL rather than InfluxQL/Flux.</p>
+</li>
+<li>
+<p><strong>Alertmanager</strong> — Receives firing alerts from Prometheus alerting rules and routes
+   them to PagerDuty, Slack, email, or webhook. Handles deduplication, grouping, and
+   silencing. This is what InfluxDB + Kapacitor handled in push-model stacks.</p>
+</li>
+</ol>
+<h3 id="the-interview-sentence-say-this-verbatim">The Interview Sentence (Say This Verbatim)</h3>
+<blockquote>
+<p>"Instead of installing Prometheus, Grafana, and the exporters separately and wiring them
+together, kube-prometheus-stack is a single Helm chart that delivers Prometheus Operator,
+node-exporter, kube-state-metrics, Grafana, and Alertmanager pre-wired. The Operator
+pattern means you define what to scrape with a ServiceMonitor CRD and the Operator
+manages Prometheus config automatically."</p>
+</blockquote>
+<h3 id="memory-aid-for-the-five-components">Memory Aid for the Five Components</h3>
+<p><strong>"PnKGA"</strong> — Prometheus Operator, node-exporter, kube-state-metrics, Grafana, Alertmanager.
+Or: "Operator finds targets, node-exporter reports the host, kube-state-metrics reports the
+cluster, Grafana shows both, Alertmanager pages you."</p>
+<hr />
+<h2 id="3-a-recitable-promql-query">3. A Recitable PromQL Query</h2>
+<h3 id="the-primary-query-learn-this-verbatim">The Primary Query (Learn This Verbatim)</h3>
+<div class="highlight"><pre><span></span><code><span class="kr">rate</span><span class="o">(</span><span class="nv">container_cpu_usage_seconds_total</span><span class="p">{</span><span class="nl">namespace</span><span class="o">=</span><span class="p">&quot;</span><span class="s">virtual-sensing</span><span class="p">&quot;}[</span><span class="s">5m</span><span class="p">]</span><span class="o">)</span>
+</code></pre></div>
+
+<p><strong>What it does:</strong> Computes the per-second CPU usage rate averaged over the last 5 minutes
+for all containers in the <code>virtual-sensing</code> namespace.</p>
+<p><strong>Why <code>rate()</code> is required:</strong> <code>container_cpu_usage_seconds_total</code> is a <strong>cumulative
+counter</strong> — it counts CPU seconds consumed since the container started. A raw counter is
+not useful for "current CPU usage." The <code>rate()</code> function computes the per-second increase
+over the specified time window, which gives you CPU utilization as a rate.</p>
+<p><strong>Anatomy of the query:</strong>
+- <code>container_cpu_usage_seconds_total</code> — the metric name (from cAdvisor, bundled with K8s)
+- <code>{namespace="virtual-sensing"}</code> — label matcher: filter to only the virtual-sensing namespace
+- <code>[5m]</code> — time window: look back 5 minutes to compute the rate
+- <code>rate(...)</code> — converts the counter to a per-second rate</p>
+<p><strong>Say aloud:</strong> "Rate of container CPU usage, filtered to the virtual-sensing namespace,
+averaged over a 5-minute window. Rate is required because the metric is a cumulative counter."</p>
+<h3 id="additional-awareness-queries">Additional Awareness Queries</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># Memory working set in bytes, grouped by pod (for EKF pods)</span>
+<span class="k">sum</span><span class="o">(</span><span class="nv">container_memory_working_set_bytes</span><span class="p">{</span><span class="nl">pod</span><span class="o">=~</span><span class="p">&quot;</span><span class="s">ekf-.*</span><span class="p">&quot;}</span><span class="o">)</span><span class="w"> </span><span class="k">by</span><span class="w"> </span><span class="o">(</span><span class="nv">pod</span><span class="o">)</span>
+</code></pre></div>
+
+<div class="highlight"><pre><span></span><code><span class="c1"># Count of ready pods in the namespace (from kube-state-metrics)</span>
+<span class="nv">kube_pod_status_ready</span><span class="p">{</span><span class="nl">condition</span><span class="o">=</span><span class="p">&quot;</span><span class="s">true</span><span class="p">&quot;,</span><span class="w"> </span><span class="nl">namespace</span><span class="o">=</span><span class="p">&quot;</span><span class="s">virtual-sensing</span><span class="p">&quot;}</span>
+</code></pre></div>
+
+<div class="highlight"><pre><span></span><code><span class="c1"># Alert: node-exporter scrape target is down (0 = down)</span>
+<span class="nv">up</span><span class="p">{</span><span class="nl">job</span><span class="o">=</span><span class="p">&quot;</span><span class="s">node-exporter</span><span class="p">&quot;}</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span>
+</code></pre></div>
+
+<h3 id="promql-building-blocks-to-name">PromQL Building Blocks to Name</h3>
+<table>
+<thead>
+<tr>
+<th>Building Block</th>
+<th>Syntax</th>
+<th>When to Use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Rate of counter</td>
+<td><code>rate(counter[window])</code></td>
+<td>Convert cumulative counter to per-second rate</td>
+</tr>
+<tr>
+<td>Aggregate by label</td>
+<td><code>sum(...) by (label)</code></td>
+<td>Group instances by a label (e.g., sum by pod)</td>
+</tr>
+<tr>
+<td>Exact label match</td>
+<td><code>{label="value"}</code></td>
+<td>Filter to specific value</td>
+</tr>
+<tr>
+<td>Regex label match</td>
+<td><code>{label=~"pattern"}</code></td>
+<td>Filter with regex (e.g., <code>pod=~"ekf-.*"</code>)</td>
+</tr>
+<tr>
+<td>Negative match</td>
+<td><code>{label!="value"}</code> or <code>{label!~"pattern"}</code></td>
+<td>Exclude by label</td>
+</tr>
+<tr>
+<td>Heartbeat metric</td>
+<td><code>up</code></td>
+<td>0 = Prometheus cannot scrape the target; built-in health check</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="4-where-observability-runs-in-the-architecture">4. Where Observability Runs in the Architecture</h2>
+<p>Prometheus runs at <strong>both</strong> edge and cloud:</p>
+<ul>
+<li><strong>Edge (K3s node):</strong> A Prometheus instance scrapes the local node-exporter, the
+  kube-state-metrics for the local K3s node, and the virtual-sensing FastAPI service's
+  <code>/metrics</code> endpoint. This gives sub-second latency local observability without WAN.</li>
+<li><strong>Cloud:</strong> A centralized Prometheus (or Thanos/Mimir for long-term storage) scrapes
+  aggregated metrics from all edge nodes, or receives federation from edge Prometheus
+  instances. Grafana is centralized here, with PromQL dashboards across the fleet.</li>
+</ul>
+<p>(Full tier placement is covered in STK-05's four-tier reference architecture.)</p>
+<hr />
+<h2 id="3-min-say-aloud-version">&lt;3-min say-aloud version</h2>
+<blockquote>
+<p>"Observability: the key mental model shift is pull vs push. I ran InfluxDB in OSED on a
+push model — services write to InfluxDB. Prometheus inverts that: services expose a
+<code>/metrics</code> endpoint, Prometheus scrapes them. The advantage for K8s is that pod IPs
+change constantly — with pull, services just expose their endpoint and Prometheus finds
+them through a ServiceMonitor CRD. No reconfiguration when pods restart.</p>
+<p>For deployment, I wouldn't install Prometheus and Grafana separately. The production
+standard is kube-prometheus-stack — a single Helm chart that bundles five components
+pre-wired: Prometheus Operator, node-exporter, kube-state-metrics, Grafana, and
+Alertmanager. The Operator watches ServiceMonitor CRDs and auto-configures scrape
+targets — you never touch prometheus.yml.</p>
+<p>For a recitable query: <code>rate(container_cpu_usage_seconds_total{namespace="virtual-sensing"}[5m])</code>
+— that's the per-second CPU rate for all containers in the virtual-sensing namespace,
+averaged over 5 minutes. Rate is required because the underlying metric is a cumulative
+counter. For alerting: <code>up{job="node-exporter"} == 0</code> means the node-exporter scrape
+target is unreachable — that's your node-down alert."</p>
+</blockquote>
+<hr />
+<h2 id="bridge-to-your-work">→ Bridge to your work</h2>
+<blockquote>
+<p><strong>InfluxDB + Grafana (Juan has) → Prometheus + PromQL:</strong> "Prometheus pull-scrapes K8s
+pods; Grafana visualizes via PromQL. I ran the push-model version — InfluxDB + Grafana —
+in OSED. Prometheus inverts the data flow with native K8s service discovery, and
+kube-prometheus-stack gives me the whole stack — Operator, exporters, Grafana,
+Alertmanager — in one Helm install."</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>My existing stack (OSED)</th>
+<th>GE Vernova stack</th>
+<th>The difference</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>InfluxDB (push: services write)</td>
+<td>Prometheus (pull: scrapes <code>/metrics</code>)</td>
+<td>Inverted data flow; Prometheus discovers targets via K8s</td>
+</tr>
+<tr>
+<td>InfluxQL / Flux queries</td>
+<td>PromQL</td>
+<td><code>rate()</code>, <code>sum() by ()</code>, label matchers</td>
+</tr>
+<tr>
+<td>Grafana (reads InfluxDB)</td>
+<td>Grafana (reads Prometheus via PromQL)</td>
+<td>Same Grafana; different data source + query language</td>
+</tr>
+<tr>
+<td>Grafana alerts / Kapacitor</td>
+<td>Alertmanager (bundled in kube-prometheus-stack)</td>
+<td>Native Prometheus alerting rules + Alertmanager routing</td>
+</tr>
+<tr>
+<td>Manual wiring of components</td>
+<td>kube-prometheus-stack (single Helm chart)</td>
+<td>Pre-wired: Operator + 4 components in one install</td>
+</tr>
+</tbody>
+</table>
+<p><strong>How to say this in the interview:</strong></p>
+<blockquote>
+<p>"I ran InfluxDB + Grafana in OSED on a push model — services write to InfluxDB, Grafana
+queries with InfluxQL. Prometheus inverts that to a pull/scrape model with native K8s
+service discovery, which fits Kubernetes much better because pod IPs change dynamically.
+The production deployment is kube-prometheus-stack — a single Helm chart that gives me
+Prometheus Operator, node-exporter, kube-state-metrics, Grafana, and Alertmanager
+pre-wired. The Grafana piece I already know well; the Operator and ServiceMonitor CRD
+pattern are the operational upgrade."</p>
+</blockquote>
+<hr />
+<h2 id="quick-recall-card-recite-before-the-interview">Quick-Recall Card (Recite Before the Interview)</h2>
+<ol>
+<li><strong>Pull vs push:</strong> Prometheus scrapes <code>/metrics</code> on a schedule; InfluxDB receives writes from services. Pull fits K8s because pod IPs change — services expose the endpoint, Prometheus discovers via ServiceMonitor.</li>
+<li><strong>kube-prometheus-stack — the chart name:</strong> Single Helm chart, current version ~86.2.3. Bundles <strong>five</strong> components:
+   - <strong>Prometheus Operator</strong> — watches ServiceMonitor CRDs, auto-configures scrape targets
+   - <strong>node-exporter</strong> — DaemonSet; Linux host metrics (CPU/mem/disk/net)
+   - <strong>kube-state-metrics</strong> — K8s object states (pod/replica/PVC status)
+   - <strong>Grafana</strong> — visualization, pre-loaded K8s dashboards
+   - <strong>Alertmanager</strong> — alert routing to PagerDuty/Slack/email/webhook</li>
+<li><strong>The recitable query:</strong> <code>rate(container_cpu_usage_seconds_total{namespace="virtual-sensing"}[5m])</code> — per-second CPU rate for virtual-sensing namespace, 5-minute window. <code>rate()</code> is required because the metric is a cumulative counter.</li>
+<li><strong>Down-node alert:</strong> <code>up{job="node-exporter"} == 0</code> — Prometheus's own scrape health; 0 = target unreachable.</li>
+<li><strong>PromQL building blocks:</strong> <code>rate(counter[window])</code>, <code>sum(...) by (label)</code>, label matchers <code>=</code>, <code>!=</code>, <code>=~</code>, <code>!~</code>, and <code>up</code> heartbeat.</li>
+<li><strong>Pitfall:</strong> Never say "Prometheus + Grafana." Say "kube-prometheus-stack — five components, one Helm chart: Operator, node-exporter, kube-state-metrics, Grafana, Alertmanager."</li>
+<li><strong>My bridge:</strong> InfluxDB + Grafana push-model (OSED) → Prometheus pull-model + kube-prometheus-stack (same Grafana, different data source, Operator-managed, native K8s service discovery).</li>
+</ol>
+<hr />
+<p><em>Sources: Prometheus docs (prometheus.io — pull model, PromQL rate() semantics, ServiceMonitor CRD, alerting rules); ArtifactHub kube-prometheus-stack 86.2.3 (artifacthub.io/packages/helm/prometheus-community/kube-prometheus-stack — bundled components confirmed); CLAUDE.md Category 4 (Prometheus vs InfluxDB comparison table, PromQL snippets); Juan's CV (OSED: InfluxDB + Grafana + TimescaleDB for edge observability).</em></p>
+            <footer><a href="../index.html">&larr; Back to study hub</a></footer>
+          </main>
+        </div>
+        </body>
+        </html>

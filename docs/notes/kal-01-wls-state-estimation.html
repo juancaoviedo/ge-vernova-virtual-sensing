@@ -1,0 +1,236 @@
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noindex,nofollow">
+        <title>KAL-01: WLS / Gauss-Newton Power-System State Estimation</title>
+        <link rel="stylesheet" href="../assets/site.css">
+        <link rel="stylesheet" href="../assets/pygments.css">
+        <script>
+window.MathJax = {
+  tex: { inlineMath: [["\\(","\\)"]], displayMath: [["\\[","\\]"]],
+         processEscapes: true, processEnvironments: true },
+  options: { ignoreHtmlClass: ".*", processHtmlClass: "arithmatex" }
+};
+</script>
+<script defer src="../vendor/mathjax/tex-chtml.js"></script>
+        </head>
+        <body>
+        <div class="wrap">
+          <header class="masthead"><h1>KAL-01: WLS / Gauss-Newton Power-System State Estimation</h1></header>
+          <nav class="toc"><h2>Contents</h2><div class="toc">
+<ul>
+<li><a href="#1-what-wls-state-estimation-is-mental-model-first">1. What WLS State Estimation Is (Mental Model First)</a></li>
+<li><a href="#2-the-wls-objective-function">2. The WLS Objective Function</a></li>
+<li><a href="#3-the-gauss-newton-iteration-how-you-actually-solve-it">3. The Gauss-Newton Iteration (How You Actually Solve It)</a></li>
+<li><a href="#4-interview-vocabulary-the-terms-you-must-own">4. Interview Vocabulary (The Terms You Must Own)</a><ul>
+<li><a href="#observability">Observability</a></li>
+<li><a href="#residuals">Residuals</a></li>
+<li><a href="#bad-data-detection-chi-squared-test">Bad-Data Detection: Chi-Squared Test</a></li>
+<li><a href="#the-critical-limitation-leverage-measurements">The Critical Limitation: Leverage Measurements</a></li>
+</ul>
+</li>
+<li><a href="#5-static-vs-dynamic-state-estimation">5. Static vs. Dynamic State Estimation</a></li>
+<li><a href="#6-osed-bridge-the-convex-optimization-connection">6. OSED Bridge: The Convex Optimization Connection</a></li>
+<li><a href="#quick-recall-card-recite-before-the-interview">Quick-Recall Card (Recite Before the Interview)</a></li>
+</ul>
+</div>
+</nav>
+          <main>
+        <h1 id="kal-01-wls-gauss-newton-power-system-state-estimation">KAL-01: WLS / Gauss-Newton Power-System State Estimation</h1>
+<p><strong>For:</strong> Oral rehearsal — speak each section aloud before the interview.
+<strong>Purpose:</strong> Close the vocabulary gap on state estimation so you can engage the interviewer's
+questions on Kalman, WLS, and observability with specifics, not generalities.</p>
+<hr />
+<h2 id="1-what-wls-state-estimation-is-mental-model-first">1. What WLS State Estimation Is (Mental Model First)</h2>
+<p>The grid is running right now. Thousands of sensors — SCADA meters, PMUs, current
+transformers — are feeding the control center with noisy, redundant readings. None of them
+directly tells you the exact voltage or phase angle at every bus. <strong>State estimation is the
+algorithm that takes that noisy, redundant sensor soup and produces the single best consistent
+picture of what the grid is actually doing.</strong></p>
+<p>The state vector captures everything you need to know:</p>
+<div class="arithmatex">\[x = [V_1,\, \theta_1,\, V_2,\, \theta_2,\, \ldots,\, V_n,\, \theta_n]\]</div>
+<p>Voltage magnitude <span class="arithmatex">\(V_i\)</span> and phase angle <span class="arithmatex">\(\theta_i\)</span> at every one of <span class="arithmatex">\(n\)</span> buses. Once you know <span class="arithmatex">\(x\)</span>, you can
+compute every power flow, every current injection — the full operating point falls out of the
+AC power-flow equations.</p>
+<p>The <strong>measurement model</strong> relates the hidden state to what sensors actually report:</p>
+<div class="arithmatex">\[z = h(x) + e\]</div>
+<ul>
+<li><span class="arithmatex">\(z\)</span> = vector of <span class="arithmatex">\(m\)</span> measurements (bus voltages, real/reactive power flows, current magnitudes)</li>
+<li><span class="arithmatex">\(h(x)\)</span> = the nonlinear AC power-flow equations mapping state to observables</li>
+<li><span class="arithmatex">\(e\)</span> = measurement errors: <span class="arithmatex">\(e \sim \mathcal{N}(0, R)\)</span>, Gaussian with covariance <span class="arithmatex">\(R\)</span></li>
+</ul>
+<p><span class="arithmatex">\(R\)</span> is diagonal: each sensor has its own noise variance. A high-accuracy PMU gets a small <span class="arithmatex">\(R\)</span> entry;
+a legacy SCADA meter with loose calibration gets a large one.</p>
+<p><strong>One-liner for the interview:</strong> "State estimation answers: given all these noisy, redundant
+SCADA readings, what is the most consistent operating point that best explains all of them?"</p>
+<hr />
+<h2 id="2-the-wls-objective-function">2. The WLS Objective Function</h2>
+<p>We want the estimate <span class="arithmatex">\(\hat{x}\)</span> that minimizes the <strong>weighted sum of squared residuals</strong>:</p>
+<div class="arithmatex">\[J(x) = [z - h(x)]^\top W\, [z - h(x)]\]</div>
+<p>where <span class="arithmatex">\(W = R^{-1}\)</span> — the weight matrix is the inverse of the noise covariance. A more trustworthy
+sensor (small <span class="arithmatex">\(R_{ii}\)</span>) gets higher weight <span class="arithmatex">\(W_{ii} = 1/R_{ii}\)</span>; a noisy legacy meter gets low weight.</p>
+<p>This is exactly <strong>least squares</strong> with per-measurement trust. When all sensors are equally
+trusted (<span class="arithmatex">\(W = I\)</span>), it collapses to ordinary least squares. The WLS version is what every
+production energy management system (EMS) runs.</p>
+<p><strong>Key intuition:</strong> You are not minimizing the number of wrong measurements — you are minimizing
+the energy of the residuals in a space where trustworthy sensors pull harder.</p>
+<hr />
+<h2 id="3-the-gauss-newton-iteration-how-you-actually-solve-it">3. The Gauss-Newton Iteration (How You Actually Solve It)</h2>
+<p><span class="arithmatex">\(h(x)\)</span> is nonlinear (AC power flow involves sines and cosines of phase angles). So <span class="arithmatex">\(J(x)\)</span> has no
+closed-form minimum. We solve iteratively using Gauss-Newton:</p>
+<p><strong>At each iteration, starting from current estimate <span class="arithmatex">\(\hat{x}\)</span>:</strong></p>
+<p><strong>Step 1 — Linearize.</strong> Compute the Jacobian of <span class="arithmatex">\(h\)</span> at the current estimate:</p>
+<div class="arithmatex">\[H = \frac{\partial h}{\partial x}\bigg|_{\hat{x}}\]</div>
+<p><span class="arithmatex">\(H\)</span> has shape <span class="arithmatex">\(m \times 2n\)</span> (<span class="arithmatex">\(m\)</span> measurements, <span class="arithmatex">\(2n\)</span> states). Each row says: "how does measurement <span class="arithmatex">\(i\)</span> change
+when state <span class="arithmatex">\(j\)</span> changes by a tiny amount?"</p>
+<p><strong>Step 2 — Form the gain matrix (information matrix):</strong></p>
+<div class="arithmatex">\[G = H^\top W H\]</div>
+<p><span class="arithmatex">\(G\)</span> is <span class="arithmatex">\(2n \times 2n\)</span>. It captures how much information the current measurements give you about each
+state variable. A well-conditioned <span class="arithmatex">\(G\)</span> means the grid is observable.</p>
+<p><strong>Step 3 — Compute the state correction:</strong></p>
+<div class="arithmatex">\[\Delta x = G^{-1} H^\top W\, [z - h(\hat{x})]\]</div>
+<p>The bracketed term <span class="arithmatex">\([z - h(\hat{x})]\)</span> is the current residual — the gap between what we measured
+and what our current estimate predicts. We correct the estimate to close that gap, weighted
+by sensor trust.</p>
+<p><strong>Step 4 — Update and check convergence:</strong></p>
+<div class="arithmatex">\[\hat{x} \leftarrow \hat{x} + \Delta x\]</div>
+<p>Repeat until <span class="arithmatex">\(\|\Delta x\| &lt; \text{tolerance}\)</span>. In practice, a well-initialized power-system SE converges in
+<strong>2–4 iterations</strong>. The operating point from the previous scan is almost always a good starting
+point, so convergence is fast.</p>
+<hr />
+<h2 id="4-interview-vocabulary-the-terms-you-must-own">4. Interview Vocabulary (The Terms You Must Own)</h2>
+<h3 id="observability">Observability</h3>
+<p>The grid is <strong>observable</strong> when <span class="arithmatex">\(H\)</span> has full column rank — there are enough independent
+measurements to uniquely determine all state variables. In graph terms: every bus must have
+at least one incident measurement (voltage or a power flow on a connected branch).</p>
+<p>If a portion of the grid has no measurements (and no measured branches connecting it to the
+rest), it forms an <strong>unobservable island</strong> — SE cannot determine those bus voltages. The EMS
+flags this and either uses historical data or skips that region.</p>
+<p><strong>Interview sentence:</strong> "Observability is about whether the Jacobian <span class="arithmatex">\(H\)</span> has full column rank —
+whether the measurement set is rich enough to uniquely pin down every state variable."</p>
+<h3 id="residuals">Residuals</h3>
+<p>After WLS converges, the <strong>residuals</strong> are:</p>
+<div class="arithmatex">\[r = z - h(\hat{x})\]</div>
+<p>Small residuals across the board = the estimate is consistent with all measurements. A large
+residual on one measurement flags a potential bad sensor.</p>
+<h3 id="bad-data-detection-chi-squared-test">Bad-Data Detection: Chi-Squared Test</h3>
+<p>After convergence, the weighted residual sum <span class="arithmatex">\(J(\hat{x}) = r^\top W r\)</span> follows a <strong>chi-squared
+distribution</strong> with <span class="arithmatex">\(m - n\)</span> degrees of freedom (<span class="arithmatex">\(m\)</span> measurements minus <span class="arithmatex">\(n\)</span> states = degrees of
+redundancy). If:</p>
+<div class="arithmatex">\[J(\hat{x}) &gt; \chi^2_{\text{threshold}}(m - n,\; 0.95)\]</div>
+<p>...at least one measurement is bad. The <strong>Largest Normalized Residual (LNR) test</strong> then
+identifies the culprit: compute <span class="arithmatex">\(r_i / \sqrt{\Omega_{ii}}\)</span> for each measurement <span class="arithmatex">\(i\)</span> (where <span class="arithmatex">\(\Omega_{ii}\)</span> is the
+diagonal of the residual covariance matrix); the measurement with the largest normalized
+residual is the prime suspect. Remove it and re-run SE.</p>
+<h3 id="the-critical-limitation-leverage-measurements">The Critical Limitation: Leverage Measurements</h3>
+<p>Here is the trap that interviewers who have built real SE systems will probe:</p>
+<p><strong>Leverage measurements</strong> are measurements at buses that, if removed, would render that bus
+(or a subsection of the grid) unobservable. Because the SE solution depends entirely on
+them, their normalized residual is always near zero — even when the measurement is corrupted.</p>
+<p>Think about it: if a bus voltage measurement is the <em>only</em> thing anchoring that bus, the SE
+will fit its estimate to that reading no matter what. A bad reading does not create a large
+residual; it just gives you a wrong state estimate that looks perfectly consistent.</p>
+<p><strong>Interview sentence:</strong> "The LNR test has a structural blind spot: leverage measurements at
+sparsely instrumented buses have near-zero normalized residuals even when corrupted, because
+the estimator has no independent measurement to contradict them. That is the key limitation
+of chi-squared bad-data detection, and it motivates redundant measurement placement at
+critical buses."</p>
+<hr />
+<h2 id="5-static-vs-dynamic-state-estimation">5. Static vs. Dynamic State Estimation</h2>
+<p><strong>WLS is a snapshot estimator.</strong> It processes one scan of SCADA data — typically a 4-second
+update cycle — and produces one operating-point estimate. There is no memory of the previous
+scan; each solve is independent.</p>
+<p>This is fine for slowly-varying transmission conditions but becomes limiting when:</p>
+<ul>
+<li>You have <strong>PMU data</strong> at 30–120 Hz and want to track rapid transients</li>
+<li>You want to estimate dynamic variables (generator rotor angles, frequencies) that evolve
+  between SCADA scans</li>
+<li>You need to predict the state one step ahead (e.g., for model-predictive control or DLR)</li>
+</ul>
+<p><strong>Dynamic state estimation</strong> (KF/EKF/UKF-based) adds a <strong>time dimension</strong>: a predict step
+propagates the state estimate forward using a physics model, then an update step corrects it
+with incoming measurements. This is what KAL-02 covers.</p>
+<p><strong>Transition sentence:</strong> "WLS gives you the best static snapshot; Kalman-based dynamic SE
+gives you a running film with uncertainty quantification at every frame."</p>
+<hr />
+<h2 id="6-osed-bridge-the-convex-optimization-connection">6. OSED Bridge: The Convex Optimization Connection</h2>
+<!-- greppable tag: WLS convex -->
+
+<p>This is the link that makes your experience directly relevant and differentiates you from
+candidates who learned SE from a textbook:</p>
+<blockquote>
+<p><strong>"OSED's convex optimization formulates a quadratic objective over building state variables
+from sensor measurements — same minimize-weighted-squared-residuals logic, just swapping
+AC power-flow for an RC thermal model."</strong></p>
+</blockquote>
+<p>Unpacking the structural isomorphism:</p>
+<table>
+<thead>
+<tr>
+<th>Power-System WLS</th>
+<th>OSED Convex Optimization</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>State vector <span class="arithmatex">\(x = [V,\, \theta]\)</span> per bus</td>
+<td>State vector <span class="arithmatex">\(= [T_\text{zone},\, P_\text{HVAC},\, \ldots]\)</span> per building</td>
+</tr>
+<tr>
+<td>Measurement model <span class="arithmatex">\(z = h(x) + e\)</span></td>
+<td>Sensor model <span class="arithmatex">\(y = Cx + e\)</span></td>
+</tr>
+<tr>
+<td>Objective: <span class="arithmatex">\(\min [z-h(x)]^\top W [z-h(x)]\)</span></td>
+<td>Objective: <span class="arithmatex">\(\min [y-Cx]^\top R^{-1} [y-Cx] + \text{regularization}\)</span></td>
+</tr>
+<tr>
+<td>Nonlinear <span class="arithmatex">\(h\)</span> → Gauss-Newton</td>
+<td>Linear <span class="arithmatex">\(C\)</span> → closed-form or CVXPY</td>
+</tr>
+<tr>
+<td>Measurement noise <span class="arithmatex">\(R\)</span> from sensor specs</td>
+<td>Noise <span class="arithmatex">\(R\)</span> from building sensor calibration</td>
+</tr>
+<tr>
+<td>Observable = <span class="arithmatex">\(H\)</span> full column rank</td>
+<td>Observable = <span class="arithmatex">\(C\)</span> full column rank</td>
+</tr>
+</tbody>
+</table>
+<p>The mathematical logic — minimize weighted squared residuals to get the best consistent
+estimate from redundant noisy sensors — is identical. The grid version is more complex because
+<span class="arithmatex">\(h(x)\)</span> is nonlinear (requires Gauss-Newton iteration), while the building version is linear
+(RC thermal model), so it solves in one shot with CVXPY.</p>
+<p><strong>How to say this in the interview:</strong></p>
+<blockquote>
+<p>"I have implemented the WLS objective in a different physical domain: OSED's building thermal
+state estimator minimizes a weighted least-squares objective over zone temperatures and HVAC
+states using building management system sensor readings. The math is structurally identical
+to power-system WLS. The difference is that my measurement function <span class="arithmatex">\(h(x)\)</span> is linear in
+building temperatures — the RC thermal model is linear — whereas the grid version is
+nonlinear in voltage angles, which is why it needs Gauss-Newton iteration instead of a
+closed-form solve."</p>
+</blockquote>
+<hr />
+<h2 id="quick-recall-card-recite-before-the-interview">Quick-Recall Card (Recite Before the Interview)</h2>
+<ol>
+<li><strong>State vector:</strong> <span class="arithmatex">\(x = [V,\, \theta]\)</span> per bus — WLS finds the best consistent <span class="arithmatex">\(x\)</span>.</li>
+<li><strong>Measurement model:</strong> <span class="arithmatex">\(z = h(x) + e\)</span>; <span class="arithmatex">\(h\)</span> is nonlinear AC power flow; <span class="arithmatex">\(e \sim \mathcal{N}(0, R)\)</span>.</li>
+<li><strong>Objective:</strong> minimize <span class="arithmatex">\(J(x) = [z - h(x)]^\top R^{-1} [z - h(x)]\)</span>.</li>
+<li><strong>Gauss-Newton:</strong> linearize <span class="arithmatex">\(H = \partial h/\partial x\)</span> → gain <span class="arithmatex">\(G = H^\top W H\)</span> → correction <span class="arithmatex">\(\Delta x = G^{-1} H^\top W [z - h(\hat{x})]\)</span> → iterate 2–4 times.</li>
+<li><strong>Observability:</strong> <span class="arithmatex">\(H\)</span> full column rank; unobservable islands if buses have no incident measurements.</li>
+<li><strong>Bad data:</strong> <span class="arithmatex">\(J(\hat{x}) \sim \chi^2(m-n)\)</span>; LNR test finds the suspect measurement.</li>
+<li><strong>Leverage measurement trap:</strong> near-zero normalized residual even when corrupted — structural blind spot of LNR.</li>
+<li><strong>Static vs. dynamic:</strong> WLS = 4-second snapshot; KF/EKF = running estimate with time propagation.</li>
+<li><strong>My bridge:</strong> OSED convex optimization IS structurally WLS — same minimize-weighted-residuals logic, linear RC model instead of nonlinear AC power flow.</li>
+</ol>
+<hr />
+<p><em>Sources: arXiv 2502.18229 (JuliaGrid WLS); ResearchGate 329665834 (WLS framework); 01-RESEARCH.md verified equations</em></p>
+            <footer><a href="../index.html">&larr; Back to study hub</a></footer>
+          </main>
+        </div>
+        </body>
+        </html>

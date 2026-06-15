@@ -1,0 +1,239 @@
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noindex,nofollow">
+        <title>TVS-02: DC Power-Flow Angle Inference (P = Bθ, Linear WLS)</title>
+        <link rel="stylesheet" href="../assets/site.css">
+        <link rel="stylesheet" href="../assets/pygments.css">
+        <script>
+window.MathJax = {
+  tex: { inlineMath: [["\\(","\\)"]], displayMath: [["\\[","\\]"]],
+         processEscapes: true, processEnvironments: true },
+  options: { ignoreHtmlClass: ".*", processHtmlClass: "arithmatex" }
+};
+</script>
+<script defer src="../vendor/mathjax/tex-chtml.js"></script>
+        </head>
+        <body>
+        <div class="wrap">
+          <header class="masthead"><h1>TVS-02: DC Power-Flow Angle Inference (P = Bθ, Linear WLS)</h1></header>
+          <nav class="toc"><h2>Contents</h2><div class="toc">
+<ul>
+<li><a href="#3-min-say-aloud-version">&lt;3-min say-aloud version</a></li>
+<li><a href="#1-the-dc-approximation-assumptions-mental-model-first">1. The DC Approximation Assumptions (Mental Model First)</a></li>
+<li><a href="#2-the-p-btheta-derivation">2. The \(P = B\theta\) Derivation</a></li>
+<li><a href="#3-the-sparse-pmu-observability-gap-awareness">3. The Sparse-PMU Observability Gap (Awareness)</a></li>
+<li><a href="#4-angle-estimation-as-linear-wls-the-kal-01-link">4. Angle Estimation as Linear WLS — The KAL-01 Link</a></li>
+<li><a href="#5-the-3-bus-worked-numbers-these-drive-the-demo">5. The 3-Bus Worked Numbers (These Drive the Demo)</a></li>
+<li><a href="#bridge-to-your-work">→ Bridge to your work</a></li>
+<li><a href="#quick-recall-card-recite-before-the-interview">Quick-Recall Card (Recite Before the Interview)</a></li>
+</ul>
+</div>
+</nav>
+          <main>
+        <h1 id="tvs-02-dc-power-flow-angle-inference-p-b-linear-wls">TVS-02: DC Power-Flow Angle Inference (P = Bθ, Linear WLS)</h1>
+<p><strong>For:</strong> Oral rehearsal — speak each section aloud before the interview.
+<strong>Purpose:</strong> Close the transmission angle-inference vocabulary gap so you can state the DC
+power-flow approximation <span class="arithmatex">\(P = B\theta\)</span>, explain the sparse-PMU coverage problem, and frame
+phase-angle estimation as a weighted-least-squares problem — building directly on KAL-01
+rather than re-deriving it.</p>
+<blockquote>
+<p><strong>This is the linear case of KAL-01.</strong> KAL-01 already owns the WLS objective, the
+Gauss-Newton iteration, observability, and bad-data detection. In DC power flow the
+measurement function is <em>linear</em> in the bus angles, so KAL-01's Gauss-Newton <strong>collapses to a
+single one-shot solve</strong> — no iteration, no Jacobian re-evaluation. This note shows that
+collapse and the DC-specific machinery (the <span class="arithmatex">\(\mathbf B\)</span> matrix, the slack bus). It does <strong>not</strong>
+re-derive Gauss-Newton — see KAL-01 §3 for that.</p>
+</blockquote>
+<hr />
+<h2 id="3-min-say-aloud-version">&lt;3-min say-aloud version</h2>
+<blockquote>
+<p>"In transmission you often care about the bus voltage angles, because real power flow is
+driven by angle differences. The DC power-flow approximation makes that exactly linear: assume
+flat voltage magnitudes near one per-unit, small angle differences so sine is its argument and
+cosine is one, and lossless lines so each branch admittance is just <span class="arithmatex">\(1/x\)</span>, the susceptance.
+Under those assumptions the branch flow is <span class="arithmatex">\(b_{ij}(\theta_i - \theta_j)\)</span>, and stacking every bus
+gives <span class="arithmatex">\(P = B\theta\)</span>, where <span class="arithmatex">\(B\)</span> is the susceptance-weighted graph Laplacian of the network. <span class="arithmatex">\(B\)</span>
+is singular because angles are only relative, so you pick a slack bus, set its angle to zero,
+and delete its row and column. Now the problem: PMUs measure angles directly, but PMU coverage
+is sparse and expensive, so most bus angles are unmeasured and have to be inferred. That is a
+state-estimation problem — and because the model <span class="arithmatex">\(z = H\theta + e\)</span> is linear, the
+Gauss-Newton estimator from KAL-01 collapses to one shot:
+<span class="arithmatex">\(\hat\theta = (H^\top W H)^{-1} H^\top W z\)</span>. One solve, no iteration. Concretely, a 3-bus
+network with all susceptances <span class="arithmatex">\(10\)</span> and bus 1 as slack gives a reduced <span class="arithmatex">\(B\)</span> of
+<span class="arithmatex">\([[20,-10],[-10,20]]\)</span> — and that is exactly the demo I built."</p>
+</blockquote>
+<hr />
+<h2 id="1-the-dc-approximation-assumptions-mental-model-first">1. The DC Approximation Assumptions (Mental Model First)</h2>
+<p>Full AC power flow is nonlinear — that is why KAL-01 needed Gauss-Newton iteration. The <strong>DC
+power-flow approximation</strong> trades a little accuracy for a fully <em>linear</em> model of real power, and
+it is remarkably good on transmission networks because the three assumptions it makes are nearly
+true there.</p>
+<ol>
+<li><strong>Flat voltage magnitudes:</strong> <span class="arithmatex">\(V_i \approx 1.0\)</span> p.u. at every bus. Transmission voltages are
+   tightly regulated near nominal, so magnitude variation is second-order for <em>real</em> power.</li>
+<li><strong>Small angle differences:</strong> <span class="arithmatex">\(\sin(\theta_i - \theta_j) \approx (\theta_i - \theta_j)\)</span> and
+   <span class="arithmatex">\(\cos(\theta_i - \theta_j) \approx 1\)</span>. Across a healthy line the angle difference is a few
+   degrees, where the small-angle approximation is excellent.</li>
+<li><strong>Lossless lines:</strong> resistance is negligible relative to reactance (<span class="arithmatex">\(r \ll x\)</span>), so the branch
+   admittance reduces to <span class="arithmatex">\(1/x = b\)</span>, the <strong>susceptance</strong>.</li>
+</ol>
+<p><strong>Result: real power flow becomes linear in the bus angles.</strong> That linearity is the entire payoff
+— it is what makes angle estimation a one-shot solve instead of an iteration.</p>
+<p><strong>One-liner for the interview:</strong> "DC power flow is the linearization of AC for real power — flat
+voltages, small angles, lossless lines — and it makes power a linear function of bus angles,
+which is what lets state estimation become a single matrix solve."</p>
+<hr />
+<h2 id="2-the-p-btheta-derivation">2. The <span class="arithmatex">\(P = B\theta\)</span> Derivation</h2>
+<p><strong>Branch flow.</strong> Under the DC assumptions, the real power flowing from bus <span class="arithmatex">\(i\)</span> to bus <span class="arithmatex">\(j\)</span> on a line
+of reactance <span class="arithmatex">\(x_{ij}\)</span> is proportional to the angle difference, with the susceptance as the constant:</p>
+<div class="arithmatex">\[P_{ij} = b_{ij}\,(\theta_i - \theta_j), \qquad b_{ij} = \frac{1}{x_{ij}}\]</div>
+<p><strong>Bus injection.</strong> The net real power injected at a bus is the sum of the flows leaving it on its
+incident lines. Stacking that relation over every bus gives the compact matrix form:</p>
+<div class="arithmatex">\[\mathbf{P} = \mathbf{B}\,\boldsymbol{\theta}\]</div>
+<p>where <span class="arithmatex">\(\mathbf P\)</span> is the vector of bus power injections, <span class="arithmatex">\(\boldsymbol\theta\)</span> the vector of bus
+angles, and <span class="arithmatex">\(\mathbf B\)</span> is the <strong>DC Bbus matrix</strong> — a <strong>susceptance-weighted graph Laplacian</strong> of
+the network:</p>
+<div class="arithmatex">\[B_{ii} = \sum_{k\in\mathcal{N}(i)} b_{ik}, \qquad B_{ij} = \begin{cases} -b_{ij} &amp; i\neq j,\ i\text{ connected to } j \\ 0 &amp; i\neq j,\ \text{not connected}\end{cases}\]</div>
+<p>The diagonal of <span class="arithmatex">\(B\)</span> sums the susceptances of all lines touching a bus; each off-diagonal is the
+negative susceptance of the line between two buses (zero if they are not directly connected). It
+is exactly the Laplacian of the network graph with edges weighted by susceptance.</p>
+<p><strong>The slack / reference bus.</strong> <span class="arithmatex">\(\mathbf B\)</span> as written is <strong>singular</strong> — every row sums to zero,
+because power injections are unchanged if you add a constant to <em>all</em> angles. Angles only matter
+<em>relative</em> to a reference. So you pick one bus as the <strong>slack</strong> (reference) bus, fix
+<span class="arithmatex">\(\theta_{slack} = 0\)</span>, and <strong>delete its row and column</strong> from <span class="arithmatex">\(\mathbf B\)</span>. The remaining <strong>reduced
+<span class="arithmatex">\(B\)</span> matrix</strong> is nonsingular and the reduced system <span class="arithmatex">\(B_{red}\,\theta = P\)</span> is solvable for the
+non-slack angles.</p>
+<p><strong>Interview sentence:</strong> "<span class="arithmatex">\(P = B\theta\)</span> where <span class="arithmatex">\(B\)</span> is the susceptance-weighted graph Laplacian. It's
+singular because angles are relative, so you ground a slack bus at zero and delete its row and
+column to get a solvable reduced system."</p>
+<hr />
+<h2 id="3-the-sparse-pmu-observability-gap-awareness">3. The Sparse-PMU Observability Gap (Awareness)</h2>
+<p>State this crisply — the deep PMU / IEEE C37.118 protocol treatment is Phase 4, not here.</p>
+<p>A <strong>PMU</strong> (phasor measurement unit) measures bus voltage <em>phasors</em> — magnitude <em>and angle</em>,
+time-synchronized to GPS — and line-current phasors, directly. If a PMU sat on every bus, the
+angles would be measured outright and there would be little to estimate.</p>
+<p>In reality, <strong>PMU coverage is sparse and expensive.</strong> Utilities instrument a subset of buses, so
+<strong>most bus angles are unmeasured</strong> and must be <strong>inferred</strong> from the measurements that do exist —
+the line flows, injections, and the PMU readings you have. Inferring the full angle vector from a
+partial, redundant measurement set is precisely a <strong>state-estimation problem on angles</strong>, which
+is the subject of the next section.</p>
+<p><strong>Awareness sentence:</strong> "PMUs give you angles directly, but coverage is sparse and costly, so most
+bus angles are unmeasured — you infer the full angle state from the measurements you do have,
+which is a state-estimation problem."</p>
+<hr />
+<h2 id="4-angle-estimation-as-linear-wls-the-kal-01-link">4. Angle Estimation as Linear WLS — The KAL-01 Link</h2>
+<p>Here is where TVS-02 cashes in KAL-01. The measurement model for DC angle estimation is <strong>linear</strong>:</p>
+<div class="arithmatex">\[z = H\theta + e, \qquad e \sim \mathcal N(0, R)\]</div>
+<p>where each row of <span class="arithmatex">\(H\)</span> is the linear sensitivity of a measured quantity (a line flow or a bus
+injection) to the angle vector — and those sensitivities are just susceptances. Compare this to
+KAL-01's nonlinear <span class="arithmatex">\(z = h(x) + e\)</span>: because <span class="arithmatex">\(h(\theta) = H\theta\)</span> is now <strong>linear</strong>, the Jacobian
+<span class="arithmatex">\(H\)</span> is <strong>constant</strong>, so KAL-01's Gauss-Newton iteration <strong>collapses to a one-shot solve</strong>:</p>
+<div class="arithmatex">\[\hat{\boldsymbol\theta} = (H^\top W H)^{-1} H^\top W\, z, \qquad W = R^{-1}\]</div>
+<p>This is the <em>same normal-equations form</em> as KAL-01 §3 — gain matrix <span class="arithmatex">\(G = H^\top W H\)</span>, correction
+driven by <span class="arithmatex">\(H^\top W z\)</span> — but with <span class="arithmatex">\(H\)</span> no longer re-linearized at each step. There is nothing to
+iterate: one matrix solve gives the best weighted-least-squares angle estimate.</p>
+<p><strong>Say this explicitly:</strong> <em>"DC state estimation is the linear case of the WLS / Gauss-Newton
+estimator from KAL-01 — one iteration, no Jacobian re-evaluation. The nonlinear AC version needs
+Gauss-Newton; the DC version is a single solve because the measurement model is linear in
+angles."</em></p>
+<p><strong>Interview sentence:</strong> "Angle inference is weighted least squares: <span class="arithmatex">\(z = H\theta + e\)</span> with <span class="arithmatex">\(H\)</span>
+made of susceptances. Since it's linear, the KAL-01 Gauss-Newton iteration collapses to
+<span class="arithmatex">\(\hat\theta = (H^\top W H)^{-1} H^\top W z\)</span> — one shot, no iteration."</p>
+<hr />
+<h2 id="5-the-3-bus-worked-numbers-these-drive-the-demo">5. The 3-Bus Worked Numbers (These Drive the Demo)</h2>
+<p>A concrete network makes the whole chain memorable — and these exact numbers drive the Plan-03
+demo, so the note and the code line up.</p>
+<p><strong>Network.</strong> Three buses, lines <span class="arithmatex">\(1\text{–}2\)</span>, <span class="arithmatex">\(1\text{–}3\)</span>, <span class="arithmatex">\(2\text{–}3\)</span>, with equal susceptances
+<span class="arithmatex">\(b_{12} = b_{13} = b_{23} = 10\)</span> p.u. (reactances <span class="arithmatex">\(x = 0.1\)</span> p.u. each — round numbers for clean
+arithmetic). Choose <strong>bus 1 as slack</strong>, <span class="arithmatex">\(\theta_1 = 0\)</span>. The state is then the two non-slack angles
+<span class="arithmatex">\([\theta_2, \theta_3]\)</span> (<span class="arithmatex">\(n = 2\)</span>).</p>
+<p><strong>Reduced <span class="arithmatex">\(B\)</span>.</strong> Delete row/column 1. Each remaining diagonal sums the two susceptances incident
+to that bus (<span class="arithmatex">\(b_{12} + b_{23} = 20\)</span> at bus 2; <span class="arithmatex">\(b_{13} + b_{23} = 20\)</span> at bus 3), and the
+off-diagonal is <span class="arithmatex">\(-b_{23} = -10\)</span>:</p>
+<div class="arithmatex">\[B_{red} = \begin{bmatrix} b_{12}+b_{23} &amp; -b_{23}\\ -b_{23} &amp; b_{13}+b_{23}\end{bmatrix} = \begin{bmatrix} 20 &amp; -10\\ -10 &amp; 20\end{bmatrix}\]</div>
+<p><strong>Loads and ground-truth angles.</strong> Take bus injections <span class="arithmatex">\(P_2 = -1.0\)</span> and <span class="arithmatex">\(P_3 = -0.5\)</span> p.u. (both
+loads). The ground-truth angles solve the reduced system:</p>
+<div class="arithmatex">\[B_{red}\,\boldsymbol\theta = \mathbf P, \qquad \begin{bmatrix} 20 &amp; -10\\ -10 &amp; 20\end{bmatrix}\begin{bmatrix}\theta_2\\\theta_3\end{bmatrix} = \begin{bmatrix}-1.0\\-0.5\end{bmatrix}\]</div>
+<p>which gives <span class="arithmatex">\(\boldsymbol\theta \approx [-0.0833,\ -0.0667]\)</span> rad (verify in code — the demo solves
+this exactly). From these true angles the demo generates a redundant set of noisy line-flow and
+injection measurements, then runs the linear WLS solve above — making this 3-bus case the
+concrete, defensible whiteboard story for both <span class="arithmatex">\(P = B\theta\)</span> and the one-shot WLS estimate.</p>
+<p><strong>Interview sentence:</strong> "For a 3-bus network with all susceptances <span class="arithmatex">\(10\)</span> and bus 1 as slack, the
+reduced <span class="arithmatex">\(B\)</span> is <span class="arithmatex">\([[20,-10],[-10,20]]\)</span>; with loads <span class="arithmatex">\(-1.0\)</span> and <span class="arithmatex">\(-0.5\)</span> the true angles come out around
+<span class="arithmatex">\(-0.083\)</span> and <span class="arithmatex">\(-0.067\)</span> radians — and that's exactly the demo I built."</p>
+<hr />
+<h2 id="bridge-to-your-work">→ Bridge to your work</h2>
+<!-- greppable tag: Bridge to your work -->
+
+<p>The strongest analog is <strong>inferring an unmeasured full state from sparse, redundant sensors via
+weighted least squares</strong> — exactly the shape of your OSED thermal estimator and SI-MAPPER.</p>
+<blockquote>
+<p><strong>"Sparse PMU angle inference is the same shape as my OSED thermal estimator — too few direct
+sensors, so you infer the full state vector from a redundant set via weighted least squares."</strong></p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>DC Angle State Estimation</th>
+<th>OSED / SI-MAPPER Inference</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>State = bus voltage angles <span class="arithmatex">\(\boldsymbol\theta\)</span> (mostly unmeasured)</td>
+<td>State = building thermal state <span class="arithmatex">\([T_\text{zone}, \ldots]\)</span> (not directly sensed)</td>
+</tr>
+<tr>
+<td>Measurements = sparse PMU + line-flow / injection readings</td>
+<td>Measurements = sparse, redundant BMS sensor readings</td>
+</tr>
+<tr>
+<td>Linear model <span class="arithmatex">\(z = H\theta + e\)</span>, <span class="arithmatex">\(H\)</span> from susceptances</td>
+<td>(Near-)linear sensor model <span class="arithmatex">\(y = Cx + e\)</span>, <span class="arithmatex">\(C\)</span> from the RC thermal model</td>
+</tr>
+<tr>
+<td>Solve: <span class="arithmatex">\(\hat\theta = (H^\top W H)^{-1} H^\top W z\)</span> (one shot)</td>
+<td>Solve: weighted-least-squares / convex objective over <span class="arithmatex">\(x\)</span></td>
+</tr>
+<tr>
+<td>SI-MAPPER analog: infer structured state where direct labels are absent</td>
+<td>Infer ontology / structured state from images via redundant cues</td>
+</tr>
+</tbody>
+</table>
+<p>The common structure: the quantity you actually want is <strong>unmeasured or only sparsely measured</strong>,
+so you infer the <strong>full state vector</strong> from a <strong>redundant</strong> set of available, noisy measurements by
+<strong>weighted least squares</strong>. The grid version is the cleanest because DC makes it perfectly linear —
+one solve — but the OSED thermal estimator is the same inference problem in the building domain.</p>
+<p><strong>How to say this in the interview:</strong></p>
+<blockquote>
+<p>"Sparse PMU angle inference is structurally the same as my OSED building thermal estimator. In
+both you can't measure the state you care about everywhere — bus angles on the grid, zone
+thermal state in a building — so you infer the full state vector from a redundant set of sensors
+by weighted least squares. The DC power-flow case is the linear, one-shot version of the
+Gauss-Newton estimator: <span class="arithmatex">\(\hat\theta = (H^\top W H)^{-1} H^\top W z\)</span>. I've already built this kind
+of redundant-sensor state inference in OSED, and SI-MAPPER does the same when it infers
+structured state where direct labels are absent."</p>
+</blockquote>
+<hr />
+<h2 id="quick-recall-card-recite-before-the-interview">Quick-Recall Card (Recite Before the Interview)</h2>
+<ol>
+<li><strong>DC assumptions:</strong> flat <span class="arithmatex">\(V \approx 1.0\)</span> p.u.; small angles (<span class="arithmatex">\(\sin \approx \cdot\)</span>, <span class="arithmatex">\(\cos \approx 1\)</span>); lossless (<span class="arithmatex">\(r \ll x\)</span>, <span class="arithmatex">\(b = 1/x\)</span>). → real power linear in angles.</li>
+<li><strong>Branch flow:</strong> <span class="arithmatex">\(P_{ij} = b_{ij}(\theta_i - \theta_j)\)</span>, <span class="arithmatex">\(b_{ij} = 1/x_{ij}\)</span>.</li>
+<li><strong>Stacked:</strong> <span class="arithmatex">\(\mathbf P = \mathbf B\boldsymbol\theta\)</span>; <span class="arithmatex">\(\mathbf B\)</span> = susceptance-weighted graph Laplacian: <span class="arithmatex">\(B_{ii} = \sum_k b_{ik}\)</span>, <span class="arithmatex">\(B_{ij} = -b_{ij}\)</span>.</li>
+<li><strong>Slack bus:</strong> <span class="arithmatex">\(\mathbf B\)</span> singular (angles relative) → fix <span class="arithmatex">\(\theta_{slack} = 0\)</span>, delete its row/column → reduced <span class="arithmatex">\(B\)</span> solvable.</li>
+<li><strong>Sparse-PMU gap (awareness):</strong> PMUs measure angles directly but coverage is sparse → most angles inferred → state-estimation problem.</li>
+<li><strong>Linear WLS = KAL-01 collapsed:</strong> <span class="arithmatex">\(z = H\theta + e\)</span> linear → <span class="arithmatex">\(\hat\theta = (H^\top W H)^{-1} H^\top W z\)</span>, one shot, no Gauss-Newton iteration.</li>
+<li><strong>3-bus:</strong> <span class="arithmatex">\(b = 10\)</span> all lines, slack = bus 1; <span class="arithmatex">\(B_{red} = [[20,-10],[-10,20]]\)</span>; loads <span class="arithmatex">\(-1.0/-0.5\)</span> → <span class="arithmatex">\(\theta \approx [-0.083, -0.067]\)</span> rad (verify in code).</li>
+<li><strong>My bridge:</strong> sparse angle inference IS my OSED thermal estimator — infer the full state from redundant sensors via weighted least squares.</li>
+</ol>
+<hr />
+<p><em>Sources: Abur &amp; Expósito, "Power System State Estimation: Theory and Implementation" (2004), DC/linear SE chapter; KAL-01-wls-state-estimation.md §3 (WLS normal equations, Gauss-Newton — the linear case of which this is); 02-RESEARCH.md §TVS-02 verified equations and 3-bus worked numbers; CV — OSED building thermal estimator, SI-MAPPER structured-state inference.</em></p>
+            <footer><a href="../index.html">&larr; Back to study hub</a></footer>
+          </main>
+        </div>
+        </body>
+        </html>

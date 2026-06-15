@@ -1,0 +1,277 @@
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noindex,nofollow">
+        <title>STK-01: Grid Protocol Stack — Field-to-Cloud Tier Map</title>
+        <link rel="stylesheet" href="../assets/site.css">
+        <link rel="stylesheet" href="../assets/pygments.css">
+        <script>
+window.MathJax = {
+  tex: { inlineMath: [["\\(","\\)"]], displayMath: [["\\[","\\]"]],
+         processEscapes: true, processEnvironments: true },
+  options: { ignoreHtmlClass: ".*", processHtmlClass: "arithmatex" }
+};
+</script>
+<script defer src="../vendor/mathjax/tex-chtml.js"></script>
+        </head>
+        <body>
+        <div class="wrap">
+          <header class="masthead"><h1>STK-01: Grid Protocol Stack — Field-to-Cloud Tier Map</h1></header>
+          <nav class="toc"><h2>Contents</h2><div class="toc">
+<ul>
+<li><a href="#1-the-field-to-cloud-mental-model">1. The Field-to-Cloud Mental Model</a></li>
+<li><a href="#2-the-tier-map">2. The Tier Map</a></li>
+<li><a href="#3-ieee-c37118-reporting-rate-detail">3. IEEE C37.118 Reporting-Rate Detail</a></li>
+<li><a href="#4-dnp3-vs-modbus-the-distinction-that-powers-the-bridge">4. DNP3 vs. Modbus — The Distinction That Powers the Bridge</a></li>
+<li><a href="#3-min-say-aloud-version">&lt;3-min say-aloud version</a></li>
+<li><a href="#bridge-to-your-work">→ Bridge to your work</a></li>
+<li><a href="#quick-recall-card-recite-before-the-interview">Quick-Recall Card (Recite Before the Interview)</a></li>
+</ul>
+</div>
+</nav>
+          <main>
+        <h1 id="stk-01-grid-protocol-stack-field-to-cloud-tier-map">STK-01: Grid Protocol Stack — Field-to-Cloud Tier Map</h1>
+<p><strong>For:</strong> Oral rehearsal — speak each section aloud before the interview.
+<strong>Purpose:</strong> Place every named grid protocol in the correct field-to-cloud tier with one
+distinguishing property each — so you can navigate the protocol stack in conversation and
+never confuse SCADA with DNP3 or LoRa with MQTT.</p>
+<hr />
+<blockquote>
+<p><strong>Depth strategy:</strong> FULL depth for <strong>DNP3 vs. Modbus</strong> and the <strong>PMU / IEEE C37.118</strong>
+reporting-rate detail — these are the most likely interview probes. <strong>Awareness only</strong> for
+IEC 61850 internals (that's STK-02) and LoRa RF engineering (CLAUDE.md "What NOT to
+Over-Invest In"). SCADA/OPC-UA gets one conceptual paragraph — you'll elaborate if asked.</p>
+</blockquote>
+<hr />
+<h2 id="1-the-field-to-cloud-mental-model">1. The Field-to-Cloud Mental Model</h2>
+<p>Every grid protocol lives in a tier. The interviewer is not just asking "what is DNP3?" —
+they are asking "where does it live and what problem does it solve that nothing else at
+that tier solves?" Protocols exist because different tiers have fundamentally different
+constraints: a protection relay needs a deterministic sub-4 ms signal that never touches
+IP routing; a field RTU needs to push timestamp-stamped events to a SCADA master without
+being polled; a wide-area sensor on a pole-top needs to run on battery for 10 years.
+Protocols are the shape of those constraints. Know the tier, know the constraint, know
+the one property — and you own the conversation.</p>
+<hr />
+<h2 id="2-the-tier-map">2. The Tier Map</h2>
+<table>
+<thead>
+<tr>
+<th>Protocol</th>
+<th>Field-to-Cloud Tier</th>
+<th>One Key Property</th>
+<th>Transport</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>SCADA + OPC-UA</strong></td>
+<td>Station level → cloud / control center</td>
+<td>RTUs/IEDs aggregate field data; OPC-UA is the integration API bridging SCADA to historians and analytics</td>
+<td>TCP/IP</td>
+</tr>
+<tr>
+<td><strong>DNP3</strong></td>
+<td>Field → station (RTU/IED to SCADA master)</td>
+<td><strong>Millisecond timestamps on every data point</strong> + unsolicited reporting (RTU pushes on change — no polling)</td>
+<td>Serial or TCP/IP</td>
+</tr>
+<tr>
+<td><strong>PMU / IEEE C37.118</strong></td>
+<td>Field → regional / cloud (via PDC)</td>
+<td><strong>GPS-synchronized phasors at 10–120 frames/sec</strong> (30/60 common for 60 Hz); enables wide-area state estimation</td>
+<td>TCP/IP (streaming)</td>
+</tr>
+<tr>
+<td><strong>IEC 61850</strong></td>
+<td>Process bus (GOOSE/SV) and station bus (MMS)</td>
+<td>GOOSE &lt;4 ms L2 protection trips; SV = digitized I/V on process bus; MMS = client-server SCADA supervision</td>
+<td>L2 Ethernet (GOOSE/SV); TCP/IP (MMS)</td>
+</tr>
+<tr>
+<td><strong>LoRa / LoRaWAN</strong></td>
+<td>Field → wide-area (cloud via network server)</td>
+<td><strong>2–15 km range on battery power (5–10 years)</strong>; star-of-stars topology; 0.3–50 kbps</td>
+<td>LoRa RF → gateway → TCP</td>
+</tr>
+<tr>
+<td><strong>MQTT</strong></td>
+<td>Field → edge broker (device-to-broker)</td>
+<td>Lightweight pub/sub; QoS 0/1/2; star topology through broker; <strong>no native timestamping</strong></td>
+<td>TCP/IP</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="3-ieee-c37118-reporting-rate-detail">3. IEEE C37.118 Reporting-Rate Detail</h2>
+<p>IEEE C37.118 is the communication standard for synchrophasor (PMU) data. Required baseline
+for 60 Hz power systems: <strong>10, 30, or 60 frames per second</strong> (user-selectable). Higher
+rates — <strong>120 fps</strong> — are encouraged and common in high-resolution Wide-Area Monitoring
+System (WAMS) applications. Every frame carries a <strong>GPS-derived timestamp</strong>, which is what
+makes cross-system phase comparison possible: two PMUs on opposite ends of a 500 kV line,
+synchronized to UTC, can have their phasors compared to microsecond accuracy. That GPS
+lock is what enables the Kalman-based wide-area state estimation the role names.</p>
+<p><strong>One-liner:</strong> "C37.118 is the language PMUs speak — GPS-synchronized phasors at 10–120
+frames/sec, TCP streaming to a Phasor Data Concentrator (PDC), enabling wide-area state
+estimation at a resolution no SCADA poll can match."</p>
+<hr />
+<h2 id="4-dnp3-vs-modbus-the-distinction-that-powers-the-bridge">4. DNP3 vs. Modbus — The Distinction That Powers the Bridge</h2>
+<p>Modbus was designed in 1979 for industrial automation: simple, poll-only, no timestamps.
+DNP3 was designed in the 1990s specifically for the electric utility industry — it adds
+three things Modbus does not have:</p>
+<ol>
+<li>
+<p><strong>Millisecond timestamps on every data object.</strong> When an RTU reads an analog input or
+   a binary status, the value is packaged with the exact millisecond it was observed. This
+   is non-negotiable for post-event analysis and grid protection coordination.</p>
+</li>
+<li>
+<p><strong>Unsolicited reporting.</strong> An RTU running DNP3 can be configured to push a report to
+   the SCADA master the moment a value changes (or crosses a threshold), without waiting to
+   be polled. Modbus is poll-only — the master must ask; the slave never volunteers.</p>
+</li>
+<li>
+<p><strong>Three-layer architecture + DNP3 SAv5.</strong> DNP3 uses a proper application/transport/
+   data-link stack (vs. Modbus's simple two-layer) and DNP3 Secure Authentication version 5
+   (SAv5) for authenticated communications — critical in utility SCADA where an unauthenticated
+   command could open a breaker.</p>
+</li>
+</ol>
+<table>
+<thead>
+<tr>
+<th>Dimension</th>
+<th>Modbus (Juan has)</th>
+<th>DNP3 (gap)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Origin</td>
+<td>Industrial automation (1979)</td>
+<td>Electric utility (1990s)</td>
+</tr>
+<tr>
+<td>Timestamping</td>
+<td>No native timestamps</td>
+<td>Millisecond timestamps on every data point</td>
+</tr>
+<tr>
+<td>Reporting mode</td>
+<td>Poll-only</td>
+<td>Unsolicited reporting + polling</td>
+</tr>
+<tr>
+<td>Architecture</td>
+<td>Two-layer (app/data-link)</td>
+<td>Three-layer (app/transport/data-link)</td>
+</tr>
+<tr>
+<td>Security</td>
+<td>None native</td>
+<td>DNP3 SAv5 (Secure Authentication v5)</td>
+</tr>
+<tr>
+<td>Transport</td>
+<td>Serial, Ethernet</td>
+<td>Serial, TCP/IP, UDP</td>
+</tr>
+<tr>
+<td>Primary use</td>
+<td>PLC/SCADA in industrial</td>
+<td>RTU/IED to SCADA master in utility</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="3-min-say-aloud-version">&lt;3-min say-aloud version</h2>
+<blockquote>
+<p>"Let me walk the stack bottom to top.</p>
+<p>At the bottom, the <strong>field tier</strong>. Two protocols own protection: <strong>IEC 61850 GOOSE and SV</strong>,
+both running Layer-2 Ethernet — they never touch IP routing because they cannot afford to.
+GOOSE delivers a protection trip in <strong>&lt;4 ms</strong>; SV streams digitized current and voltage from
+merging units to protection relays. Both stay inside the substation LAN.</p>
+<p>Also in the field tier, <strong>DNP3</strong> — the RTU-to-SCADA workhorse for utility telemetry. Its key
+property: <strong>millisecond timestamps on every data point</strong> and unsolicited reporting, so the RTU
+pushes on change rather than waiting to be polled. That's what makes post-event replay possible.</p>
+<p><strong>PMUs</strong> also live at the field tier, speaking <strong>IEEE C37.118</strong> — GPS-synchronized phasors at
+10–120 frames per second. Those go to a Phasor Data Concentrator, then to a Wide-Area Monitoring
+System in the cloud. The GPS lock is what lets you compare phase angles across thousands of
+kilometers.</p>
+<p>On the wide-area sensing side: <strong>LoRa/LoRaWAN</strong> — 2 to 15 km on battery power for 5 to 10 years,
+star-of-stars topology, 0.3 to 50 kbps. This is for pole-top sensors, fault indicators in rural
+areas, or distribution sensors where you cannot justify fiber or cellular.</p>
+<p>Moving up, <strong>MQTT</strong> lives at the device-to-edge-broker tier — lightweight pub/sub, QoS 0/1/2,
+star topology through a broker. No native timestamping; that's my world from OSED.</p>
+<p>At the top, <strong>SCADA + OPC-UA</strong>. SCADA aggregates RTU/IED data and provides the operator HMI.
+OPC-UA is the integration API — the bridge from SCADA to historians like OSIsoft PI and to
+analytics pipelines. All over TCP/IP."</p>
+</blockquote>
+<hr />
+<h2 id="bridge-to-your-work">→ Bridge to your work</h2>
+<blockquote>
+<p><strong>Two bridges from the CLAUDE.md Summary Reference Table — the exact reframes to use:</strong></p>
+<p><strong>Bridge 1: Modbus → DNP3</strong>
+"I've used Modbus in production (OSED building automation, HVAC, RTUs). Modbus is polling with
+no timestamps — fine for a controlled environment where you own the polling schedule and latency
+doesn't matter. DNP3 adds the two things Modbus lacks for utility applications: millisecond
+timestamps on every reading, and unsolicited push so the RTU reports on change. It's the same
+register model, but with the timestamp and event discipline utilities require for SCADA and
+post-event reconstruction."</p>
+<p><strong>Bridge 2: Zigbee → LoRa</strong>
+"I've deployed Zigbee in building automation (OSED/HEMS). Zigbee is 250 kbps mesh at 10–100 m
+— perfect indoors. LoRa/LoRaWAN is 0.3–50 kbps star-of-stars at 2–15 km on a battery that lasts
+10 years — the use case is completely different: pole-top fault indicators, distribution sensors
+in rural areas that don't justify fiber. Same IoT instinct, different constraint set."</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>Juan's experience</th>
+<th>Grid equivalent</th>
+<th>What changes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Modbus (industrial RTUs, OSED)</td>
+<td><strong>DNP3</strong></td>
+<td>Add millisecond timestamps + unsolicited push; DNP3 SAv5 for auth</td>
+</tr>
+<tr>
+<td>Zigbee (HEMS, building automation)</td>
+<td><strong>LoRa/LoRaWAN</strong></td>
+<td>Km-range, years-on-battery, star-of-stars instead of 100 m mesh</td>
+</tr>
+</tbody>
+</table>
+<p><strong>How to say this in the interview:</strong></p>
+<blockquote>
+<p>"I've built with Modbus and Zigbee in production. DNP3 is the utility evolution of Modbus —
+same register-based telemetry idea, but with millisecond timestamps and unsolicited reporting
+so the RTU pushes on change instead of being polled. And LoRa is the km-range, battery-class
+cousin of Zigbee — same IoT instinct, completely different physical constraint. The upgrade
+path from my stack to the utility field stack is a clear step, not a rethink."</p>
+</blockquote>
+<hr />
+<h2 id="quick-recall-card-recite-before-the-interview">Quick-Recall Card (Recite Before the Interview)</h2>
+<ol>
+<li><strong>SCADA + OPC-UA</strong> — station level to cloud; RTUs/IEDs aggregate, OPC-UA bridges to historians; TCP/IP.</li>
+<li><strong>DNP3</strong> — field to SCADA master; <strong>millisecond timestamps</strong> + <strong>unsolicited push</strong>; Serial or TCP/IP.</li>
+<li><strong>PMU / IEEE C37.118</strong> — field to cloud via PDC; <strong>GPS-synced phasors at 10–120 fps</strong>; TCP/IP streaming.</li>
+<li><strong>IEC 61850</strong> — process bus (GOOSE/SV Layer 2, &lt;4 ms) + station bus (MMS TCP/IP); see STK-02 for internals.</li>
+<li><strong>LoRa/LoRaWAN</strong> — field to wide-area cloud; <strong>2–15 km, 5–10 yr battery</strong>; LoRa RF → gateway → TCP.</li>
+<li><strong>MQTT</strong> — device to edge broker; lightweight pub/sub; no native timestamps; my background.</li>
+<li><strong>DNP3 vs Modbus:</strong> Modbus = poll-only, no timestamps. DNP3 = millisecond timestamps + unsolicited push + DNP3 SAv5 auth.</li>
+<li><strong>C37.118 detail:</strong> 10/30/60 fps baseline; 120 fps for WAMS; GPS timestamp on every frame.</li>
+<li><strong>My bridge:</strong> Modbus → DNP3 (timestamps + push), Zigbee → LoRa (km-range, battery, star-of-stars).</li>
+</ol>
+<hr />
+<p><em>Sources: CLAUDE.md "Category 3: Grid Protocols" (SCADA, DNP3 vs Modbus table, PMU/C37.118, IEC 61850, LoRa/Zigbee table) and "Summary Reference Table" (bridge raw material); IEEE C37.118 (synchrophasor standard — baseline reporting rates, GPS synchronization); DNP3 (IEC 60870-5 derivative — three-layer architecture, SAv5); IEC 61850 (GOOSE/SV Layer 2, MMS TCP/IP); CV (Modbus in OSED building automation, Zigbee in HEMS/building intelligence).</em></p>
+            <footer><a href="../index.html">&larr; Back to study hub</a></footer>
+          </main>
+        </div>
+        </body>
+        </html>
