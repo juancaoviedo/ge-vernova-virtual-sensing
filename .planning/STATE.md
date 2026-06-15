@@ -4,7 +4,7 @@ milestone: v1.0
 milestone_name: milestone
 status: verifying
 stopped_at: Phase 7 UI-SPEC approved
-last_updated: "2026-06-15T07:18:03.299Z"
+last_updated: "2026-06-15T07:29:13.499Z"
 last_activity: 2026-06-15
 progress:
   total_phases: 8
@@ -65,6 +65,7 @@ Progress: [██████████] 100%
 | Phase 05 P01 | 3 | 2 tasks | 2 files |
 | Phase 7 P01 | 90 | 3 tasks | 23 files |
 | Phase 07 P03 | 4 | 2 tasks | 7 files |
+| Phase 07 P04 | 15 | 3 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -94,6 +95,8 @@ Recent decisions affecting current work:
 - [Phase 07-integrated-html-study-site]: D-01: docs/build_site.py is the single re-runnable note-conversion build entry point; plans 02-04 extend the same file (not create new scripts)
 - [Phase ?]: D-11: AST-based _slice_function() embeds key functions only — no whole files
 - [Phase ?]: Hub index.html is manifest-driven (no hardcoded slugs) — prevents slug drift
+- [Phase ?]: diagram viewer embeds annotated PNG (draw.io export with user hand-annotations) as primary; SVG secondary — PNG has faithful colors, SVG had rendering issues in browser
+- [Phase ?]: D-06 honored: actual GitHub Pages deploy deferred; PUBLISH.md documents rebuild + offline smoke test + Pages deploy steps + deferred CV/patent-PDF privacy decision
 
 ### Roadmap Evolution
 
@@ -121,6 +124,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-06-15T07:18:03.284Z
+Last session: 2026-06-15T07:29:08.035Z
 Stopped at: Phase 7 UI-SPEC approved
 Resume file: None
