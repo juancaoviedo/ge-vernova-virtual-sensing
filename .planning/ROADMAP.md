@@ -125,7 +125,7 @@ deliverable maps to exactly one phase; no requirement is orphaned.
   3. Each hands-on demo has a section explaining what it is, why it was created, and references/links to its code and README
   4. The site opens locally in a browser with working internal navigation between architecture, notes, and demos
 **Plans**: 4 plans
-  - [ ] 07-01-PLAN.md — Build foundation: venv, build_site.py, shared CSS, vendored MathJax, convert all 15 notes (HTML-03, HTML-04)
+  - [x] 07-01-PLAN.md — Build foundation: venv, build_site.py, shared CSS, vendored MathJax, convert all 15 notes (HTML-03, HTML-04)
   - [ ] 07-02-PLAN.md — Architecture integration: copy research trio + sources + diagram, rewrite cross-links, diagram viewer (HTML-02)
   - [ ] 07-03-PLAN.md — Card-grid hub + demos page with embedded key code and inline results (HTML-01, HTML-05)
   - [ ] 07-04-PLAN.md — Publish-readiness: .nojekyll, robots/noindex, link-validation pass, PUBLISH.md, offline smoke check (HTML-06, HTML-07)
@@ -144,4 +144,4 @@ Phases execute in numeric order: 0 → 1 → 2 → 3 → 4 → 5 → 6 → 7
 | 4. Protocols, Stack & Architecture | 3/3 | Complete   | 2026-06-14 |
 | 5. Federated Architectures & Security | 3/3 | Complete   | 2026-06-14 |
 | 6. Synthesis, Drills & Mock Interview | 0/TBD | Not started | - |
-| 7. Integrated HTML Study Site | 0/TBD | Not started | - |
+| 7. Integrated HTML Study Site | 1/4 | In Progress|  |
