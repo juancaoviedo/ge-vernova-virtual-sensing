@@ -285,10 +285,16 @@ def build_architecture() -> None:
 # ---------------------------------------------------------------------------
 
 def build_diagram_page() -> None:
-    """Emit docs/architecture/diagram.html — shared-shell viewer for the AGMS SVG.
+    """Emit docs/architecture/diagram.html — shared-shell viewer for the AGMS architecture PNG.
 
     Uses the same .wrap shell as note pages; no MathJax (no math on this page).
     Paths: ../assets/site.css, ../assets/pygments.css (one level up from architecture/).
+
+    Embeds the annotated PNG (AGMS-architecture.drawio.png, ~4885x4265 px, includes
+    user hand-annotations).  The PNG is faithful to the original draw.io colors.
+    The image is wrapped in a click-to-zoom link (<a target="_blank">) and styled
+    responsively (max-width:100%; height:auto) so it fits any viewport.
+    The SVG remains in architecture/ as an alternate; a secondary link is provided.
     """
     arch_dir = DOCS / "architecture"
     arch_dir.mkdir(parents=True, exist_ok=True)
@@ -303,6 +309,20 @@ def build_diagram_page() -> None:
         <title>AGMS Architecture Diagram</title>
         <link rel="stylesheet" href="../assets/site.css">
         <link rel="stylesheet" href="../assets/pygments.css">
+        <style>
+        .diagram-figure img {
+          max-width: 100%;
+          height: auto;
+          display: block;
+          border: 1px solid #ddd;
+          border-radius: 4px;
+        }
+        .diagram-figure figcaption {
+          margin-top: 0.5em;
+          font-size: 0.875em;
+          color: #555;
+        }
+        </style>
         </head>
         <body>
         <div class="wrap">
@@ -316,11 +336,16 @@ def build_diagram_page() -> None:
               <h2 class="sec">AGMS reference architecture</h2>
               <p>The self-organizing grid-management platform: perceive (GWM) &rarr; reason
               (CaCSM) &rarr; orchestrate (Logistician/GWCH) &rarr; deploy autonomous scouts.
-              SVG below; <a href="AGMS-architecture.drawio.png">PNG fallback</a>.</p>
-              <figure>
-                <img src="AGMS-architecture.svg" alt="AGMS reference architecture diagram">
-                <figcaption>AGMS architecture (source: director&#x27;s patent family walkthrough).
-                Crisp SVG render.</figcaption>
+              Click the image to open full-size (4885&times;4265 px) in a new tab &mdash;
+              annotations are visible at full zoom.</p>
+              <figure class="diagram-figure">
+                <a href="AGMS-architecture.drawio.png" target="_blank" rel="noopener">
+                  <img src="AGMS-architecture.drawio.png"
+                       alt="AGMS architecture diagram (with annotations)">
+                </a>
+                <figcaption>AGMS architecture (source: director&#x27;s patent family walkthrough,
+                with hand-added study annotations). PNG exported from draw.io — faithful colors.
+                Also available: <a href="AGMS-architecture.svg">vector SVG</a>.</figcaption>
               </figure>
             </section>
             <footer><a href="../index.html">&larr; Back to study hub</a></footer>
@@ -654,7 +679,7 @@ _ARCH_CARDS = [
      "Browse the patent index — six patents covering AGMS, Logistician Module, Scout Command, and more.",
      "architecture/INDEX.html"),
     ("AGMS Architecture Diagram",
-     "View the full AGMS reference-architecture diagram (SVG, crisp at any zoom).",
+     "View the full AGMS reference-architecture diagram (annotated PNG, click to zoom).",
      "architecture/diagram.html"),
 ]
 

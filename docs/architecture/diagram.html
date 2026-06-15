@@ -7,6 +7,20 @@
 <title>AGMS Architecture Diagram</title>
 <link rel="stylesheet" href="../assets/site.css">
 <link rel="stylesheet" href="../assets/pygments.css">
+<style>
+.diagram-figure img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+.diagram-figure figcaption {
+  margin-top: 0.5em;
+  font-size: 0.875em;
+  color: #555;
+}
+</style>
 </head>
 <body>
 <div class="wrap">
@@ -20,11 +34,16 @@
       <h2 class="sec">AGMS reference architecture</h2>
       <p>The self-organizing grid-management platform: perceive (GWM) &rarr; reason
       (CaCSM) &rarr; orchestrate (Logistician/GWCH) &rarr; deploy autonomous scouts.
-      SVG below; <a href="AGMS-architecture.drawio.png">PNG fallback</a>.</p>
-      <figure>
-        <img src="AGMS-architecture.svg" alt="AGMS reference architecture diagram">
-        <figcaption>AGMS architecture (source: director&#x27;s patent family walkthrough).
-        Crisp SVG render.</figcaption>
+      Click the image to open full-size (4885&times;4265 px) in a new tab &mdash;
+      annotations are visible at full zoom.</p>
+      <figure class="diagram-figure">
+        <a href="AGMS-architecture.drawio.png" target="_blank" rel="noopener">
+          <img src="AGMS-architecture.drawio.png"
+               alt="AGMS architecture diagram (with annotations)">
+        </a>
+        <figcaption>AGMS architecture (source: director&#x27;s patent family walkthrough,
+        with hand-added study annotations). PNG exported from draw.io — faithful colors.
+        Also available: <a href="AGMS-architecture.svg">vector SVG</a>.</figcaption>
       </figure>
     </section>
     <footer><a href="../index.html">&larr; Back to study hub</a></footer>
