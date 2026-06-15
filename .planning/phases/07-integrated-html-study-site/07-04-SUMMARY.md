@@ -19,8 +19,12 @@ key_files:
     - docs/.nojekyll
     - docs/robots.txt
     - docs/PUBLISH.md
+    - .planning/phases/07-integrated-html-study-site/07-04-SUMMARY.md
   modified:
     - docs/build_site.py
+    - docs/architecture/diagram.html
+    - docs/architecture/AGMS-architecture.drawio.png
+    - docs/index.html
     - docs/architecture/AGMS-architecture.html
     - docs/architecture/grid-operations-and-role.html
     - docs/architecture/INDEX.html
@@ -32,18 +36,20 @@ decisions:
   - "validate_links() runs as the FINAL main() step — all outputs are already on disk when the gate fires; no separate validation script needed"
   - "PUBLISH.md placed in docs/ (co-located with site) per D-06 discretion — travels with the site if cloned"
   - "D-06 deferred: actual GitHub Pages enable is not done here; PUBLISH.md records the deploy-time CV/patent-PDF privacy decision explicitly"
+  - "PNG primary in diagram viewer: user-exported annotated PNG (4885x4265, ~2.4MB) has faithful draw.io colors; SVG rendered with wrong colors — PNG is now the canonical embed, SVG is secondary link"
+  - "Click-to-zoom: <a href=PNG target=_blank> wrapping <img> so user can inspect hand-annotations at full resolution"
 metrics:
-  duration_minutes: 2
+  duration_minutes: 15
   completed_date: "2026-06-15"
-  tasks_completed: 2
+  tasks_completed: 3
   tasks_total: 3
-  files_created: 3
-  checkpoint_task: "Task 3 (checkpoint:human-verify) — awaiting user verification"
+  files_created: 4
+  checkpoint_task: "Task 3 (checkpoint:human-verify) — APPROVED by user 2026-06-15"
 ---
 
-# Phase 7 Plan 04: Publishing Config + Link-Validation Gate Summary
+# Phase 7 Plan 04: Publishing Config + Link-Validation Gate + Annotated Diagram PNG Summary
 
-**One-liner:** Build-time validate_links() pass (HTML-06 acceptance gate: 24 pages, 0 broken links, 0 noindex-missing), .nojekyll + robots.txt emitted, and PUBLISH.md deploy guide written with the deferred CV/patent-PDF privacy decision documented.
+**One-liner:** Build-time validate_links() gate (24 pages, 0 broken links, 0 noindex-missing), .nojekyll + robots.txt + PUBLISH.md emitted, and diagram viewer upgraded to annotated PNG (draw.io export with user hand-annotations, faithful colors, click-to-zoom) — full offline navigation approved by user.
 
 ## What Was Built
 
@@ -107,15 +113,14 @@ Five sections, checklist-style:
 
 ## Checkpoint Status
 
-**Task 3 (checkpoint:human-verify) — AWAITING USER.**
+**Task 3 (checkpoint:human-verify) — APPROVED by user (2026-06-15).**
 
-The human-verify checkpoint requires the user to:
-1. Disable networking
-2. Open `docs/index.html` via `file://`
-3. Navigate through Architecture, Study Notes (math typesets), Demos (figures + code work)
-4. Confirm zero broken links and that PUBLISH.md reads as a clear deploy checklist
+User verified full offline navigation:
+- Hub, Architecture pages, Study Notes (math typesets), Demos (result images + code) — all working
+- Zero broken links, zero 404s while fully offline (file://)
+- PUBLISH.md reads as a clear deploy checklist
 
-This checkpoint was NOT auto-approved (plan `autonomous: false`; checkpoint instructions require human action).
+**Feedback applied with approval:** Embed annotated PNG in diagram viewer instead of SVG (SVG rendered with wrong colors in browser). User's draw.io hand-annotations are now visible at full resolution via click-to-zoom. Fix committed in `c6c2634`.
 
 ## Deviations from Plan
 
@@ -127,6 +132,14 @@ This checkpoint was NOT auto-approved (plan `autonomous: false`; checkpoint inst
 - **Fix:** Added noindex injection to `_copy_and_rewrite()` — if the copied page lacks `noindex`, inject `<meta name="robots" content="noindex,nofollow">` after the viewport meta. This is an extension of the existing copy step (not a new pass).
 - **Files modified:** `docs/build_site.py`, and all 5 copied architecture pages (regenerated on next build)
 - **Commit:** 75d7368
+
+**2. [Human feedback - Diagram PNG fix at checkpoint approval]**
+- **Found during:** Task 3 (checkpoint:human-verify) — user approved site but requested diagram fix
+- **Issue:** `build_diagram_page()` embedded `AGMS-architecture.svg` as the primary `<img src>`; the SVG rendered with wrong colors in the browser. The user's updated draw.io file has hand-added annotations visible only in the PNG export.
+- **Fix:** Updated `build_diagram_page()` to embed `AGMS-architecture.drawio.png` with responsive CSS (`max-width:100%; height:auto`), click-to-zoom `<a href=PNG target=_blank>` wrapper, and SVG as secondary link in figcaption. `build_architecture()` already copies the fresh PNG from source via `shutil.copy2` — no extra copy logic needed. Hub card copy updated too.
+- **Files modified:** `docs/build_site.py`, `docs/architecture/diagram.html`, `docs/architecture/AGMS-architecture.drawio.png`, `docs/index.html`
+- **Verification:** PNG embed confirmed (`grep 'img src' docs/architecture/diagram.html`); PNG size 2419307 bytes matches fresh source; full rebuild exits 0 with 0 broken links
+- **Commit:** c6c2634
 
 ## Known Stubs
 
@@ -151,5 +164,9 @@ No new network endpoints, auth paths, or trust boundary changes.
 - `docs/PUBLISH.md` exists with all required sections: FOUND
 - `docs/build_site.py` contains `def validate_links`: FOUND
 - `docs/build_site.py` contains `def emit_publishing_files`: FOUND
+- `docs/architecture/diagram.html` embeds `AGMS-architecture.drawio.png` (not SVG): FOUND
+- `docs/architecture/AGMS-architecture.drawio.png` is 2419307 bytes (fresh annotated export): FOUND
+- Full rebuild exits 0 with 0 broken links, 0 noindex-missing across 24 pages: CONFIRMED
 - Task 1 commit 75d7368: FOUND
 - Task 2 commit 3830e46: FOUND
+- Diagram PNG fix commit c6c2634: FOUND
