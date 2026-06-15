@@ -89,6 +89,10 @@ Recent decisions affecting current work:
 - [Phase 05-03]: Demo mu=0.5 + poison_magnitude=5.0 produce legible contrast on first run: FedAvg error -0.64, FedProx +0.006, Krum +0.26, Median +0.04 (seed 42, no tuning needed)
 - [Phase 05-03]: Phase 5 complete — 3 notes (FED-01/02/03) + 1 NumPy demo (FedAvg/FedProx/Krum/coord-median); FED-01 and FED-02a 'I ran this from scratch' credibility established
 
+### Roadmap Evolution
+
+- Phase 7 added: Integrated HTML Study Site — consolidate all phase study notes + research HTML/diagram assets (AGMS architecture/patents, study notes, demo explanations and references) into one navigable HTML site for revision
+
 ### Pending Todos
 
 None yet.

@@ -21,6 +21,7 @@ deliverable maps to exactly one phase; no requirement is orphaned.
 - [x] **Phase 4: Protocols, Stack & Architecture** - Close Gaps 4, 6, 7: grid protocol stack (SCADA/DNP3/PMU/IEC 61850) plus NATS/Kafka/K3s/Prometheus positioning (completed 2026-06-14)
 - [x] **Phase 5: Federated Architectures & Security** - Close Gap 5: distinguish federated from distributed, master FedAvg/FedProx/Krum, and frame edge security (completed 2026-06-14)
 - [ ] **Phase 6: Synthesis, Drills & Mock Interview** - Convert all knowledge to deliverable interview answers: vocabulary bridges, OSED pitch, STAR stories, system-design drills, timed Q&A rehearsal
+- [ ] **Phase 7: Integrated HTML Study Site** - Consolidate all phase study notes and research HTML/diagram assets into one navigable HTML study site: AGMS architecture (patents), study notes, and demo explanations/references
 
 ## Phase Details
 
@@ -114,10 +115,21 @@ deliverable maps to exactly one phase; no requirement is orphaned.
   5. Juan has answered all 12 tough domain questions aloud, timed, and can identify the 2–3 questions that need additional rehearsal before the interview
 **Plans**: TBD
 
+### Phase 7: Integrated HTML Study Site
+**Goal**: All study notes produced across the phases plus the research-stage HTML/diagram assets are consolidated into a single, navigable HTML study site — AGMS architecture (the patents), the study notes, and the demos (what each demo is, why it was built, and references) — so Juan can revise everything in one place
+**Depends on**: Phase 6
+**Requirements**: TBD (run /gsd-plan-phase 7)
+**Success Criteria** (what must be TRUE):
+  1. A single HTML entry point renders the AGMS architecture section (patent-derived), built from the existing patents research assets (AGMS-architecture.drawio/.svg/.png/.pdf)
+  2. All phase study notes (Markdown across .planning/phases/*) are converted to HTML and reachable from a single navigation
+  3. Each hands-on demo has a section explaining what it is, why it was created, and references/links to its code and README
+  4. The site opens locally in a browser with working internal navigation between architecture, notes, and demos
+**Plans**: TBD
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 0 → 1 → 2 → 3 → 4 → 5 → 6
+Phases execute in numeric order: 0 → 1 → 2 → 3 → 4 → 5 → 6 → 7
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -128,4 +140,4 @@ Phases execute in numeric order: 0 → 1 → 2 → 3 → 4 → 5 → 6
 | 4. Protocols, Stack & Architecture | 3/3 | Complete   | 2026-06-14 |
 | 5. Federated Architectures & Security | 3/3 | Complete   | 2026-06-14 |
 | 6. Synthesis, Drills & Mock Interview | 0/TBD | Not started | - |
-</content>
+| 7. Integrated HTML Study Site | 0/TBD | Not started | - |
