@@ -4,7 +4,7 @@ milestone: v1.0
 milestone_name: milestone
 status: executing
 stopped_at: Phase 7 UI-SPEC approved
-last_updated: "2026-06-15T06:38:47.561Z"
+last_updated: "2026-06-15T06:58:39.209Z"
 last_activity: 2026-06-15
 progress:
   total_phases: 8
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-06-13)
 ## Current Position
 
 Phase: 7 (integrated-html-study-site) — EXECUTING
-Plan: 2 of 4
+Plan: 3 of 4
 Status: Ready to execute
 Last activity: 2026-06-15
 
@@ -63,6 +63,7 @@ Progress: [████████░░] 82%
 | Phase 04 P01 | 3 | 2 tasks | 2 files |
 | Phase 04 P03 | 8 | 1 tasks | 1 files |
 | Phase 05 P01 | 3 | 2 tasks | 2 files |
+| Phase 7 P01 | 90 | 3 tasks | 23 files |
 
 ## Accumulated Context
 
@@ -88,6 +89,8 @@ Recent decisions affecting current work:
 - [Phase ?]: SPIFFE 'Not just TLS' paragraph added to counter Pitfall 5 — workload identity distinguishes which workload, not just encrypts the channel
 - [Phase 05-03]: Demo mu=0.5 + poison_magnitude=5.0 produce legible contrast on first run: FedAvg error -0.64, FedProx +0.006, Krum +0.26, Median +0.04 (seed 42, no tuning needed)
 - [Phase 05-03]: Phase 5 complete — 3 notes (FED-01/02/03) + 1 NumPy demo (FedAvg/FedProx/Krum/coord-median); FED-01 and FED-02a 'I ran this from scratch' credibility established
+- [Phase 07-integrated-html-study-site]: D-13: MathJax 3.2.2 full es5/ tree vendored into docs/vendor/mathjax/ for offline file:// rendering — CHTML fonts co-located; HTML-04 confirmed by user
+- [Phase 07-integrated-html-study-site]: D-01: docs/build_site.py is the single re-runnable note-conversion build entry point; plans 02-04 extend the same file (not create new scripts)
 
 ### Roadmap Evolution
 
@@ -115,6 +118,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-06-15T06:38:47.542Z
+Last session: 2026-06-15T06:58:39.194Z
 Stopped at: Phase 7 UI-SPEC approved
 Resume file: None
