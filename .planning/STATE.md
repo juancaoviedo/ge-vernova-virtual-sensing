@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-06-13)
 Phase: 7
 Plan: Not started
 Status: Milestone complete
-Last activity: 2026-06-15
+Last activity: 2026-06-15 - Completed quick task 260615-7dc: Rebuild Phase 1 (Kalman/FASE) and Phase 2 (DSSE) study notes with distribution information-sourcing framing
 
 Progress: [██████████] 100%
 
@@ -122,6 +122,7 @@ None yet.
 | Date | Quick ID | Task | Result |
 |------|----------|------|--------|
 | 2026-06-13 | 260613-gyx | Extract three new AGMS patents (Logistician Module, Operation Loop Formation, Scout Command) and integrate into patents INDEX.md | OCR'd 3 image-only PDFs; wrote `logistician-module.md`, `operation-loop.md`, `scout-command.md`; rewrote `INDEX.md` for 6 patents. Surfaced that **Operation Loop Formation (US 12,596,341 B2) is GRANTED and assigned to GE Vernova**. |
+| 2026-06-15 | 260615-7dc | Rebuild Phase 1 (Kalman/FASE) and Phase 2 (DSSE) study notes with distribution information-sourcing framing | Reframed Phase 1 to virtual-sensing/FASE: KAL-01 (fusion-engine reframe), KAL-02 (KF/EKF/UKF mechanics), KAL-03 (**new centerpiece** — augmented-load FASE 3-bus feeder walk: dark node observed via Kirchhoff coupling, covariance = ORACS Observability index), KAL-04 (IEEE 738 demoted to asset-health). Rewrote Phase 2 TVS-01..04 → **DSSE-01..04** (under-observability, side-information taxonomy, distribution modeling + pseudo-measurement honesty, virtual sensing in AGMS + federated multi-area DSSE). Follow-up: phase dir still named `02-transmission-virtual-sensing` (ROADMAP rename out of scope). |
 
 ## Session Continuity
 
