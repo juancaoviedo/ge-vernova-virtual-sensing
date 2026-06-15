@@ -90,7 +90,7 @@ completed: 2026-06-15
 |------|--------|------|
 | `ekf_line_temp_demo.py` | `.planning/phases/01-kalman-state-estimation/demo/` | Full source (link target) |
 | `ekf_line_temp.png` | same | Inline result figure |
-| `dc_powerflow_baddata_demo.py` | `.planning/phases/02-transmission-virtual-sensing/demo/` | Full source (link target) |
+| `dc_powerflow_baddata_demo.py` | `.planning/phases/02-distribution-virtual-sensing/demo/` | Full source (link target) |
 | `dc_powerflow_baddata.png` | same | Inline result figure |
 | `fedavg_fedprox_krum_demo.py` | `.planning/phases/05-federated-architectures-security/demo/` | Full source (link target, no PNG) |
 

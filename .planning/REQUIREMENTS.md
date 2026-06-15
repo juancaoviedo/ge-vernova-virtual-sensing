@@ -15,7 +15,7 @@
 - [ ] **KAL-03**: Worked line-temperature EKF example mapping the IEEE 738 conductor ODE to the predict step (Q/R tuning, innovation sequence, divergence detection)
 - [ ] **KAL-04**: Hands-on Python EKF mini-demo estimating line temperature from current + weather telemetry
 
-### Transmission Virtual Sensing (TVS) — Gap 2 (T&D vocabulary)
+### Distribution Virtual Sensing (TVS) — Gap 2 (T&D vocabulary)
 
 - [x] **TVS-01**: Notes on voltage stability monitoring — P-V curve, voltage collapse, Thevenin-equivalent VSI from PMU data
 - [x] **TVS-02**: Notes on phase-angle / power-flow inference — DC approximation (P = Bθ), sparse PMU coverage problem
@@ -86,10 +86,10 @@ Deferred — useful but not worth the runway before this interview.
 | KAL-02 | Phase 1: Kalman & State Estimation | Pending |
 | KAL-03 | Phase 1: Kalman & State Estimation | Pending |
 | KAL-04 | Phase 1: Kalman & State Estimation | Pending |
-| TVS-01 | Phase 2: Transmission Virtual Sensing | Complete |
-| TVS-02 | Phase 2: Transmission Virtual Sensing | Complete |
-| TVS-03 | Phase 2: Transmission Virtual Sensing | Complete |
-| TVS-04 | Phase 2: Transmission Virtual Sensing | Complete |
+| TVS-01 | Phase 2: Distribution Virtual Sensing | Complete |
+| TVS-02 | Phase 2: Distribution Virtual Sensing | Complete |
+| TVS-03 | Phase 2: Distribution Virtual Sensing | Complete |
+| TVS-04 | Phase 2: Distribution Virtual Sensing | Complete |
 | PAT-01 | Phase 3: Director's Patents Deep-Read | Complete |
 | PAT-02 | Phase 3: Director's Patents Deep-Read | Complete |
 | PAT-03 | Phase 3: Director's Patents Deep-Read | Complete |

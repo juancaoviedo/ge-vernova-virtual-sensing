@@ -86,8 +86,8 @@ accumulated from CLAUDE.md (the primary content base for this phase), REQUIREMEN
 - `.planning/phases/03-director-s-patents-deep-read/03-01-PLAN.md` and the resulting rehearsal deck — the existing patent-connection layer the overlay cross-links to.
 
 ### Phase convention references (note style — D-07/D-08/D-10)
-- `.planning/phases/02-transmission-virtual-sensing/notes/TVS-04-asset-health.md` (and siblings) — established note style: For:/Purpose: header, numbered sections, "<3-min say-aloud" track, boxed "→ Bridge to your work" callout. Phase 4 mirrors this.
-- `.planning/phases/02-transmission-virtual-sensing/02-CONTEXT.md` — the D-04/D-06/D-09/D-10 convention decisions carried forward here.
+- `.planning/phases/02-distribution-virtual-sensing/notes/TVS-04-asset-health.md` (and siblings) — established note style: For:/Purpose: header, numbered sections, "<3-min say-aloud" track, boxed "→ Bridge to your work" callout. Phase 4 mirrors this.
+- `.planning/phases/02-distribution-virtual-sensing/02-CONTEXT.md` — the D-04/D-06/D-09/D-10 convention decisions carried forward here.
 - `.planning/phases/01-kalman-state-estimation/notes/KAL-02-kalman-family-kf-ekf-ukf.md` — canonical note-style reference.
 
 </canonical_refs>

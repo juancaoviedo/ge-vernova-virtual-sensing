@@ -1,5 +1,5 @@
 ---
-phase: 02-transmission-virtual-sensing
+phase: 02-distribution-virtual-sensing
 verified: 2026-06-13T00:00:00Z
 status: passed
 score: 4/4 must-haves verified
@@ -8,7 +8,7 @@ re_verification: # No previous VERIFICATION.md existed
   previous_status: none
 ---
 
-# Phase 2: Transmission Virtual Sensing Verification Report
+# Phase 2: Distribution Virtual Sensing Verification Report
 
 **Phase Goal:** Juan can discuss voltage stability monitoring, phase-angle inference, observability analysis, bad-data detection, and asset-health estimation in T&D vocabulary without defaulting to distribution-side analogies.
 **Verified:** 2026-06-13

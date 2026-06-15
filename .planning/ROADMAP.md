@@ -16,7 +16,7 @@ deliverable maps to exactly one phase; no requirement is orphaned.
 
 - [ ] **Phase 0: Document Ingestion** - Establish the repeatable mechanism for ingesting source documents into the study set so new material can be folded in throughout the sprint
 - [ ] **Phase 1: Kalman & State Estimation** - Close Gap 1 (disqualifying): build EKF/UKF depth plus a working Python demo, anchored to the IEEE 738 DLR bridge story
-- [ ] **Phase 2: Transmission Virtual Sensing** - Close Gap 2: acquire fluent T&D vocabulary covering voltage stability, phase angles, observability, bad-data detection, and asset health
+- [ ] **Phase 2: Distribution Virtual Sensing** - Close Gap 2: distribution system state estimation (DSSE) under severe under-observability — the information-sourcing/fusion view, pseudo-measurements, forecasting-aided (Kalman) estimation, and virtual sensing as the ORACS observability index
 - [x] **Phase 3: Director's Patents Deep-Read** - Close Gap 3 (highest differentiation): deep-read all six AGMS-family patents and prepare one connection and one question per patent (completed 2026-06-13)
 - [x] **Phase 4: Protocols, Stack & Architecture** - Close Gaps 4, 6, 7: grid protocol stack (SCADA/DNP3/PMU/IEC 61850) plus NATS/Kafka/K3s/Prometheus positioning (completed 2026-06-14)
 - [x] **Phase 5: Federated Architectures & Security** - Close Gap 5: distinguish federated from distributed, master FedAvg/FedProx/Krum, and frame edge security (completed 2026-06-14)
@@ -49,8 +49,8 @@ deliverable maps to exactly one phase; no requirement is orphaned.
 - [x] 01-02-PLAN.md — KAL-03 worked IEEE 738 line-temperature EKF example + building-RC bridge
 - [x] 01-03-PLAN.md — KAL-04 from-scratch Python EKF mini-demo + README
 
-### Phase 2: Transmission Virtual Sensing
-**Goal**: Juan can discuss voltage stability monitoring, phase-angle inference, observability analysis, bad-data detection, and asset-health estimation in T&D vocabulary without defaulting to distribution-side analogies
+### Phase 2: Distribution Virtual Sensing
+**Goal**: Juan can explain distribution system state estimation (DSSE) under severe under-observability — the information-sourcing/fusion view, pseudo-measurements, forecasting-aided (Kalman/FASE) estimation, μPMUs, and how virtual sensing produces the ORACS observability index — in distribution vocabulary, invoking transmission state estimation only as explicit contrast
 **Depends on**: Phase 1
 **Requirements**: TVS-01, TVS-02, TVS-03, TVS-04
 **Success Criteria** (what must be TRUE):
@@ -139,7 +139,7 @@ Phases execute in numeric order: 0 → 1 → 2 → 3 → 4 → 5 → 6 → 7
 |-------|----------------|--------|-----------|
 | 0. Document Ingestion | 0/TBD | Not started | - |
 | 1. Kalman & State Estimation | 0/3 | Not started | - |
-| 2. Transmission Virtual Sensing | 0/3 | Not started | - |
+| 2. Distribution Virtual Sensing | 0/3 | Not started | - |
 | 3. Director's Patents Deep-Read | 1/1 | Complete    | 2026-06-13 |
 | 4. Protocols, Stack & Architecture | 3/3 | Complete   | 2026-06-14 |
 | 5. Federated Architectures & Security | 3/3 | Complete   | 2026-06-14 |

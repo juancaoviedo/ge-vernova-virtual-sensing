@@ -1,5 +1,5 @@
 ---
-phase: 02-transmission-virtual-sensing
+phase: 02-distribution-virtual-sensing
 plan: 03
 subsystem: demo
 tags: [numpy, scipy, matplotlib, wls, state-estimation, dc-powerflow, bad-data-detection, chi-squared]
@@ -7,7 +7,7 @@ tags: [numpy, scipy, matplotlib, wls, state-estimation, dc-powerflow, bad-data-d
 requires:
   - phase: 01-kalman-state-estimation
     provides: ekf_line_temp_demo.py scaffolding (Agg backend, seed 42, banner console block, script_dir+savefig, chi2.ppf) and KAL-01 WLS/Gauss-Newton machinery
-  - phase: 02-transmission-virtual-sensing
+  - phase: 02-distribution-virtual-sensing
     provides: TVS-02 (P=Bθ angle WLS) and TVS-03 (chi-squared + normalized-residual bad-data detection) notes that this demo concretizes
 provides:
   - A from-scratch 3-bus DC power-flow WLS state estimator with chi-squared detection and largest-normalized-residual identification
@@ -22,9 +22,9 @@ tech-stack:
 
 key-files:
   created:
-    - .planning/phases/02-transmission-virtual-sensing/demo/dc_powerflow_baddata_demo.py
-    - .planning/phases/02-transmission-virtual-sensing/demo/README.md
-    - .planning/phases/02-transmission-virtual-sensing/demo/dc_powerflow_baddata.png
+    - .planning/phases/02-distribution-virtual-sensing/demo/dc_powerflow_baddata_demo.py
+    - .planning/phases/02-distribution-virtual-sensing/demo/README.md
+    - .planning/phases/02-distribution-virtual-sensing/demo/dc_powerflow_baddata.png
   modified: []
 
 key-decisions:
@@ -97,5 +97,5 @@ None - no external service configuration required. numpy/scipy/matplotlib are al
 All created files verified present; both task commits (`c317e13`, `34cafa0`) found in git history.
 
 ---
-*Phase: 02-transmission-virtual-sensing*
+*Phase: 02-distribution-virtual-sensing*
 *Completed: 2026-06-13*

@@ -174,7 +174,7 @@ EKF example numerically; know Q/R tuning, innovation sequence, divergence detect
 - Kalman hands-on: implement EKF for line-temp estimation from current + weather (2 hr mini-demo)
 **Pitfalls to avoid:** Pitfall 1 (shallow Kalman claim); Pitfall 9 (pure ML without physics)
 
-### Phase 2: Transmission Virtual Sensing — The T&D Gap (Days 2-3)
+### Phase 2: Distribution Virtual Sensing — The T&D Gap (Days 2-3)
 **Rationale:** Gap 2; without this Juan speaks only distribution vocabulary in a T&D interview;
 phase angle and voltage stability are the first two named targets in the JD.
 **Delivers:** Fluent explanation of voltage stability (P-V curve, Thevenin VSI), phase angle

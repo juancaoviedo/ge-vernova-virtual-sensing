@@ -56,7 +56,7 @@ No power-flow library (no `pandapower` / `PYPOWER`) is needed. The point is to
 ## How to Run
 
 ```bash
-cd .planning/phases/02-transmission-virtual-sensing/demo
+cd .planning/phases/02-distribution-virtual-sensing/demo
 python3 dc_powerflow_baddata_demo.py
 ```
 

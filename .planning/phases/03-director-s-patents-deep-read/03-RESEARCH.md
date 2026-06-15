@@ -456,7 +456,7 @@ files — no user confirmation needed.
 - `.planning/REQUIREMENTS.md` — PAT-01/02/03 as written (noted as stale re: count; D-02 supersedes)
 - `.planning/STATE.md` — project history, quick-task completion record
 - `.planning/config.json` — `nyquist_validation: false`, `commit_docs: true`
-- `.planning/phases/02-transmission-virtual-sensing/notes/TVS-01-voltage-stability.md` — Phase 2 style reference (For:/Purpose: header, <3-min say-aloud block)
+- `.planning/phases/02-distribution-virtual-sensing/notes/TVS-01-voltage-stability.md` — Phase 2 style reference (For:/Purpose: header, <3-min say-aloud block)
 
 ---
 

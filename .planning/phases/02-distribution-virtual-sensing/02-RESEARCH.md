@@ -1,4 +1,4 @@
-# Phase 2: Transmission Virtual Sensing - Research
+# Phase 2: Distribution Virtual Sensing - Research
 
 **Researched:** 2026-06-13
 **Domain:** Power-system T&D virtual sensing — voltage stability, DC power-flow angle estimation, observability/bad-data theory, transformer/asset thermal models — packaged as interview study notes + one NumPy demo

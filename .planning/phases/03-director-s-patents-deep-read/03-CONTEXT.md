@@ -88,7 +88,7 @@ done — the refs below are the completed research the deck distills, plus the s
 - `docs/job-requirements.md` — the JD; frames why these connections land for THIS role.
 
 ### Phase convention reference (deck style)
-- `.planning/phases/02-transmission-virtual-sensing/02-CONTEXT.md` and the Phase 1/2 `notes/` artifacts — established oral-rehearsal style (For:/Purpose: header, say-aloud framing). Note the deck is a *single consolidated doc*, not the per-requirement `notes/` split used in Phases 1–2.
+- `.planning/phases/02-distribution-virtual-sensing/02-CONTEXT.md` and the Phase 1/2 `notes/` artifacts — established oral-rehearsal style (For:/Purpose: header, say-aloud framing). Note the deck is a *single consolidated doc*, not the per-requirement `notes/` split used in Phases 1–2.
 
 </canonical_refs>
 

@@ -1,5 +1,5 @@
 ---
-phase: 02-transmission-virtual-sensing
+phase: 02-distribution-virtual-sensing
 plan: 01
 subsystem: study-notes
 tags: [voltage-stability, thevenin-vsi, pmu, dc-power-flow, wls, state-estimation, interview-prep, latex-markdown]
@@ -20,8 +20,8 @@ tech-stack:
 
 key-files:
   created:
-    - .planning/phases/02-transmission-virtual-sensing/notes/TVS-01-voltage-stability.md
-    - .planning/phases/02-transmission-virtual-sensing/notes/TVS-02-dc-powerflow-angle-wls.md
+    - .planning/phases/02-distribution-virtual-sensing/notes/TVS-01-voltage-stability.md
+    - .planning/phases/02-distribution-virtual-sensing/notes/TVS-02-dc-powerflow-angle-wls.md
   modified: []
 
 key-decisions:
@@ -67,8 +67,8 @@ Each task was committed atomically:
 **Plan metadata:** (this SUMMARY + STATE/ROADMAP/REQUIREMENTS) — see final docs commit
 
 ## Files Created/Modified
-- `.planning/phases/02-transmission-virtual-sensing/notes/TVS-01-voltage-stability.md` - Voltage-stability note: P-V nose curve, Thevenin VSI from PMU data, operating margin, multi-load limitation, HEMS bridge.
-- `.planning/phases/02-transmission-virtual-sensing/notes/TVS-02-dc-powerflow-angle-wls.md` - DC power-flow angle note: P = Bθ, slack reduction, sparse-PMU gap, linear WLS one-shot collapse of KAL-01, 3-bus worked numbers, OSED/SI-MAPPER bridge.
+- `.planning/phases/02-distribution-virtual-sensing/notes/TVS-01-voltage-stability.md` - Voltage-stability note: P-V nose curve, Thevenin VSI from PMU data, operating margin, multi-load limitation, HEMS bridge.
+- `.planning/phases/02-distribution-virtual-sensing/notes/TVS-02-dc-powerflow-angle-wls.md` - DC power-flow angle note: P = Bθ, slack reduction, sparse-PMU gap, linear WLS one-shot collapse of KAL-01, 3-bus worked numbers, OSED/SI-MAPPER bridge.
 
 ## Decisions Made
 - **Say-aloud track at the top** of both notes (D-06 leaves placement to discretion): the compressed spoken script is the first thing Juan sees, so the timed-aloud rehearsal is front-loaded.
@@ -102,5 +102,5 @@ None - no external service configuration required. These are markdown study note
 - FOUND: commit 498d68c (Task 2)
 
 ---
-*Phase: 02-transmission-virtual-sensing*
+*Phase: 02-distribution-virtual-sensing*
 *Completed: 2026-06-13*

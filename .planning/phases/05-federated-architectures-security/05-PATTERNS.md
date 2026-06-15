@@ -22,7 +22,7 @@
 
 ### `notes/FED-01-federated-vs-distributed.md` (study-note, explain-why depth)
 
-**Primary analog:** `.planning/phases/02-transmission-virtual-sensing/notes/TVS-04-asset-health.md`
+**Primary analog:** `.planning/phases/02-distribution-virtual-sensing/notes/TVS-04-asset-health.md`
 **Secondary analog:** `.planning/phases/01-kalman-state-estimation/notes/KAL-02-kalman-family-kf-ekf-ukf.md`
 
 **Header block pattern** (TVS-04-asset-health.md lines 1–8):
@@ -166,7 +166,7 @@ Apply to FED-02: group by concept (FedAvg, Krum, Coord Median, Gossip-vs-Central
 
 ### `notes/FED-03-edge-security.md` (study-note, awareness depth)
 
-**Primary analog:** `.planning/phases/02-transmission-virtual-sensing/notes/TVS-04-asset-health.md` — sections 4, 5, 6 (DGA, DLR, RUL at awareness depth)
+**Primary analog:** `.planning/phases/02-distribution-virtual-sensing/notes/TVS-04-asset-health.md` — sections 4, 5, 6 (DGA, DLR, RUL at awareness depth)
 
 **Awareness section pattern** (TVS-04-asset-health.md lines 108–126):
 ```markdown
@@ -207,7 +207,7 @@ and a signature-check at the node — same mechanism, grid-safety guarantee.
 
 ### `demo/fedavg_fedprox_krum_demo.py` (teaching-demo, NumPy from-scratch)
 
-**Primary analog:** `.planning/phases/02-transmission-virtual-sensing/demo/dc_powerflow_baddata_demo.py`
+**Primary analog:** `.planning/phases/02-distribution-virtual-sensing/demo/dc_powerflow_baddata_demo.py`
 **Secondary analog:** `.planning/phases/01-kalman-state-estimation/demo/ekf_line_temp_demo.py`
 
 **Module docstring header pattern** (dc_powerflow_baddata_demo.py lines 1–24):
@@ -322,7 +322,7 @@ Apply to FED-05 demo: always the final two lines.
 ### `demo/README.md` (demo-readme)
 
 **Primary analog:** `.planning/phases/01-kalman-state-estimation/demo/README.md`
-**Secondary analog:** `.planning/phases/02-transmission-virtual-sensing/demo/README.md`
+**Secondary analog:** `.planning/phases/02-distribution-virtual-sensing/demo/README.md`
 
 **README section order pattern** (Phase 1 README.md lines 1–139):
 ```markdown
@@ -498,6 +498,6 @@ All five Phase 5 files have close analogs. No files require falling back to RESE
 
 ## Metadata
 
-**Analog search scope:** `.planning/phases/01-kalman-state-estimation/`, `.planning/phases/02-transmission-virtual-sensing/`, `.planning/phases/04-protocols-stack-architecture/`
+**Analog search scope:** `.planning/phases/01-kalman-state-estimation/`, `.planning/phases/02-distribution-virtual-sensing/`, `.planning/phases/04-protocols-stack-architecture/`
 **Files scanned:** 9 (2 demo .py, 2 demo README.md, 5 note .md files across phases 1/2/4)
 **Pattern extraction date:** 2026-06-14

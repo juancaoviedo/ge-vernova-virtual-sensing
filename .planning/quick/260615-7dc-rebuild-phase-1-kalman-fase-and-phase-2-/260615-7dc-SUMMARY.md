@@ -29,7 +29,7 @@ as the organizing framework, and AGMS architectural placement throughout.
 | Created (new centerpiece) | `KAL-03-fase-augmented-load-feeder-walk.md` |
 | Renamed + adapted (demoted) | `KAL-04-ieee738-asset-health-ekf.md` (was `KAL-03-ieee738-ekf-worked-example.md`) |
 
-### Phase 2 — `.planning/phases/02-transmission-virtual-sensing/notes/`
+### Phase 2 — `.planning/phases/02-distribution-virtual-sensing/notes/`
 
 | Operation | File |
 |-----------|------|
@@ -130,7 +130,7 @@ None — plan executed exactly as specified.
 ## Known Follow-up (Out of Scope for This Task)
 
 **Phase directory name mismatch:** The Phase 2 notes directory is still named
-`02-transmission-virtual-sensing`, but the notes are now DSSE-framed. Renaming the directory
+`02-distribution-virtual-sensing`, but the notes are now DSSE-framed. Renaming the directory
 requires a ROADMAP.md update and is intentionally out of scope for this notes-only task. A
 future ROADMAP cleanup task should rename the directory to `02-distribution-dsse` or similar
 and update all cross-references.

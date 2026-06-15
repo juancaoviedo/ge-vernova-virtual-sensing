@@ -91,14 +91,14 @@ Downstream agents MUST read `07-SPEC.md` before planning or implementing. Requir
 
 ### Study notes to convert (15 files)
 - `.planning/phases/01-kalman-state-estimation/notes/` — KAL-01 (WLS), KAL-02 (Kalman family), KAL-03 (IEEE 738 EKF).
-- `.planning/phases/02-transmission-virtual-sensing/notes/` — TVS-01..04 (voltage stability, DC power-flow angle-WLS, observability/bad-data, asset health).
+- `.planning/phases/02-distribution-virtual-sensing/notes/` — TVS-01..04 (voltage stability, DC power-flow angle-WLS, observability/bad-data, asset health).
 - `.planning/phases/03-director-s-patents-deep-read/notes/AGMS-patent-rehearsal-deck.md` — AGMS patent rehearsal deck.
 - `.planning/phases/04-protocols-stack-architecture/notes/` — STK-01..05 (protocol stack, IEC 61850, messaging/orchestration, observability, reference architecture).
 - `.planning/phases/05-federated-architectures-security/notes/` — FED-01..03 (federated-vs-distributed, byzantine robustness, edge security).
 
 ### Demos (explanation source + code + results)
 - `.planning/phases/01-kalman-state-estimation/demo/` — `ekf_line_temp_demo.py`, `ekf_line_temp.png`, `README.md`.
-- `.planning/phases/02-transmission-virtual-sensing/demo/` — `dc_powerflow_baddata_demo.py`, `dc_powerflow_baddata.png`, `README.md`.
+- `.planning/phases/02-distribution-virtual-sensing/demo/` — `dc_powerflow_baddata_demo.py`, `dc_powerflow_baddata.png`, `README.md`.
 - `.planning/phases/05-federated-architectures-security/demo/` — `fedavg_fedprox_krum_demo.py`, `README.md` (text output, no PNG).
 
 ### Publish target

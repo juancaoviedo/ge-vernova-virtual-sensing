@@ -7,7 +7,7 @@ dependency_graph:
   requires:
     - .planning/phases/04-protocols-stack-architecture/04-RESEARCH.md
     - .planning/research/patents/INDEX.md
-    - .planning/phases/02-transmission-virtual-sensing/notes/TVS-04-asset-health.md
+    - .planning/phases/02-distribution-virtual-sensing/notes/TVS-04-asset-health.md
     - docs/intelligrid.pdf
   provides:
     - .planning/phases/04-protocols-stack-architecture/notes/STK-05-reference-architecture.md

@@ -1,4 +1,4 @@
-# Phase 2: Transmission Virtual Sensing - Pattern Map
+# Phase 2: Distribution Virtual Sensing - Pattern Map
 
 **Mapped:** 2026-06-13
 **Files analyzed:** 7 to-be-created (4 notes + demo script + demo README + demo PNG)

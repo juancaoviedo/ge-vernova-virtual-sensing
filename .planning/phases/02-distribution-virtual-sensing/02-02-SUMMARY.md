@@ -1,5 +1,5 @@
 ---
-phase: 02-transmission-virtual-sensing
+phase: 02-distribution-virtual-sensing
 plan: 02
 subsystem: study-notes
 tags: [observability, bad-data, chi-squared, normalized-residual, leverage, jacobian-rank, ieee-c57.91, transformer-hot-spot, arrhenius, dga, dlr, rul, virtual-sensing, latex-in-markdown]
@@ -21,8 +21,8 @@ tech-stack:
 
 key-files:
   created:
-    - .planning/phases/02-transmission-virtual-sensing/notes/TVS-03-observability-bad-data.md
-    - .planning/phases/02-transmission-virtual-sensing/notes/TVS-04-asset-health.md
+    - .planning/phases/02-distribution-virtual-sensing/notes/TVS-03-observability-bad-data.md
+    - .planning/phases/02-distribution-virtual-sensing/notes/TVS-04-asset-health.md
   modified: []
 
 key-decisions:
@@ -68,8 +68,8 @@ Each task was committed atomically:
 **Plan metadata:** committed with this SUMMARY (docs)
 
 ## Files Created/Modified
-- `.planning/phases/02-transmission-virtual-sensing/notes/TVS-03-observability-bad-data.md` - Deep observability/bad-data note (H-rank, χ², rN, leverage, substation bridge)
-- `.planning/phases/02-transmission-virtual-sensing/notes/TVS-04-asset-health.md` - Asset-health note (C57.91 hot-spot ODE, Arrhenius, DGA/DLR/RUL awareness, OSED bridge)
+- `.planning/phases/02-distribution-virtual-sensing/notes/TVS-03-observability-bad-data.md` - Deep observability/bad-data note (H-rank, χ², rN, leverage, substation bridge)
+- `.planning/phases/02-distribution-virtual-sensing/notes/TVS-04-asset-health.md` - Asset-health note (C57.91 hot-spot ODE, Arrhenius, DGA/DLR/RUL awareness, OSED bridge)
 
 ## Decisions Made
 - **C57.91 confirm pass outcome (rendering choice):** Per RESEARCH Open Question 1 / Pitfall 4 / Assumption A1, the two-cascaded-first-order-rise STRUCTURE (top-oil over ambient, slow $\tau_{TO}$; hot-spot over top-oil, fast $\tau_w$; load drive via $K=I/I_{rated}$ with oil exponent $n$ and winding exponent $m$) is verified and asserted confidently. The exact exponent/constant placement differs between C57.91 Clause 7 (exponential) and Annex G (detailed) models, so all display constants and parameters are tagged "per IEEE C57.91-2011" rather than asserting a single possibly-wrong placement. The Arrhenius aging law ($A=9.8\times10^{-18}$, $B=15000$) is the verified standard value. This is the lowest-risk, interview-defensible rendering for a transformer-savvy interviewer.
@@ -92,7 +92,7 @@ None - study notes are plain markdown + LaTeX, no external configuration.
 - Per-note bridge boxes (TVS-01..04) now feed Phase 6's aggregate vocabulary-bridge table (BRG-01..03) without duplication (D-05).
 
 ---
-*Phase: 02-transmission-virtual-sensing*
+*Phase: 02-distribution-virtual-sensing*
 *Completed: 2026-06-13*
 
 ## Self-Check: PASSED

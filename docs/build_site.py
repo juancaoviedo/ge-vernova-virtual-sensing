@@ -40,7 +40,7 @@ MANIFEST_PATH = DOCS / ".build_manifest.json"
 # ---------------------------------------------------------------------------
 NOTE_GLOBS = [
     ".planning/phases/01-kalman-state-estimation/notes/*.md",
-    ".planning/phases/02-transmission-virtual-sensing/notes/*.md",
+    ".planning/phases/02-distribution-virtual-sensing/notes/*.md",
     ".planning/phases/03-director-s-patents-deep-read/notes/*.md",
     ".planning/phases/04-protocols-stack-architecture/notes/*.md",
     ".planning/phases/05-federated-architectures-security/notes/*.md",
@@ -370,7 +370,7 @@ def build_diagram_page() -> None:
 # Demo source roots
 _DEMO_SRCS = {
     "ekf": REPO_ROOT / ".planning/phases/01-kalman-state-estimation/demo",
-    "dc":  REPO_ROOT / ".planning/phases/02-transmission-virtual-sensing/demo",
+    "dc":  REPO_ROOT / ".planning/phases/02-distribution-virtual-sensing/demo",
     "fed": REPO_ROOT / ".planning/phases/05-federated-architectures-security/demo",
 }
 
@@ -696,7 +696,7 @@ _DEMO_CARDS = [
 # Phase prefix → group label for study notes
 _NOTE_GROUPS = [
     ("KAL", "Phase 1 — Kalman State Estimation"),
-    ("TVS", "Phase 2 — Transmission Virtual Sensing"),
+    ("DSSE", "Phase 2 — Distribution Virtual Sensing"),
     ("AGMS", "Phase 3 — Director&#x27;s Patents"),
     ("STK", "Phase 4 — Protocols &amp; Stack Architecture"),
     ("FED", "Phase 5 — Federated Architectures &amp; Security"),

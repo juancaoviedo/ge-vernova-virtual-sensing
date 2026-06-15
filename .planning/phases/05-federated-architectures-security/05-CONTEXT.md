@@ -161,10 +161,10 @@ material, and the Phase 1–4 artifacts whose conventions this phase follows.
   overlay short — reference, don't re-derive.**
 
 ### Phase convention references (note + demo style — D-08/D-09/D-10, D-04)
-- `.planning/phases/02-transmission-virtual-sensing/notes/TVS-04-asset-health.md` (and siblings)
+- `.planning/phases/02-distribution-virtual-sensing/notes/TVS-04-asset-health.md` (and siblings)
   — established note style: For:/Purpose: header, numbered sections, "<3-min say-aloud" track,
   boxed "→ Bridge to your work" callout.
-- `.planning/phases/02-transmission-virtual-sensing/` demo + README — the small-from-scratch
+- `.planning/phases/02-distribution-virtual-sensing/` demo + README — the small-from-scratch
   Python demo + README pattern D-04 revives (also Phase 1 EKF demo).
 - `.planning/phases/01-kalman-state-estimation/notes/KAL-02-kalman-family-kf-ekf-ukf.md` —
   canonical note-style reference.

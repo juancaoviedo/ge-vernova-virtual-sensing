@@ -1,4 +1,4 @@
-# Phase 2: Transmission Virtual Sensing - Context
+# Phase 2: Distribution Virtual Sensing - Context
 
 **Gathered:** 2026-06-13
 **Status:** Ready for planning
@@ -115,5 +115,5 @@ artifacts this phase builds on.
 
 ---
 
-*Phase: 2-Transmission Virtual Sensing*
+*Phase: 2-Distribution Virtual Sensing*
 *Context gathered: 2026-06-13*

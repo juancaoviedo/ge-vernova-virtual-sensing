@@ -1,15 +1,15 @@
 ---
-phase: 02-transmission-virtual-sensing
+phase: 02-distribution-virtual-sensing
 reviewed: 2026-06-13T00:00:00Z
 depth: standard
 files_reviewed: 6
 files_reviewed_list:
-  - .planning/phases/02-transmission-virtual-sensing/demo/dc_powerflow_baddata_demo.py
-  - .planning/phases/02-transmission-virtual-sensing/demo/README.md
-  - .planning/phases/02-transmission-virtual-sensing/notes/TVS-01-voltage-stability.md
-  - .planning/phases/02-transmission-virtual-sensing/notes/TVS-02-dc-powerflow-angle-wls.md
-  - .planning/phases/02-transmission-virtual-sensing/notes/TVS-03-observability-bad-data.md
-  - .planning/phases/02-transmission-virtual-sensing/notes/TVS-04-asset-health.md
+  - .planning/phases/02-distribution-virtual-sensing/demo/dc_powerflow_baddata_demo.py
+  - .planning/phases/02-distribution-virtual-sensing/demo/README.md
+  - .planning/phases/02-distribution-virtual-sensing/notes/TVS-01-voltage-stability.md
+  - .planning/phases/02-distribution-virtual-sensing/notes/TVS-02-dc-powerflow-angle-wls.md
+  - .planning/phases/02-distribution-virtual-sensing/notes/TVS-03-observability-bad-data.md
+  - .planning/phases/02-distribution-virtual-sensing/notes/TVS-04-asset-health.md
 findings:
   critical: 0
   warning: 3
@@ -58,7 +58,7 @@ None block this study artifact from serving its purpose.
 
 ### WR-01: Suspect removal can leave the re-solve unobservable, with no guard
 
-**File:** `.planning/phases/02-transmission-virtual-sensing/demo/dc_powerflow_baddata_demo.py:134-136`
+**File:** `.planning/phases/02-distribution-virtual-sensing/demo/dc_powerflow_baddata_demo.py:134-136`
 **Issue:** After picking `suspect = argmax(rN)`, the code drops that row and re-solves
 without re-checking that `H2` still has full column rank. The pre-removal assert
 (`matrix_rank(H) == n`, line 116) only validates the *original* `H`. For the shipped
@@ -78,7 +78,7 @@ theta2, r2, J2, _ = wls_solve(H2, W2, z2)
 
 ### WR-02: `np.sqrt(np.diag(Omega))` can produce NaN with no guard
 
-**File:** `.planning/phases/02-transmission-virtual-sensing/demo/dc_powerflow_baddata_demo.py:97-98`
+**File:** `.planning/phases/02-distribution-virtual-sensing/demo/dc_powerflow_baddata_demo.py:97-98`
 **Issue:** `Omega_ii` is the residual variance and is non-negative *in exact arithmetic*,
 but for a leverage measurement it is structurally near-zero and floating-point round-off
 can push it slightly negative. `np.sqrt` of a negative then yields `nan`, and
@@ -95,7 +95,7 @@ rN = np.abs(r) / np.sqrt(omega_diag)
 
 ### WR-03: `chi2_test` `confidence` parameter is dead — both call sites use the default
 
-**File:** `.planning/phases/02-transmission-virtual-sensing/demo/dc_powerflow_baddata_demo.py:86-89, 127, 138`
+**File:** `.planning/phases/02-distribution-virtual-sensing/demo/dc_powerflow_baddata_demo.py:86-89, 127, 138`
 **Issue:** `chi2_test(J, df, confidence=0.95)` exposes a `confidence` knob, but both
 callers (lines 127 and 138) rely on the default and the console labels hard-code
 `"95%"` (lines 149, 158). If a reader changes the default to demonstrate a different
@@ -112,7 +112,7 @@ print(f"  chi2 threshold ({CONFIDENCE:.0%}, df={df1}) : {thr1:.3f}")
 
 ### IN-01: Residual covariance recomputes `G⁻¹` via explicit `inv` instead of reusing the solve
 
-**File:** `.planning/phases/02-transmission-virtual-sensing/demo/dc_powerflow_baddata_demo.py:97`
+**File:** `.planning/phases/02-distribution-virtual-sensing/demo/dc_powerflow_baddata_demo.py:97`
 **Issue:** `normalized_residuals` calls `np.linalg.inv(G)` to form `Ω = R − H G⁻¹ Hᵀ`.
 Forming an explicit inverse is the numerically less-preferred route; the textbook /
 production idiom is to solve `G X = Hᵀ` and use `H @ X`. For a 2×2 `G` this is harmless,
@@ -126,7 +126,7 @@ Omega = np.diag(1.0 / np.diag(W)) - HGinvHt
 
 ### IN-02: `r2` is unpacked but never used
 
-**File:** `.planning/phases/02-transmission-virtual-sensing/demo/dc_powerflow_baddata_demo.py:136`
+**File:** `.planning/phases/02-distribution-virtual-sensing/demo/dc_powerflow_baddata_demo.py:136`
 **Issue:** `theta2, r2, J2, _ = wls_solve(...)` binds `r2`, which is never referenced
 again (only `theta2` and `J2` are used downstream). Minor dead binding; prefer `_` for
 consistency with the discarded gain matrix on the same line.
@@ -134,7 +134,7 @@ consistency with the discarded gain matrix on the same line.
 
 ### IN-03: "others < {...}" label assumes the second-largest rN is below the suspect
 
-**File:** `.planning/phases/02-transmission-virtual-sensing/demo/dc_powerflow_baddata_demo.py:152-153`
+**File:** `.planning/phases/02-distribution-virtual-sensing/demo/dc_powerflow_baddata_demo.py:152-153`
 **Issue:** The console prints `rN = {suspect}  (others < {np.partition(rN, -2)[-2]})`.
 `np.partition(rN, -2)[-2]` is the second-largest value, which is correct *only* when the
 suspect is the single largest (true here). It is a reasonable shorthand, but the phrasing

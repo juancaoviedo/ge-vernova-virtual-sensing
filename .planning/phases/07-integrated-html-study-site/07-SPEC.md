@@ -19,7 +19,7 @@ Plus the AGMS architecture diagram in `.drawio/.svg/.png/.pdf` form.
 
 What does **not** exist yet: a single entry point that ties these together with the ~15 study-note Markdown files, which currently live unconverted across phase folders:
 - Phase 1 (`01-kalman-state-estimation/notes/`): KAL-01 WLS, KAL-02 Kalman family, KAL-03 IEEE 738 EKF
-- Phase 2 (`02-transmission-virtual-sensing/notes/`): TVS-01 voltage stability, TVS-02 DC power-flow angle-WLS, TVS-03 observability/bad-data, TVS-04 asset health
+- Phase 2 (`02-distribution-virtual-sensing/notes/`): TVS-01 voltage stability, TVS-02 DC power-flow angle-WLS, TVS-03 observability/bad-data, TVS-04 asset health
 - Phase 3 (`03-director-s-patents-deep-read/notes/`): AGMS patent rehearsal deck
 - Phase 4 (`04-protocols-stack-architecture/notes/`): STK-01 protocol stack, STK-02 IEC 61850, STK-03 messaging/orchestration, STK-04 observability, STK-05 reference architecture
 - Phase 5 (`05-federated-architectures-security/notes/`): FED-01 federated-vs-distributed, FED-02 byzantine robustness, FED-03 edge security
