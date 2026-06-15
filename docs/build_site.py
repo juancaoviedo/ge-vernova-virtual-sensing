@@ -6,7 +6,8 @@ Plan 07-01 scope: note discovery, MD→HTML conversion, shared HTML shell, pygme
 Plan 07-02 scope: copy research trio + sources + diagram into docs/architecture/; rewrite
                   cross-links; emit diagram.html viewer.
 Plan 07-03 scope: demos page (build_demos()) and card-grid hub index.html (build_hub()).
-Plan 07-04 scope: link validation.
+Plan 07-04 scope: emit .nojekyll + robots.txt; build-time link-validation + noindex audit
+                  (HTML-06/HTML-07 acceptance gate — fails loud on first miss).
 
 Usage:
     .venv-site/bin/python docs/build_site.py
@@ -218,11 +219,25 @@ _REWRITES: dict[str, list[tuple[str, str]]] = {
 }
 
 
+_NOINDEX_META = '<meta name="robots" content="noindex,nofollow">'
+
 def _copy_and_rewrite(src: pathlib.Path, dst: pathlib.Path, rewrites: list[tuple[str, str]]) -> None:
-    """Read src HTML, apply string-replacement rewrites, write to dst."""
+    """Read src HTML, apply string-replacement rewrites, inject noindex if absent, write to dst.
+
+    HTML-07: every emitted page must carry noindex,nofollow.  Architecture pages are
+    copied from research originals that predate this requirement; inject the tag after
+    the viewport meta if not already present.
+    """
     text = src.read_text(encoding="utf-8")
     for old, new in rewrites:
         text = text.replace(old, new)
+    # Inject noindex meta if absent (HTML-07 — copied pages may not carry it)
+    if "noindex" not in text:
+        text = text.replace(
+            '<meta name="viewport" content="width=device-width, initial-scale=1">',
+            '<meta name="viewport" content="width=device-width, initial-scale=1">\n'
+            + _NOINDEX_META,
+        )
     dst.write_text(text, encoding="utf-8")
 
 
@@ -788,6 +803,99 @@ def build_hub(manifest: dict) -> None:
 
 
 # ---------------------------------------------------------------------------
+# Publishing config files (Plan 07-04)
+# ---------------------------------------------------------------------------
+
+def emit_publishing_files() -> None:
+    """Emit docs/.nojekyll (empty marker) and docs/robots.txt (disallow all).
+
+    .nojekyll: stops GitHub Pages' Jekyll from mangling vendor/ and _-prefixed
+    MathJax component paths (anti-pattern: absent .nojekyll breaks offline math
+    on Pages — RESEARCH.md).
+
+    robots.txt: reinforces noindex,nofollow on every page (HTML-07).
+    """
+    nojekyll = DOCS / ".nojekyll"
+    nojekyll.write_text("", encoding="utf-8")
+    print(f"  emitted   docs/.nojekyll  (empty marker — stops Jekyll mangling vendor/)")
+
+    robots = DOCS / "robots.txt"
+    robots.write_text("User-agent: *\nDisallow: /\n", encoding="utf-8")
+    print(f"  emitted   docs/robots.txt  (Disallow: /)")
+
+
+# ---------------------------------------------------------------------------
+# Link-validation pass (Plan 07-04) — HTML-06 + HTML-07 acceptance gate
+# ---------------------------------------------------------------------------
+
+def validate_links() -> None:
+    """Validate every emitted HTML page in docs/:
+      1. Each href/src that is not external (http/https/mailto) and not a pure
+         anchor (#...) must resolve to a file that exists on disk relative to the
+         page's own directory.  Missing targets are collected and reported as
+         BROKEN lines; then sys.exit(1) is raised (fail loud — HTML-06).
+      2. Every emitted .html must contain the string 'noindex' in its content
+         (HTML-07).  Pages lacking it are reported as NOINDEX-MISSING and also
+         trigger sys.exit(1).
+
+    Uses only stdlib (re + pathlib) — no third-party deps.
+
+    NOTE: Architecture pages (copied from research) retain their own
+    noindex,nofollow meta from the originals; docs/ source PDFs and .docx files
+    that nothing links to are out-of-scope and intentionally skipped.
+    """
+    # Collect all emitted HTML pages under docs/
+    all_pages = sorted(DOCS.rglob("*.html"))
+
+    # Pattern: match href="..." or src="..." (single or double quotes)
+    attr_pattern = re.compile(r"""(?:href|src)=["']([^"']+)["']""")
+
+    broken: list[str] = []
+    noindex_missing: list[str] = []
+
+    for page in all_pages:
+        text = page.read_text(encoding="utf-8", errors="replace")
+        page_dir = page.parent
+
+        # ---- noindex audit (HTML-07) ----
+        if "noindex" not in text:
+            noindex_missing.append(f"NOINDEX-MISSING: {page.relative_to(DOCS)}")
+
+        # ---- link audit (HTML-06) ----
+        for match in attr_pattern.finditer(text):
+            raw = match.group(1)
+
+            # Skip external schemes and pure anchors
+            if raw.startswith(("http://", "https://", "mailto:", "data:", "//")):
+                continue
+            if raw.startswith("#"):
+                continue
+
+            # Strip fragment (#anchor) if present
+            href = raw.split("#")[0]
+            if not href:
+                continue  # pure anchor after stripping
+
+            # Resolve relative to the page's own directory
+            target = (page_dir / href).resolve()
+
+            if not target.exists():
+                broken.append(f"BROKEN: {page.relative_to(DOCS)} -> {raw}")
+
+    # Report all issues, then fail loud if any
+    issues = noindex_missing + broken
+    if issues:
+        print("\n--- LINK VALIDATION FAILED ---", file=sys.stderr)
+        for issue in issues:
+            print(f"  {issue}", file=sys.stderr)
+        print(f"\n  {len(broken)} broken link(s), {len(noindex_missing)} noindex-missing page(s)",
+              file=sys.stderr)
+        sys.exit(1)
+
+    print(f"  validate_links: OK — {len(all_pages)} pages, 0 broken links, 0 noindex-missing")
+
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 
@@ -829,6 +937,15 @@ def main() -> None:
 
     print("--- hub (index.html) ---")
     build_hub(manifest)
+    print()
+
+    # Plan 07-04: emit publishing config files + final link-validation pass
+    print("--- publishing config ---")
+    emit_publishing_files()
+    print()
+
+    print("--- link validation (HTML-06 + HTML-07 acceptance gate) ---")
+    validate_links()
     print()
 
 
