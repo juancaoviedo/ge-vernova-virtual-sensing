@@ -1,0 +1,102 @@
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex,nofollow">
+    <title>GE Vernova Virtual Sensing &mdash; Interview Study Site</title>
+    <link rel="stylesheet" href="assets/site.css">
+    <link rel="stylesheet" href="assets/pygments.css">
+    </head>
+    <body>
+    <div class="wrap">
+      <header class="masthead">
+        <h1>GE Vernova Virtual Sensing &mdash; Interview Study Site</h1>
+        <div class="meta">Architecture, study notes, and hands-on demos in one place.</div>
+      </header>
+      <nav class="toc">
+        <h2>Jump to</h2>
+        <a href="#architecture">Architecture</a>
+        <a href="#notes">Study Notes</a>
+        <a href="#demos">Demos</a>
+      </nav>
+      <main>
+
+    <!-- ================================================================
+         Group 1: Architecture
+         ================================================================ -->
+    <section class="card" id="architecture">
+      <h2 class="sec">Architecture</h2>
+      <p>Research pages covering the AGMS patent family, the director&#x27;s architecture,
+      and the grid-operations context &mdash; copied directly from the hand-authored
+      research HTML.</p>
+      <div class="card-grid">
+  <a class="hub-card" href="architecture/AGMS-architecture.html"><h3>AGMS Architecture Walkthrough</h3><p>Read the AGMS system walkthrough — self-organizing grid-management platform, patents deep-dive.</p></a>
+  <a class="hub-card" href="architecture/grid-operations-and-role.html"><h3>Grid Operations &amp; Director&#x27;s Role</h3><p>Read grid operations and role companion — Appendices A&ndash;G mapping the role to the architecture.</p></a>
+  <a class="hub-card" href="architecture/INDEX.html"><h3>Patent Family Index</h3><p>Browse the patent index — six patents covering AGMS, Logistician Module, Scout Command, and more.</p></a>
+  <a class="hub-card" href="architecture/diagram.html"><h3>AGMS Architecture Diagram</h3><p>View the full AGMS reference-architecture diagram (SVG, crisp at any zoom).</p></a>
+</div>
+    </section>
+
+    <!-- ================================================================
+         Group 2: Study Notes
+         ================================================================ -->
+    <section class="card" id="notes">
+      <h2 class="sec">Study Notes</h2>
+      <p>16 notes converted from Markdown, organized by phase.</p>
+
+<h3 class="sub">Phase 1 — Kalman State Estimation</h3>
+<div class="card-grid">
+  <a class="hub-card" href="notes/kal-01-wls-state-estimation.html"><h3>Open study note</h3><p>Kal 01 Wls State Estimation</p></a>
+  <a class="hub-card" href="notes/kal-02-kalman-family-kf-ekf-ukf.html"><h3>Open study note</h3><p>Kal 02 Kalman Family Kf Ekf Ukf</p></a>
+  <a class="hub-card" href="notes/kal-03-ieee738-ekf-worked-example.html"><h3>Open study note</h3><p>Kal 03 Ieee738 Ekf Worked Example</p></a>
+</div>
+
+<h3 class="sub">Phase 2 — Transmission Virtual Sensing</h3>
+<div class="card-grid">
+  <a class="hub-card" href="notes/tvs-01-voltage-stability.html"><h3>Open study note</h3><p>Tvs 01 Voltage Stability</p></a>
+  <a class="hub-card" href="notes/tvs-02-dc-powerflow-angle-wls.html"><h3>Open study note</h3><p>Tvs 02 Dc Powerflow Angle Wls</p></a>
+  <a class="hub-card" href="notes/tvs-03-observability-bad-data.html"><h3>Open study note</h3><p>Tvs 03 Observability Bad Data</p></a>
+  <a class="hub-card" href="notes/tvs-04-asset-health.html"><h3>Open study note</h3><p>Tvs 04 Asset Health</p></a>
+</div>
+
+<h3 class="sub">Phase 3 — Director&#x27;s Patents</h3>
+<div class="card-grid">
+  <a class="hub-card" href="notes/agms-patent-rehearsal-deck.html"><h3>Open study note</h3><p>Agms Patent Rehearsal Deck</p></a>
+</div>
+
+<h3 class="sub">Phase 4 — Protocols &amp; Stack Architecture</h3>
+<div class="card-grid">
+  <a class="hub-card" href="notes/stk-01-protocol-stack.html"><h3>Open study note</h3><p>Stk 01 Protocol Stack</p></a>
+  <a class="hub-card" href="notes/stk-02-iec-61850.html"><h3>Open study note</h3><p>Stk 02 Iec 61850</p></a>
+  <a class="hub-card" href="notes/stk-03-messaging-orchestration.html"><h3>Open study note</h3><p>Stk 03 Messaging Orchestration</p></a>
+  <a class="hub-card" href="notes/stk-04-observability.html"><h3>Open study note</h3><p>Stk 04 Observability</p></a>
+  <a class="hub-card" href="notes/stk-05-reference-architecture.html"><h3>Open study note</h3><p>Stk 05 Reference Architecture</p></a>
+</div>
+
+<h3 class="sub">Phase 5 — Federated Architectures &amp; Security</h3>
+<div class="card-grid">
+  <a class="hub-card" href="notes/fed-01-federated-vs-distributed.html"><h3>Open study note</h3><p>Fed 01 Federated Vs Distributed</p></a>
+  <a class="hub-card" href="notes/fed-02-byzantine-robustness.html"><h3>Open study note</h3><p>Fed 02 Byzantine Robustness</p></a>
+  <a class="hub-card" href="notes/fed-03-edge-security.html"><h3>Open study note</h3><p>Fed 03 Edge Security</p></a>
+</div>
+
+    </section>
+
+    <!-- ================================================================
+         Group 3: Demos
+         ================================================================ -->
+    <section class="card" id="demos">
+      <h2 class="sec">Demos</h2>
+      <p>Three from-scratch NumPy demos with embedded key-function code, inline
+      results, and links to full source &mdash; built offline, no runtime dependencies.</p>
+      <div class="card-grid">
+  <a class="hub-card" href="demos/index.html"><h3>Hands-On Demos</h3><p>See three from-scratch NumPy demos: EKF line temperature, DC power-flow bad-data detection, and federated learning robustness.</p></a>
+</div>
+    </section>
+
+        <footer>GE Vernova Virtual Sensing Study Site &mdash; local, offline, no deployment required.</footer>
+      </main>
+    </div>
+    </body>
+    </html>
