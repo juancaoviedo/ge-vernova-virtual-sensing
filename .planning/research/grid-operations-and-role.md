@@ -576,7 +576,7 @@ These are control *systems*, not discrete field devices:
 - **Distributed FLISR / loop schemes** — reclosers and switches with peer logic that isolate a fault
   and restore power via an alternate path **without the control center**. Distribution; the
   decentralized self-healing that AGMS generalizes from fixed logic into *reasoning*. A published
-  example (Koch-Ciobotaru et al., ICRERA 2014 — `sources/flisr-distributed-fsm-2014.md`) implements
+  example (Koch-Ciobotaru et al., ICRERA 2014 — [`sources/flisr-distributed-fsm-2014.md`](sources/flisr-distributed-fsm-2014.html)) implements
   exactly this: the *same finite-state machine* on every breaker, cooperating via IEC 61850 **GOOSE**
   messages, in three phases — isolate downstream, search upstream for a tie breaker, then restore from
   a neighboring feeder.
@@ -781,7 +781,7 @@ A useful way to *name* what AGMS is, for a software audience: it is a **self-ada
 system** — one that adjusts its own behavior at runtime through a feedback loop. The canonical loop is
 **MAPE-K**; the 2025 research frontier is **AWARE**. AGMS lines up almost exactly with the shift from the
 first to the second. *(Source: Sanwouo, Quinton & Temple, "Breaking the Loop: AWARE is the New MAPE-K,"
-FSE Companion '25 — `sources/mapek-aware-2025.md`.)*
+FSE Companion '25 — [`sources/mapek-aware-2025.md`](sources/mapek-aware-2025.html).)*
 
 ### The two loops
 

@@ -88,6 +88,6 @@ citable engineering design:
 
 ## Where it is cited in our notes
 
-- Study note `grid-operations-and-role.md` — Appendix E.7 (distributed FLISR).
-- Relates to `patents/AGMS-architecture.md` Part 3 (the CaCSM as a state machine) and Appendix F
+- Study note [`grid-operations-and-role.md`](../grid-operations-and-role.html) — Appendix E.7 (distributed FLISR).
+- Relates to [`patents/AGMS-architecture.md`](../patents/AGMS-architecture.html) Part 3 (the CaCSM as a state machine) and Appendix F
   (meaning ③, the plan-step state machine).

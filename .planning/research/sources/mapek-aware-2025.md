@@ -5,7 +5,7 @@
 > Brell Sanwouo, Clément Quinton, Paul Temple,
 > **"Breaking the Loop: AWARE is the New MAPE-K,"**
 > 33rd ACM International Conference on the Foundations of Software Engineering (FSE Companion '25),
-> Trondheim, Norway, 23–28 June 2025. ACM, 5 pages. https://doi.org/10.1145/3696630.3728512
+> Trondheim, Norway, 23–28 June 2025. ACM, 5 pages. [https://doi.org/10.1145/3696630.3728512](https://doi.org/10.1145/3696630.3728512)
 > Affiliations: Univ. Lille / Univ. Rennes, CNRS, Inria, CRIStAL / IRISA.
 
 Source file: `docs/mapek.pdf` (5 pages, text-native — no OCR needed).
@@ -109,5 +109,5 @@ distributed, proactive, learning, agent-based pattern AWARE describes.
 
 ## Where it is cited in our notes
 
-- Study note `grid-operations-and-role.md` — Appendix G (AGMS in self-adaptive-systems terms).
-- Relates to `patents/AGMS-architecture.md` Part 8 (cross-cutting: learning, simulate-before-commit) and Part 10 (design principles).
+- Study note [`grid-operations-and-role.md`](../grid-operations-and-role.html) — Appendix G (AGMS in self-adaptive-systems terms).
+- Relates to [`patents/AGMS-architecture.md`](../patents/AGMS-architecture.html) Part 8 (cross-cutting: learning, simulate-before-commit) and Part 10 (design principles).

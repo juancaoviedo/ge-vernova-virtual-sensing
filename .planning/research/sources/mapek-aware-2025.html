@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The AGMS Architecture — A Full, Conceptual Walkthrough</title>
+<style>
+  :root{--panel:#fff;--ink:#1a2230;--muted:#5c6b7a;--line:#e3e8ee;--accent:#0b6e4f;--accent-soft:#e7f4ee;--gold:#b8860b;--code-bg:#f4f6f8;--callout:#fff8e6;--callout-line:#e0b84c;--juan-bg:#eef7f1;--juan-line:#0b6e4f;}
+  *{box-sizing:border-box;} html{scroll-behavior:smooth;}
+  body{margin:0;background:#eef1f5;color:var(--ink);font:16px/1.7 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 20px 80px;display:grid;grid-template-columns:250px 1fr;gap:36px;}
+  @media (max-width:900px){.wrap{grid-template-columns:1fr;}nav.toc{position:static!important;max-height:none!important;}}
+  header.masthead{grid-column:1/-1;background:linear-gradient(135deg,#0f1f2e 0%,#11342a 100%);color:#fff;border-radius:14px;padding:30px 36px;margin:28px 0 6px;box-shadow:0 8px 30px rgba(15,31,46,.25);}
+  header.masthead h1{margin:0;font-size:28px;letter-spacing:.2px;line-height:1.25;}
+  nav.toc{position:sticky;top:18px;align-self:start;max-height:calc(100vh - 36px);overflow:auto;font-size:13.5px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 14px;}
+  nav.toc h2{font-size:11px;text-transform:uppercase;letter-spacing:1.4px;color:var(--muted);margin:0 0 10px;}
+  nav.toc a{display:block;color:var(--muted);text-decoration:none;padding:5px 8px;border-radius:6px;border-left:2px solid transparent;}
+  nav.toc a:hover{color:var(--accent);background:var(--accent-soft);border-left-color:var(--accent);}
+  main{min-width:0;}
+  section.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 30px 26px;margin:18px 0;box-shadow:0 1px 3px rgba(20,30,45,.04);}
+  h2.sec{font-size:22px;margin:10px 0 6px;padding-bottom:10px;border-bottom:2px solid var(--accent-soft);color:#0c2a20;scroll-margin-top:16px;}
+  h3.sub{font-size:17px;margin:22px 0 4px;color:#13433a;}
+  p{margin:12px 0;} strong{color:#0c2233;} em{color:#33324a;} a{color:var(--accent);}
+  code{background:var(--code-bg);border:1px solid var(--line);border-radius:5px;padding:1px 5px;font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace;font-size:13px;color:#33424f;}
+  pre.diagram{background:#0f1722;color:#d6e3ee;border-radius:10px;padding:18px 20px;overflow-x:auto;font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;line-height:1.5;border:1px solid #1c2a3a;}
+  table{width:100%;border-collapse:collapse;margin:14px 0;font-size:14.5px;}
+  th,td{text-align:left;vertical-align:top;padding:9px 12px;border-bottom:1px solid var(--line);}
+  thead th{background:var(--accent-soft);color:#0c2a20;border-bottom:2px solid #cfe7dc;font-size:13px;}
+  tbody tr:nth-child(even){background:#fafbfc;} td code{font-size:12.5px;}
+  ul,ol{margin:12px 0;padding-left:24px;} li{margin:7px 0;}
+  .callout{background:var(--callout);border-left:4px solid var(--callout-line);border-radius:0 8px 8px 0;padding:12px 18px;margin:16px 0;}
+  .callout p{margin:0;}
+  .juan{background:var(--juan-bg);border-left:4px solid var(--juan-line);border-radius:0 8px 8px 0;padding:11px 18px;margin:14px 0;font-size:14.5px;}
+  footer{grid-column:1/-1;text-align:center;color:var(--muted);font-size:12.5px;margin-top:24px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="masthead"><h1>Source: MAPE-K and AWARE — the Self-Adaptive-Systems Vocabulary for AGMS</h1></header>
+  <nav class="toc">
+    <h2>Contents</h2>
+    <a href="#p1">Citation</a>
+    <a href="#p2">Why this source matters</a>
+    <a href="#p3">MAPE-K in one paragraph</a>
+    <a href="#p4">The paper&#x27;s critique of MAPE-K (the limitations AGMS answers)</a>
+    <a href="#p5">AWARE (the proposed evolution)</a>
+    <a href="#p6">The mapping that makes this gold: AGMS ≈ AWARE for the grid</a>
+    <a href="#p7">Interview talking points</a>
+    <a href="#p8">Where it is cited in our notes</a>
+  </nav>
+  <main>
+<section class="card">
+<h2 class="sec" id="p1">Citation</h2>
+<div class="callout"><p>Brell Sanwouo, Clément Quinton, Paul Temple, <strong>"Breaking the Loop: AWARE is the New MAPE-K,"</strong> 33rd ACM International Conference on the Foundations of Software Engineering (FSE Companion '25), Trondheim, Norway, 23–28 June 2025. ACM, 5 pages. <a href="https://doi.org/10.1145/3696630.3728512" target="_blank" rel="noopener">https://doi.org/10.1145/3696630.3728512</a> Affiliations: Univ. Lille / Univ. Rennes, CNRS, Inria, CRIStAL / IRISA.</p></div>
+<p>Source file: <code>docs/mapek.pdf</code> (5 pages, text-native — no OCR needed).</p>
+<p>Background reference (the original): J. O. Kephart &amp; D. M. Chess, "The Vision of Autonomic Computing," IEEE Computer, 2003 — which introduced the <strong>MAPE-K</strong> loop.</p>
+</section>
+<section class="card">
+<h2 class="sec" id="p2">Why this source matters</h2>
+<p>It gives us the <strong>established software-engineering vocabulary</strong> for what AGMS <em>is</em> as a class of system: a <strong>self-adaptive system</strong> built on an <strong>autonomic feedback loop.</strong> Being able to name the paradigm — and to position AGMS against both the classic loop (<strong>MAPE-K</strong>) and the 2025 frontier (<strong>AWARE</strong>) — lets Juan describe the patent architecture in terms a CTO-org software audience already respects, instead of only in the patents' bespoke vocabulary.</p>
+</section>
+<section class="card">
+<h2 class="sec" id="p3">MAPE-K in one paragraph</h2>
+<p><strong>MAPE-K</strong> (Kephart et al., IBM, ~2003) is the canonical loop for <strong>self-adaptive systems</strong> — systems that adjust their own behavior at runtime. A <em>managing system</em> (the adaptation logic) controls a <em>managed system</em> through a cyclic loop:</p>
+<ul><li><strong>Monitor</strong> — collect raw/aggregated data from the managed system and its environment.</li><li><strong>Analyze</strong> — evaluate adaptation options and their feasibility against the system's goals.</li><li><strong>Plan</strong> — select the best option and produce an actionable plan to reach the desired configuration.</li><li><strong>Execute</strong> — carry out the planned actions (often automatically).</li><li><strong>K (Knowledge)</strong> — a <em>centralized</em> shared knowledge base supporting all four phases.</li></ul>
+<p>It's widely used in cloud computing, IoT, cyber-physical systems, networks, and security.</p>
+</section>
+<section class="card">
+<h2 class="sec" id="p4">The paper's critique of MAPE-K (the limitations AGMS answers)</h2>
+<ol><li><strong>Monitor sees only raw data</strong> — no contextual interpretation, so root causes are hard to understand.</li><li><strong>Strictly sequential (M → A → P → E)</strong> — inherently <strong>reactive</strong>; cannot anticipate or explore future scenarios.</li><li><strong>Centralized knowledge base</strong> — poor fit for distributed/collaborative settings; limits flexibility and scalability.</li><li><strong>No built-in continuous learning</strong> — cannot refine decisions from past experience. (Even "LLM-enhanced MAPE-K" only patches individual phases; the loop stays sequential and centralized.)</li></ol>
+</section>
+<section class="card">
+<h2 class="sec" id="p5">AWARE (the proposed evolution)</h2>
+<p><strong>AWARE = Assess, Weigh, Act, Reflect, Enrich</strong> — a <strong>distributed, goal-driven</strong> framework of autonomous, collaborating <strong>AI agents</strong> with proactive anticipation and continuous learning:</p>
+<ul><li><strong>Assess</strong> [observe &amp; <em>understand</em>] — contextual/semantic perception beyond raw monitoring; understand root causes.</li><li><strong>Weigh</strong> [evaluate &amp; decide] — agents formulate <em>multiple</em> adaptation options, score them (cost/risk/performance), and <strong>negotiate</strong> (merges MAPE-K's Analyze + Plan).</li><li><strong>Act</strong> [execute] — multiple agents apply decisions, coordinated and possibly distributed, with conflict resolution.</li><li><strong>Reflect</strong> [continuous learning] — <em>new</em> vs. MAPE-K; learn from outcomes.</li><li><strong>Enrich</strong> [update &amp; capitalize] — update models/rules, share knowledge across agents, grow a smarter (distributed) knowledge base.</li></ul>
+<p><strong>Paper's comparison (Table 1):</strong></p>
+<table><thead><tr><th>Criterion</th><th>MAPE-K</th><th>LLM-MAPE-K</th><th>AWARE</th></tr></thead><tbody><tr><td>Architecture</td><td>Centralized</td><td>Centralized</td><td><strong>Distributed</strong></td></tr><tr><td>Adaptation</td><td>Reactive</td><td>Reactive</td><td><strong>Pro/re-active</strong></td></tr><tr><td>Continuous learning</td><td>Absent</td><td>Partial</td><td><strong>Complete</strong></td></tr><tr><td>Anticipation</td><td>Nonexistent</td><td>Moderate</td><td><strong>Complete</strong></td></tr><tr><td>Collaboration</td><td>Absent</td><td>Absent</td><td><strong>Strong</strong></td></tr><tr><td>Knowledge</td><td>Centralized</td><td>Centralized</td><td><strong>Distributed</strong></td></tr></tbody></table>
+</section>
+<section class="card">
+<h2 class="sec" id="p6">The mapping that makes this gold: AGMS ≈ AWARE for the grid</h2>
+<p>AGMS is, almost line for line, the AWARE critique of MAPE-K applied to grid operations. Today's grid control (SCADA + ADMS/DERMS + a human) <strong>is</strong> a centralized, largely reactive MAPE-K loop. AGMS replaces it with the distributed, proactive, learning, agent-based pattern AWARE describes.</p>
+<p><strong>AWARE stage ↔ AGMS component:</strong></p>
+<table><thead><tr><th>AWARE stage</th><th>MAPE-K phase</th><th>AGMS embodiment</th></tr></thead><tbody><tr><td><strong>Assess</strong> (understand context)</td><td>Monitor (+)</td><td>GWM Alert Correlation + GA Context Construct Engine / CAPs; <strong>virtual sensing</strong> supplies the physical state</td></tr><tr><td><strong>Weigh</strong> (decide among options, simulate)</td><td>Analyze + Plan</td><td>GA CaCSM build (match → provisional → <strong>simulate-before-commit</strong>) + Decision Support + Simulation Engine</td></tr><tr><td><strong>Act</strong> (distributed execution)</td><td>Execute</td><td>GWCH + scouts on operating cells; coordinated, edge-local actions</td></tr><tr><td><strong>Reflect</strong> (continuous learning)</td><td>— (new)</td><td>Learning Engine Agents watching per-state variance, firing recalibration</td></tr><tr><td><strong>Enrich</strong> (update &amp; share knowledge)</td><td>K</td><td>Learning Engine updating the patterns DB; POV-mediated distributed knowledge</td></tr></tbody></table>
+<p><strong>MAPE-K limitation → how AGMS fixes it:</strong></p>
+<table><thead><tr><th>MAPE-K limitation</th><th>AGMS's answer</th></tr></thead><tbody><tr><td>Centralized</td><td>Distributed operating cells + scouts; island-mode autonomy</td></tr><tr><td>Reactive only</td><td>Grid-Wide <strong>Foresight</strong> Manager + simulate-before-commit (proactive)</td></tr><tr><td>Sequential, raw monitoring</td><td>Contextual perception (action stress frame → CAPs) before acting</td></tr><tr><td>No continuous learning</td><td>Learning Engine: pattern recognition + per-state calibration</td></tr><tr><td>Centralized knowledge</td><td>POV files / patterns DB — role-mediated, distributable knowledge</td></tr></tbody></table>
+</section>
+<section class="card">
+<h2 class="sec" id="p7">Interview talking points</h2>
+<ul><li>"As a class of system, AGMS is a <strong>self-adaptive / autonomic system</strong>. The textbook loop is <strong>MAPE-K</strong>; today's centralized grid control is basically a reactive MAPE-K with a human in it."</li><li>"The architecture maps onto the 2025 frontier — <strong>AWARE</strong>: distributed agents, proactive anticipation, continuous learning, distributed knowledge. AGMS is essentially AWARE for the grid: scouts are the agents, the Foresight Manager is the anticipation, the Learning Engine is Reflect/Enrich, and simulate-before-commit is the scenario evaluation in Weigh."</li><li>"My role lives in <strong>Assess</strong> — virtual sensing is the contextual-state perception the whole loop depends on."</li></ul>
+</section>
+<section class="card">
+<h2 class="sec" id="p8">Where it is cited in our notes</h2>
+<ul><li>Study note <a href="../grid-operations-and-role.html" target="_blank" rel="noopener"><code>grid-operations-and-role.md</code></a> — Appendix G (AGMS in self-adaptive-systems terms).</li><li>Relates to <a href="../patents/AGMS-architecture.html" target="_blank" rel="noopener"><code>patents/AGMS-architecture.md</code></a> Part 8 (cross-cutting: learning, simulate-before-commit) and Part 10 (design principles).</li></ul>
+</section>
+    <footer>Rendered from the Markdown source — content unchanged.</footer>
+  </main>
+</div>
+</body>
+</html>
