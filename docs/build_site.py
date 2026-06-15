@@ -14,6 +14,7 @@ Usage:
 """
 
 import ast
+import html
 import json
 import pathlib
 import re
@@ -108,6 +109,8 @@ MATHJAX_HEAD = textwrap.dedent("""\
 
 def build_note_page(title: str, toc_html: str, html_body: str) -> str:
     """Assemble the full HTML document for a note page."""
+    # Escape the title for safe injection into <title>/<h1> (note H1s contain '&', etc.)
+    title = html.escape(title)
     return textwrap.dedent(f"""\
         <!DOCTYPE html>
         <html lang="en">
