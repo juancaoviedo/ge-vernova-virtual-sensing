@@ -781,7 +781,12 @@ of `STAR-STORIES.md`.
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
+
+> Resolution: each question below has a documented planning-side resolution that Plan 06-01
+> implements (TN prep-note footnote, `[NOTICE PERIOD]` placeholder, "if asked" behavioral
+> section). The remaining actions (confirm TN category with HR/attorney; fill notice period)
+> are runtime to-dos for Juan, not planning blockers.
 
 1. **TN category verification**
    - What we know: Engineer category likely fits; June 2025 tightened requirements; PhD in EE is
