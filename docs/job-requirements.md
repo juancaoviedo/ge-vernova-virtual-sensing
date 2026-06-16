@@ -40,15 +40,25 @@ Integrate AI/ML capabilities, federated control frameworks, and digital twins in
 
 ## Required Skills
 Software Engineering: Proficiency in Python, Go, or Rust (backend/edge) and TypeScript/React or Angular (UI).
+
 Edge/Cloud Infrastructure: Deep experience with Kubernetes/K3s, Kafka/NATS, MQTT, gRPC, and Pulsar.
+
 Data & Observability: Hands-on experience with InfluxDB/TimescaleDB and observability stacks (Prometheus, Grafana).
+
 Domain Expertise: Proven experience with federated architectures, resilient edge software, and Transmission & Distribution (T&D) applications.
+
 Scientific Aptitude: Strong understanding of signal processing, control theory, and state estimation methods.
+
 AI/ML: Experience developing and deploying AI/ML models in production environments.
+
 Preferred Qualifications
+
 Education: Master’s degree in electrical engineering, Computer Science, or a related field with 5+ years of experience.
+
 Simulation Tools: Familiarity with EMT platforms (PSCAD, RTDS, Opal-RT).
+
 Digital Twins: Experience with OpenFMB, Modelica, or graph-based modeling.
+
 Grid Standards: Knowledge of IEEE 2030.5, IEC 61850, or similar utility protocols.
 
 Why Join Us
@@ -86,6 +96,6 @@ This posting is expected to remain open for at least seven days after it was pos
 Available benefits include medical, dental, vision, and prescription drug coverage; access to Health Coach from GE Vernova, a 24/7 nurse-based resource; and access to the Employee Assistance Program, providing 24/7 confidential assessment, counseling and referral services. Retirement benefits include the GE Vernova Retirement Savings Plan, a tax-advantaged 401(k) savings opportunity with company matching contributions and company retirement contributions, as well as access to Fidelity resources and financial planning consultants. Other benefits include tuition assistance, adoption assistance, paid parental leave, disability benefits, life insurance, 12 paid holidays, and permissive time off.
  
 
- 
+
 
 GE Vernova Inc. or its affiliates (collectively or individually, “GE Vernova”) sponsor certain employee benefit plans or programs GE Vernova reserves the right to terminate, amend, suspend, replace, or modify its benefit plans and programs at any time and for any reason, in its sole discretion. No individual has a vested right to any benefit under a GE Vernova welfare benefit plan or program. This document does not create a contract of employment with any individual.
