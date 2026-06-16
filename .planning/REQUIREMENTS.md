@@ -44,8 +44,8 @@
 ### Reframe & Narrative Bridges (BRG)
 
 - [ ] **BRG-01**: A rehearsed vocabulary-bridge table translating each OSED/HEMS/SI-MAPPER concept to its T&D analog
-- [ ] **BRG-02**: A 10-minute OSED project pitch rewritten in GE Vernova vocabulary, outcome-first
-- [ ] **BRG-03**: Three STAR behavioral stories (OSED build, HEMS PoC, big-data substation analysis) mapped to JD lines
+- [x] **BRG-02**: A 10-minute OSED project pitch rewritten in GE Vernova vocabulary, outcome-first
+- [x] **BRG-03**: Three STAR behavioral stories (OSED build, HEMS PoC, big-data substation analysis) mapped to JD lines
 
 ### Q&A, Drills & Mock Interview (QNA)
 
@@ -101,8 +101,8 @@ Deferred — useful but not worth the runway before this interview.
 | FED-01 | Phase 5: Federated Architectures & Security | Complete |
 | FED-02 | Phase 5: Federated Architectures & Security | Complete |
 | BRG-01 | Phase 6: Synthesis, Drills & Mock Interview | Pending |
-| BRG-02 | Phase 6: Synthesis, Drills & Mock Interview | Pending |
-| BRG-03 | Phase 6: Synthesis, Drills & Mock Interview | Pending |
+| BRG-02 | Phase 6: Synthesis, Drills & Mock Interview | Complete |
+| BRG-03 | Phase 6: Synthesis, Drills & Mock Interview | Complete |
 | QNA-01 | Phase 6: Synthesis, Drills & Mock Interview | Pending |
 | QNA-02 | Phase 6: Synthesis, Drills & Mock Interview | Pending |
 | QNA-03 | Phase 6: Synthesis, Drills & Mock Interview | Pending |

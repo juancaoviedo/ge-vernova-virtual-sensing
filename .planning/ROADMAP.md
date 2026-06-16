@@ -114,7 +114,7 @@ deliverable maps to exactly one phase; no requirement is orphaned.
   4. Juan can walk through at least two full system-design scenarios (including "500-node virtual sensing pipeline") using K3s, NATS, EKF engine, federated aggregator, and GitOps fleet management
   5. Juan has answered all 12 tough domain questions aloud, timed, and can identify the 2–3 questions that need additional rehearsal before the interview
 **Plans**: 6 plans
-- [ ] 06-01-PLAN.md — PHONE-SCREEN.md: round-1 HR phone-screen pack (≤90 s pitch, fit narrative, TN/relocation/comp logistics, HR question set)
+- [x] 06-01-PLAN.md — PHONE-SCREEN.md: round-1 HR phone-screen pack (≤90 s pitch, fit narrative, TN/relocation/comp logistics, HR question set)
 - [ ] 06-02-PLAN.md — REFRAME.md: two-layer vocabulary bridges (Layer A plain / Layer B technical) + tiered OSED pitch
 - [ ] 06-03-PLAN.md — STAR-STORIES.md: four STAR stories (OSED, HEMS, big-data, SI-MAPPER→AGMS scouts), two versions each, JD-mapped
 - [ ] 06-04-PLAN.md — QUESTION-BANK.md: JD-bullet generator + 12 differentiator-weighted domain Qs + consolidated by-round bank
@@ -149,5 +149,5 @@ Phases execute in numeric order: 0 → 1 → 2 → 3 → 4 → 5 → 6 → 7
 | 3. Director's Patents Deep-Read | 1/1 | Complete    | 2026-06-13 |
 | 4. Protocols, Stack & Architecture | 3/3 | Complete   | 2026-06-14 |
 | 5. Federated Architectures & Security | 3/3 | Complete   | 2026-06-14 |
-| 6. Synthesis, Drills & Mock Interview | 0/6 | Planned | - |
+| 6. Synthesis, Drills & Mock Interview | 1/6 | In Progress|  |
 | 7. Integrated HTML Study Site | 4/4 | Complete    | 2026-06-15 |
