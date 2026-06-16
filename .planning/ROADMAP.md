@@ -113,7 +113,13 @@ deliverable maps to exactly one phase; no requirement is orphaned.
   3. All three STAR stories (OSED build, HEMS PoC, big-data substation analysis) are written, mapped to JD lines, and rehearsed aloud to a 2-minute target each
   4. Juan can walk through at least two full system-design scenarios (including "500-node virtual sensing pipeline") using K3s, NATS, EKF engine, federated aggregator, and GitOps fleet management
   5. Juan has answered all 12 tough domain questions aloud, timed, and can identify the 2–3 questions that need additional rehearsal before the interview
-**Plans**: TBD
+**Plans**: 6 plans
+- [ ] 06-01-PLAN.md — PHONE-SCREEN.md: round-1 HR phone-screen pack (≤90 s pitch, fit narrative, TN/relocation/comp logistics, HR question set)
+- [ ] 06-02-PLAN.md — REFRAME.md: two-layer vocabulary bridges (Layer A plain / Layer B technical) + tiered OSED pitch
+- [ ] 06-03-PLAN.md — STAR-STORIES.md: four STAR stories (OSED, HEMS, big-data, SI-MAPPER→AGMS scouts), two versions each, JD-mapped
+- [ ] 06-04-PLAN.md — QUESTION-BANK.md: JD-bullet generator + 12 differentiator-weighted domain Qs + consolidated by-round bank
+- [ ] 06-05-PLAN.md — SYSTEM-DESIGN-DRILLS.md: two whiteboard drills (500-node pipeline; close-the-loop digital-twin → field validation)
+- [ ] 06-06-PLAN.md — REHEARSAL-TRACKER.md: flashcard tracker + written active-recall/spaced-repetition rehearsal protocol
 
 ### Phase 7: Integrated HTML Study Site
 **Goal**: All study notes produced across the phases plus the research-stage HTML/diagram assets are consolidated into a single, navigable HTML study site — AGMS architecture (the patents), the study notes, and the demos (what each demo is, why it was built, and references) — so Juan can revise everything in one place
@@ -143,5 +149,5 @@ Phases execute in numeric order: 0 → 1 → 2 → 3 → 4 → 5 → 6 → 7
 | 3. Director's Patents Deep-Read | 1/1 | Complete    | 2026-06-13 |
 | 4. Protocols, Stack & Architecture | 3/3 | Complete   | 2026-06-14 |
 | 5. Federated Architectures & Security | 3/3 | Complete   | 2026-06-14 |
-| 6. Synthesis, Drills & Mock Interview | 0/TBD | Not started | - |
+| 6. Synthesis, Drills & Mock Interview | 0/6 | Planned | - |
 | 7. Integrated HTML Study Site | 4/4 | Complete    | 2026-06-15 |
