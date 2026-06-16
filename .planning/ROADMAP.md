@@ -20,7 +20,7 @@ deliverable maps to exactly one phase; no requirement is orphaned.
 - [x] **Phase 3: Director's Patents Deep-Read** - Close Gap 3 (highest differentiation): deep-read all six AGMS-family patents and prepare one connection and one question per patent (completed 2026-06-13)
 - [x] **Phase 4: Protocols, Stack & Architecture** - Close Gaps 4, 6, 7: grid protocol stack (SCADA/DNP3/PMU/IEC 61850) plus NATS/Kafka/K3s/Prometheus positioning (completed 2026-06-14)
 - [x] **Phase 5: Federated Architectures & Security** - Close Gap 5: distinguish federated from distributed, master FedAvg/FedProx/Krum, and frame edge security (completed 2026-06-14)
-- [ ] **Phase 6: Synthesis, Drills & Mock Interview** - Convert all knowledge to deliverable interview answers: vocabulary bridges, OSED pitch, STAR stories, system-design drills, timed Q&A rehearsal
+- [x] **Phase 6: Synthesis, Drills & Mock Interview** - Convert all knowledge to deliverable interview answers: vocabulary bridges, OSED pitch, STAR stories, system-design drills, timed Q&A rehearsal (completed 2026-06-16)
 - [x] **Phase 7: Integrated HTML Study Site** - Consolidate all phase study notes and research HTML/diagram assets into one navigable HTML study site: AGMS architecture (patents), study notes, and demo explanations/references (completed 2026-06-15)
 
 ## Phase Details
@@ -119,7 +119,7 @@ deliverable maps to exactly one phase; no requirement is orphaned.
 - [x] 06-03-PLAN.md — STAR-STORIES.md: four STAR stories (OSED, HEMS, big-data, SI-MAPPER→AGMS scouts), two versions each, JD-mapped
 - [x] 06-04-PLAN.md — QUESTION-BANK.md: JD-bullet generator + 12 differentiator-weighted domain Qs + consolidated by-round bank
 - [x] 06-05-PLAN.md — SYSTEM-DESIGN-DRILLS.md: two whiteboard drills (500-node pipeline; close-the-loop digital-twin → field validation)
-- [ ] 06-06-PLAN.md — REHEARSAL-TRACKER.md: flashcard tracker + written active-recall/spaced-repetition rehearsal protocol
+- [x] 06-06-PLAN.md — REHEARSAL-TRACKER.md: flashcard tracker + written active-recall/spaced-repetition rehearsal protocol
 
 ### Phase 7: Integrated HTML Study Site
 **Goal**: All study notes produced across the phases plus the research-stage HTML/diagram assets are consolidated into a single, navigable HTML study site — AGMS architecture (the patents), the study notes, and the demos (what each demo is, why it was built, and references) — so Juan can revise everything in one place
@@ -149,5 +149,5 @@ Phases execute in numeric order: 0 → 1 → 2 → 3 → 4 → 5 → 6 → 7
 | 3. Director's Patents Deep-Read | 1/1 | Complete    | 2026-06-13 |
 | 4. Protocols, Stack & Architecture | 3/3 | Complete   | 2026-06-14 |
 | 5. Federated Architectures & Security | 3/3 | Complete   | 2026-06-14 |
-| 6. Synthesis, Drills & Mock Interview | 5/6 | In Progress|  |
+| 6. Synthesis, Drills & Mock Interview | 6/6 | Complete   | 2026-06-16 |
 | 7. Integrated HTML Study Site | 4/4 | Complete    | 2026-06-15 |
