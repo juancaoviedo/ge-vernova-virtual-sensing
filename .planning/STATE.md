@@ -4,14 +4,14 @@ milestone: v1.0
 milestone_name: milestone
 status: executing
 stopped_at: Completed 06-01 PHONE-SCREEN.md (round-1 HR phone-screen pack)
-last_updated: "2026-06-16T07:02:42.082Z"
+last_updated: "2026-06-16T07:13:02.946Z"
 last_activity: 2026-06-16
 progress:
   total_phases: 8
   completed_phases: 6
   total_plans: 23
-  completed_plans: 20
-  percent: 87
+  completed_plans: 21
+  percent: 91
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-06-13)
 ## Current Position
 
 Phase: 6 (synthesis-drills-mock-interview) — EXECUTING
-Plan: 4 of 6
+Plan: 5 of 6
 Status: Ready to execute
 Last activity: 2026-06-16
 
-Progress: [█████████░] 87%
+Progress: [█████████░] 91%
 
 ## Performance Metrics
 
@@ -69,6 +69,7 @@ Progress: [█████████░] 87%
 | Phase 07 P04 | 15 | 3 tasks | 7 files |
 | Phase 06 P01 | 10 | 2 tasks | 1 files |
 | Phase 06 P03 | 179 | 2 tasks | 1 files |
+| Phase 06 P04 | 6 | 3 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -102,6 +103,7 @@ Recent decisions affecting current work:
 - [Phase ?]: D-06 honored: actual GitHub Pages deploy deferred; PUBLISH.md documents rebuild + offline smoke test + Pages deploy steps + deferred CV/patent-PDF privacy decision
 - [Phase ?]: Phone-screen salary range written as '98,400-164,000 USD' (no dollar signs) to satisfy zero-LaTeX gate; TN attorney-verify flag kept in prep-note blockquote only (Pitfall 3)
 - [Phase ?]: D-08 honored: four STAR stories each with screen + technical STAR + JD-line-mapping; Story 4 cites US 12,596,341 B2 GRANTED to GE Vernova
+- [Phase ?]: D-16 enforced in QUESTION-BANK.md: all Part B answer keys cite source note path, extracted from say-aloud tracks (T-06-07 mitigated)
 
 ### Roadmap Evolution
 
@@ -130,6 +132,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-06-16T07:02:33.595Z
+Last session: 2026-06-16T07:12:57.706Z
 Stopped at: Completed 06-01 PHONE-SCREEN.md (round-1 HR phone-screen pack)
 Resume file: None

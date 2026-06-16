@@ -49,9 +49,9 @@
 
 ### Q&A, Drills & Mock Interview (QNA)
 
-- [ ] **QNA-01**: The 12 tough domain questions with strong, personalized answer keys, rehearsed aloud
+- [x] **QNA-01**: The 12 tough domain questions with strong, personalized answer keys, rehearsed aloud
 - [ ] **QNA-02**: At least two full system-design drill walkthroughs (e.g., "virtual sensing pipeline for 500 substation edge nodes")
-- [ ] **QNA-03**: A consolidated mock-interview question bank (technical + domain + behavioral) for final-day rehearsal
+- [x] **QNA-03**: A consolidated mock-interview question bank (technical + domain + behavioral) for final-day rehearsal
 
 ### Document Ingestion (DOC) — expandable
 
@@ -103,9 +103,9 @@ Deferred — useful but not worth the runway before this interview.
 | BRG-01 | Phase 6: Synthesis, Drills & Mock Interview | Pending |
 | BRG-02 | Phase 6: Synthesis, Drills & Mock Interview | Complete |
 | BRG-03 | Phase 6: Synthesis, Drills & Mock Interview | Complete |
-| QNA-01 | Phase 6: Synthesis, Drills & Mock Interview | Pending |
+| QNA-01 | Phase 6: Synthesis, Drills & Mock Interview | Complete |
 | QNA-02 | Phase 6: Synthesis, Drills & Mock Interview | Pending |
-| QNA-03 | Phase 6: Synthesis, Drills & Mock Interview | Pending |
+| QNA-03 | Phase 6: Synthesis, Drills & Mock Interview | Complete |
 
 **Coverage:**
 - v1 requirements: 25 total
