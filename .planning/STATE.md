@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 06-01 PHONE-SCREEN.md (round-1 HR phone-screen pack)
-last_updated: "2026-06-16T07:13:02.946Z"
+stopped_at: Completed 06-05 SYSTEM-DESIGN-DRILLS.md (two whiteboard drills)
+last_updated: "2026-06-16T07:18:23.166Z"
 last_activity: 2026-06-16
 progress:
   total_phases: 8
   completed_phases: 6
   total_plans: 23
-  completed_plans: 21
-  percent: 91
+  completed_plans: 22
+  percent: 96
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-06-13)
 ## Current Position
 
 Phase: 6 (synthesis-drills-mock-interview) — EXECUTING
-Plan: 5 of 6
+Plan: 6 of 6
 Status: Ready to execute
 Last activity: 2026-06-16
 
-Progress: [█████████░] 91%
+Progress: [██████████] 96%
 
 ## Performance Metrics
 
@@ -70,6 +70,7 @@ Progress: [█████████░] 91%
 | Phase 06 P01 | 10 | 2 tasks | 1 files |
 | Phase 06 P03 | 179 | 2 tasks | 1 files |
 | Phase 06 P04 | 6 | 3 tasks | 1 files |
+| Phase 06 P05 | 8 | 2 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -104,6 +105,8 @@ Recent decisions affecting current work:
 - [Phase ?]: Phone-screen salary range written as '98,400-164,000 USD' (no dollar signs) to satisfy zero-LaTeX gate; TN attorney-verify flag kept in prep-note blockquote only (Pitfall 3)
 - [Phase ?]: D-08 honored: four STAR stories each with screen + technical STAR + JD-line-mapping; Story 4 cites US 12,596,341 B2 GRANTED to GE Vernova
 - [Phase ?]: D-16 enforced in QUESTION-BANK.md: all Part B answer keys cite source note path, extracted from say-aloud tracks (T-06-07 mitigated)
+- [Phase ?]: Drill 2 ASCII diagram as clockwise loop — closer to close-the-loop cycle shape; more drawable from memory
+- [Phase ?]: EMT tooling at AWARENESS only: PSCAD/RTDS/Opal-RT named but not claimed hands-on (CLAUDE.md depth ceiling + T-06-09 mitigated)
 
 ### Roadmap Evolution
 
@@ -132,6 +135,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-06-16T07:12:57.706Z
-Stopped at: Completed 06-01 PHONE-SCREEN.md (round-1 HR phone-screen pack)
+Last session: 2026-06-16T07:18:23.150Z
+Stopped at: Completed 06-05 SYSTEM-DESIGN-DRILLS.md (two whiteboard drills)
 Resume file: None
