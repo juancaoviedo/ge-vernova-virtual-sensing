@@ -116,7 +116,7 @@ deliverable maps to exactly one phase; no requirement is orphaned.
 **Plans**: 6 plans
 - [x] 06-01-PLAN.md — PHONE-SCREEN.md: round-1 HR phone-screen pack (≤90 s pitch, fit narrative, TN/relocation/comp logistics, HR question set)
 - [x] 06-02-PLAN.md — REFRAME.md: two-layer vocabulary bridges (Layer A plain / Layer B technical) + tiered OSED pitch
-- [ ] 06-03-PLAN.md — STAR-STORIES.md: four STAR stories (OSED, HEMS, big-data, SI-MAPPER→AGMS scouts), two versions each, JD-mapped
+- [x] 06-03-PLAN.md — STAR-STORIES.md: four STAR stories (OSED, HEMS, big-data, SI-MAPPER→AGMS scouts), two versions each, JD-mapped
 - [ ] 06-04-PLAN.md — QUESTION-BANK.md: JD-bullet generator + 12 differentiator-weighted domain Qs + consolidated by-round bank
 - [ ] 06-05-PLAN.md — SYSTEM-DESIGN-DRILLS.md: two whiteboard drills (500-node pipeline; close-the-loop digital-twin → field validation)
 - [ ] 06-06-PLAN.md — REHEARSAL-TRACKER.md: flashcard tracker + written active-recall/spaced-repetition rehearsal protocol
@@ -149,5 +149,5 @@ Phases execute in numeric order: 0 → 1 → 2 → 3 → 4 → 5 → 6 → 7
 | 3. Director's Patents Deep-Read | 1/1 | Complete    | 2026-06-13 |
 | 4. Protocols, Stack & Architecture | 3/3 | Complete   | 2026-06-14 |
 | 5. Federated Architectures & Security | 3/3 | Complete   | 2026-06-14 |
-| 6. Synthesis, Drills & Mock Interview | 2/6 | In Progress|  |
+| 6. Synthesis, Drills & Mock Interview | 3/6 | In Progress|  |
 | 7. Integrated HTML Study Site | 4/4 | Complete    | 2026-06-15 |
