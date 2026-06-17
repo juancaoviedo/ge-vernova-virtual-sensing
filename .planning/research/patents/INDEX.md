@@ -6,12 +6,6 @@ filings; the granted **Operation Loop Formation** patent is assigned to
 **GE Vernova Infrastructure Technology LLC** — the hiring company itself.
 Family: All files belong to the same **Adaptive Grid Management System (AGMS)** patent family.
 
-> **What changed:** Three new patents (Logistician Module, Operation Loop Formation,
-> Scout Command) were added to `docs/` and extracted here. The family is now **six
-> distinct patents**, not three. One of them — Operation Loop Formation — is a
-> **granted US patent assigned to GE Vernova**, making it the strongest single
-> "I read your actual IP" talking point in the set.
-
 ---
 
 ## Files in This Directory
