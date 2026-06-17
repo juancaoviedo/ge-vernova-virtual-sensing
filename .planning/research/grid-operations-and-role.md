@@ -127,11 +127,6 @@ coordination** — and pushes them **out to autonomous agents at the grid edge**
 in seconds, and keep working when the comms link drops. Same **monitor → decide → switch → restore
 → regulate** loop — done by distributed software instead of a person at a desk.
 
-**▶ Juan:** this is the **T&D-vocabulary** layer the role expects you to speak fluently — SCADA,
-DNP3, RTUs/IEDs, FLISR, Volt/VAR, ADMS/DERMS, SAIDI/SAIFI. It sits directly beside the SCADA/DNP3
-notes already in the project's gap analysis, and it is the incumbent-systems framing an interviewer
-will expect you to contrast AGMS against.
-
 ---
 
 ## Appendix B — How the Industry Is Structured (Utility vs. ISO vs. DSO — Who Operates What)
@@ -241,14 +236,6 @@ The distribution control room is surprisingly manual, for honest reasons:
    re-closing on its own is *protection*, not centralized operation; that has always been automated —
    just decentralized and dumb, not coordinated intelligence.
 
-**▶ Juan:** the punchline ties straight to the role. That old model — under-instrumented, radial,
-locally-dumb, human-in-the-loop distribution — is **breaking now** because rooftop solar, batteries,
-and EVs make distribution two-way, fast, and complex in ways the manual model cannot handle. That is
-forcing distribution to finally become **observable, automated, and decentralized** — which is
-precisely *"Virtual Sensing and Decentralized Grid Operations."* Virtual sensing answers reason #2
-(you cannot afford a sensor everywhere → estimate the missing state with ML); AGMS-style decentralized
-operations answer #1 and #4 (push coordinated intelligence to the edge instead of a central room).
-
 ---
 
 ## Appendix C — Transmission (TSO) vs. Distribution Operations: A Side-by-Side
@@ -341,17 +328,6 @@ voltage**, and increasingly **managing DER**. Both check voltage; only the TSO m
 - **Radial reconfiguration via tie-switches** and **FLISR** self-healing.
 - **Conservation Voltage Reduction (CVR)** — deliberately lowering feeder voltage to cut load and energy.
 - **The low-observability problem itself** — too many devices, too few sensors — which is precisely what creates the need for virtual sensing.
-
-**▶ Juan:** read the three tables top-to-bottom and the role jumps out. Transmission is already
-**observable** (dense SCADA + state estimation + PMUs) and **automated** (AGC, SPS/RAS, FACTS).
-Distribution is the opposite — **sparse observation** (substation head + slow AMI + phone calls) and
-**local, dumb automation** (fuses, reclosers). The job — *"Virtual Sensing and Decentralized Grid
-Operations"* — is about closing exactly that gap: **virtual sensing** brings distribution toward
-transmission-grade observability (estimate the feeder state where there is no sensor — the
-distribution state-estimation problem), and **AGMS-style decentralized operations** bring it
-coordinated, intelligent automation (distributed FLISR and Volt-VAR that *reason*, not just trip).
-You can frame your whole pitch as "making the distribution grid as observable and as smart as the
-transmission grid already is — but decentralized, so it survives losing the center."
 
 ---
 
@@ -626,14 +602,6 @@ For deeper reading on any of these, the **Wikipedia** articles (e.g.
 [Static synchronous compensator](https://en.wikipedia.org/wiki/Static_synchronous_compensator),
 [HVDC](https://en.wikipedia.org/wiki/High-voltage_direct_current)) are a fast, photo-rich next step.
 
-**▶ Juan:** map this glossary back to the job. **Virtual sensing** is about turning sparse CT/VT +
-slow AMI + a handful of D-PMUs into a full feeder picture — synthesizing the *instrument transformers
-that were never installed*. Your **edge software** is what ingests RTU / IED / PMU / DER telemetry
-(over DNP3, C37.118, IEEE 2030.5, MQTT) and runs the estimators on it. And the **controllable devices
-in E.2–E.4** — reclosers, regulators, capacitor banks, smart inverters — are exactly what an AGMS
-operation loop issues commands to. Knowing each device cold lets you talk to the power-systems
-engineers in their own language, which is half of a "bridge physics, AI, and distributed computing" role.
-
 ---
 
 ## Appendix F — The Three Meanings of "State" (and Why They Keep Colliding)
@@ -765,14 +733,6 @@ The sentence that ties them, said precisely:
 > regime**; the regime **selects a response plan whose steps** are then **driven by the physical
 > state.** Three different 'states,' three different jobs."
 
-**▶ Juan:** this distinction is worth rehearsing because an interviewer may use "state" loosely and
-*you* can be the one who is precise. Your role lives almost entirely in **layer ①** — you build the
-**state estimator** that turns sparse measurements into the physical state vector. Everything above you
-(regime classification, plan building, plan execution) *consumes* your output. Being able to say "I own
-the physical-state estimation — the observer — which is the input the regime-classifier and the control
-plan both depend on" places you exactly in the architecture and shows you understand the layers you
-hand off to.
-
 ---
 
 ## Appendix G — AGMS in Self-Adaptive-Systems Terms (MAPE-K → AWARE)
@@ -820,11 +780,6 @@ patents' bespoke vocabulary: *"AGMS is a self-adaptive system — a distributed,
 MAPE-K loop, very much in the spirit of AWARE: scouts are the agents, the Foresight Manager is the
 anticipation, the Learning Engine is the Reflect/Enrich, and simulate-before-commit is the option
 evaluation in Weigh."*
-
-**▶ Juan:** your role sits squarely in **Assess** — virtual sensing is the contextual-state perception
-the whole adaptive loop is built on. Framing it this way shows you can speak both the power-systems
-language *and* the self-adaptive-systems language, which is the "bridge physics, AI, and distributed
-computing" mandate in one sentence.
 
 ---
 
