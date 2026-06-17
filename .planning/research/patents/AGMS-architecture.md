@@ -103,12 +103,6 @@ fast and too numerous for a human-plus-central-computer to track — over commun
 cannot be assumed to be there." Centralized control hits a wall. **AGMS's bet is distributed
 autonomy: make the grid edge smart enough to run itself.**
 
-**▶ Juan:** this is exactly why the role is *"Virtual Sensing **and** Decentralized Grid
-Operations."* AGMS is the decentralized-grid-operations vision; **virtual sensing fills the one
-dependency it cannot do without** — the ORACS check constantly asks "is this asset *observable*?",
-and where there is no physical sensor, ML-based virtual sensing *estimates* that state so the
-operation loop can still act. You would be building the eyes the autonomous system runs on.
-
 ---
 
 ## Part 1 — The Big Idea
@@ -212,10 +206,6 @@ situation. Its sub-engines:
 - **Context Data store** (205): the labeled feature store — temporal experience, data/alert
   ownership, grid profile, resource view.
 
-**▶ Juan:** GWM is the data-and-ML foundation — Databricks/PySpark substation analytics feed
-the alert-correlation/decision side; an edge ML estimator (HEMS) is a Learning-Engine-shaped
-component.
-
 ### 2.2 GridArtificer (GA) — the reasoning/state-machine layer (ref 210 / 315 / 960)
 
 If GWM perceives, GA *thinks*. This is the conceptual heart of the whole invention, and it
@@ -232,9 +222,6 @@ logistics corps of specialized managers — the **Logistician**, the **Asset Por
 Manager**, the **Formation Manager / Foresight Manager**, the **Scouts Command**, and the
 **Federated Edge Transaction Manager**. The five continuation patents are essentially the
 detailed blueprints of this corps. Part 4 is the whole story of how they work together.
-
-**▶ Juan:** GWCH is an orchestration control plane — the same shape as the OSED FastAPI
-control plane that turns abstract jobs into placed, monitored K3s workloads.
 
 ---
 
@@ -292,10 +279,6 @@ that assembles real assets and deploys real scouts to carry out each state.
 > **The key mental link:** the CaCSM decides *that an operation loop should exist and what
 > states it cycles through*. The formation pipeline (next part) is what *physically builds and
 > runs that loop* out of real grid assets and real software agents.
-
-**▶ Juan:** the simulate-then-promote pattern is exactly **CVXPY MPC solve-before-commit** —
-solve and feasibility-check the control problem, *then* command the actuators. The CaCSM
-calibration loop is the predict-observe-recalibrate loop of an edge ML controller.
 
 ---
 
@@ -358,10 +341,6 @@ contractor that closes that gap:
 Output: a **provisional logistics list** (`gWFCll(id).p`) — concrete candidate assets, assigned
 to tasks, procured but *not yet verified*.
 
-**▶ Juan:** this is a domain-specific scheduler/orchestrator — turn an abstract job into a
-concrete, audited set of placed resources, and reschedule when something's missing. That's the
-OSED FastAPI control plane resolving a job into K3s workloads.
-
 ### ② Asset Portfolio Manager — *are they actually fit?* (`asset-portfolio.md`)
 
 A procured asset isn't necessarily a *usable* asset — especially during a storm, when half the
@@ -391,11 +370,6 @@ Output: a **verified logistics file** (`ORACS(id).lf`) — assets cleared and fi
 > mistake (now corrected). The patents' own abbreviation key (para [0209]) defines it as the
 > operational-index set above.
 
-**▶ Juan:** verifying observability/reachability/controllability before acting = the OSED
-"is this node healthy and reachable before I dispatch a command?" gate; **virtual sensing**
-(ML estimates where direct observability is missing) is literally an observability-index
-booster.
-
 ### ③ Operation Loop Formation — *wire them into an ORACS loop* (`operation-loop.md`) ★ GRANTED
 
 This is the **granted** patent (US 12,596,341 B2, assigned to **GE Vernova itself**). Its job
@@ -424,10 +398,6 @@ is the *assembly* step: take the verified assets and physically construct the **
 Output: the **OC-meta-object** — the constructed loop with per-asset meta objects, DNA map,
 roster, and (after ④) the launch plan.
 
-**▶ Juan:** the sharpest, most literal bridge in the whole family — "simulate the loop, then
-cause execution" *is* CVXPY MPC solve-before-commit. And because this is **GE Vernova's own
-granted IP**, it's the strongest "I read your actual patents" talking point you have.
-
 ### ④ Scout Command — *deploy the software onto the hardware* (`scout-command.md`)
 
 A verified, assembled loop is still inert — it's a plan, not running processes. **Scout Command**
@@ -448,11 +418,6 @@ on the field devices. Its module chain:
 Output: scouts **launched and running** on Field Agent Devices, and a readiness signal back up
 the chain so the CSM Operator can begin executing the loop as a state machine.
 
-**▶ Juan:** the Scout Incubator Manager is, functionally, a **Kubernetes/K3s scheduler with grid
-semantics** — declarative desired state, availability check, instantiate-or-clone-or-create to
-reconcile. And the **DNA map** that decides what to deploy where is exactly **SI-MAPPER**'s typed,
-relationship-aware asset fingerprint. You can speak to both halves from production experience.
-
 ### ⑤ Data Management — *what each module is allowed to see* (`data-management.md`, cross-cutting)
 
 This one isn't a stage in the line — it's the **data plane underneath the whole line**. The
@@ -471,10 +436,6 @@ problem). The **Data Management module** solves it with **Point of View (POV) fi
 
 This is effectively **attribute-based access control expressed as data views** — and it's what lets
 modules (and cells) stay decoupled enough to run independently, including offline.
-
-**▶ Juan:** POV files = the OSED **FastAPI service layer** mediating all telemetry access +
-**Grafana role-differentiated dashboards** over one InfluxDB/TimescaleDB backend. The patterns
-database = the **SI-MAPPER ontology** encoding what's relevant per asset class.
 
 ---
 
@@ -552,11 +513,6 @@ Two powerful behaviors fall out of this:
 Scouts run on **Field Agent Devices (FADs)** — the physical edge hardware (alongside ordinary
 application payloads). A cluster of FADs cooperating under a Coordinator is an **operating cell**.
 
-**▶ Juan:** scout roles = role-differentiated containers on a shared edge cluster (an inference
-service, an MQTT messenger, a monitoring sidecar, a security service). The lifecycle +
-clone/terminate = K3s controllers reconciling replicas. This is the runtime substrate the whole
-patent family ultimately lands on, and you've built it.
-
 ---
 
 ## Part 7 — Federation, Autonomy, and Island Mode (the payoff)
@@ -578,11 +534,6 @@ This is *why* the architecture is decentralized, and it's the part that directly
 The operation formation type (`oft`) names where a cell sits on the autonomy spectrum: an
 independent cell supporting central command (`ioc.cc`), a fully autonomous cell (`ioc.sc`), a
 member of cooperating neighbors (`ioc.coc`), or a sub-federation member (`ioc.fm`).
-
-**▶ Juan:** island-mode = OSED **edge-autonomous operation with local buffering**
-(InfluxDB/TimescaleDB, MQTT store-and-forward) keeping the control loop running through cloud
-outages. Federated authority transfer with integrity guarantees ≈ the consistency discipline
-behind a service mesh / leader handoff.
 
 ---
 
@@ -609,10 +560,6 @@ sound like you *understand* the system rather than just listing its boxes.
    or any data is released — fail the token, the request is dropped. And **gAVA** (the Grid Artificer
    Virtual Agent) standardizes the *message schema* between all modules, so the whole system speaks
    one enforced language. Authentication + schema enforcement are structural.
-
-**▶ Juan:** Learning-Engine retrieval ≈ SI-MAPPER best-matched-pattern lookup over an ontology
-graph. Simulate-before-commit ≈ CVXPY MPC. POV mediation ≈ FastAPI service layer. ga-authenticationkey
-≈ gRPC service-to-service auth / MCP tool-call auth; gAVA ≈ the enforced MQTT topic+payload schema.
 
 ---
 
