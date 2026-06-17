@@ -326,6 +326,9 @@ def build_architecture() -> None:
         svg_text = svg_src.read_text(encoding="utf-8")
         cleaned = re.sub(r'\s*requiredFeatures="[^"]*"', "", svg_text)
         cleaned = re.sub(r"<image\b[^>]*?/>", "", cleaned)
+        # Drop draw.io's invisible "Text is not SVG - cannot display" fallback link
+        # (never rendered; only stray external URL in an otherwise self-contained file).
+        cleaned = re.sub(r"<a\b[^>]*drawio\.com/doc/faq[^>]*>.*?</a>", "", cleaned, flags=re.S)
         if cleaned != svg_text:
             svg_src.write_text(cleaned, encoding="utf-8")
             print("  normalized SVG   dropped requiredFeatures gate + raster text fallbacks (crisp vector)")
