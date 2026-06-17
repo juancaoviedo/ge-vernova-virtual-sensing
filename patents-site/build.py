@@ -155,7 +155,7 @@ def main() -> None:
     # 3. Regenerate the TOC from the kept sections; lead with Architecture; no annex.
     toc_lines = ['    <a href="#architecture">Architecture diagram</a>']
     for inner in parts:
-        m = re.search(r'<h2 class="sec" id="(p\d+)">(.*?)</h2>', inner, re.S)
+        m = re.search(r'<h2 class="sec" id="([\w-]+)">(.*?)</h2>', inner, re.S)
         if not m:
             fail("a kept section is missing its <h2 class=\"sec\" id> heading")
         pid, label = m.group(1), m.group(2).strip()

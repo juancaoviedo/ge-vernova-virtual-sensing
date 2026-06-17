@@ -635,27 +635,36 @@ things to *say* in the interview, because they show you grasped the philosophy:
 
 ---
 
-## Part 11 — Where Juan's Work Maps (the consolidated bridge map)
+## Key Technical Terms Cheat Sheet
 
-| AGMS layer / concept | What it does | Juan's analog | The one-liner |
-|---|---|---|---|
-| **GWM** alert correlation + decision support | Turn alert storms into a clean situation + recommendation | Databricks/PySpark substation analytics; HEMS edge ML | "I built the streaming-analytics + ML layer that feeds correlation." |
-| **CaCSM** simulate→promote | Reason a response, validate before going live | **CVXPY MPC solve-before-commit** | "I've shipped the validate-before-execute gate, just as one optimization." |
-| **GWCH / Logistician** orchestration | Turn abstract intent into placed, monitored resources | **OSED FastAPI control plane → K3s** | "That's my orchestration control plane, with grid semantics." |
-| **ORACS index verification** | Gate assets on observability/reachability/controllability | OSED health/reachability gating; **virtual sensing** | "I gate dispatch on node health — and ML-estimate state where observability is missing." |
-| **Operation Loop Formation** (granted) | Match DNA, build meta objects, **simulate the loop** | **CVXPY MPC** (literal match) + K3s manifests | "Their granted claim 3 is my solve-before-commit. The meta objects are my deployment descriptors." |
-| **Scout Incubator** | Reconcile role-typed agents onto field devices | **K3s/K8s scheduler** | "The Incubator *is* a Kubernetes scheduler for the grid." |
-| **DNA map** | Typed, relationship-aware asset fingerprint | **SI-MAPPER** (CV→ontology knowledge graph) | "SI-MAPPER is the DNA map for building assets." |
-| **Data Management / POV** | Role-filtered, access-controlled data views | **FastAPI service layer + Grafana** over InfluxDB/TimescaleDB | "POV files are my API-mediated, role-scoped data layer." |
-| **ga-authenticationkey / gAVA** | Authenticated, schema-enforced inter-module messaging | **gRPC auth + MQTT schema; MCP tool-call auth** | "Authenticated structured messaging — I've built it at gRPC and MCP layers." |
-| **Island mode / federation** | Autonomous edge operation through WAN loss | **OSED edge autonomy + local buffering** | "My platform was designed to keep the control loop alive when the cloud drops." |
+| Term | Meaning |
+|------|---------|
+| AGMS | Adaptive Grid Management System — the full platform |
+| GWM | GridWideMind — the intelligence/alert correlation layer |
+| GA | GridArtificer — the contextual reasoning and state machine layer |
+| GWCH | GridWideCommandHub — the orchestration and execution layer |
+| CaCSM | Contextual and Cognitive State Machine — the core grid reasoning engine |
+| CAP | Contextual Abstraction Panel — a ranked contextual grouping that feeds CaCSM construction |
+| ORACS | Operation loop / operating-cell unit. Patents (para [0209]) define it as **Observability, Reachability, Adaptability, Controllability, Security** — the 5 operational indexes (extended to 7 for verification with sustainability + stability). ("Operation+Role+Asset+Context+Scouts" was a Phase-1 note error, now corrected — not in any patent.) |
+| Operation loop (ol) | The ORACS as executed; `oft` = operation formation type (e.g. `ioc.cc`, `ioc.sc`, `ioc.coc`, `ioc.fm`) |
+| Logistician Module (1023A) | Logistics orchestrator; builds + procures + audits the provisional logistics list; owns inter-ORACS gap files |
+| gWFCll / gWFClf | gridWideFederationCommand Logistics **List** / **File**; `.p` suffix = provisional |
+| Federation command template | The object the Logistician matches a context meta-object against (tasks + class requirements) |
+| Asset Portfolio Manager (1300) | Verifies the 7 operational indexes per asset → verified `ORACS(id).lf` |
+| Formation Construct Module (1400) | (Operation Loop patent) matches schema/DNA, builds per-asset meta objects, simulates loop, causes execution |
+| Meta object (OC-meta-object) | Per-loop/per-asset object that "causes an asset to execute a task"; carries DNA.map, logistics, scout roster + launch plan |
+| Scout Command (1230 / 1441→1444→1445→1447) | Incubates + role-assigns + launches scouts onto FADs |
+| Scout Incubator Manager (1445) | Checks scout availability for `DNA.role(s_c,s_m,s_i,s_g)`; clones / self-forms to fill gaps |
+| Launch plan | time + load + origin + destination + asset(id) — per host and per participant scout |
+| POV file | Point of View file — role-filtered data view served by the data management module |
+| Scout | Lightweight edge agent (meta-object + operation module) deployed to a field agent device |
+| Roles | Coordinator (s_c, cell authority), Messenger (s_m, data-in-motion), Inspector (s_i, monitoring), Guard (s_g, security) |
+| Operating cell | A cluster of FADs executing scouts + apps; can operate autonomously without WAN (island-mode) |
+| DNA / schema | Synonyms (per Operation Loop patent): unique organized structure defining a loop/scout's cognitive behavior |
+| DNA map / iO-DNA.map | Host-ORACS / inter-ORACS DNA mapping that drives scout incubation and launch |
+| gwapd | gridWide asset portfolio database (1274) — multi-dimensional operational indexes per asset |
+| gAVA | Grid Artificer Virtual Agent — inter-module message schema enforcer |
+| ga-authenticationkey | Security token passed with every inter-module command; validated by ga-GateKeeper |
+| for-id | Formation ID — unique identifier for a formation context |
+| FAD | Field Agent Device — a physical edge device in an operating cell |
 
-**The master narrative:** *"The patent family describes one self-organizing platform — perceive,
-reason, then run an assembly line (Logistician → verify → assemble+simulate → deploy) that pushes
-autonomous scouts onto field cells that survive losing the center. I've built the components of
-exactly this, independently, in buildings and DER: OSED is the edge runtime and orchestration
-control plane the scouts would land on, my K3s scheduler is the Scout Incubator with grid
-semantics, SI-MAPPER is the typed DNA-map asset model, CVXPY MPC is the simulate-before-commit gate
-that the granted Operation Loop patent — GE Vernova's own IP — puts in its claims, and my analytics
-stack is the GWM data foundation. Coming to GE Vernova means integrating those into a T&D-scale
-version of precisely this architecture."*

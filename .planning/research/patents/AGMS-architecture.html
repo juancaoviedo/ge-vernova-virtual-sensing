@@ -68,7 +68,7 @@
     <a href="#p9">Part 8 — The Cross-Cutting Systems (the threads that run through everything)</a>
     <a href="#p10">Part 9 — End-to-End Walkthrough (one concrete story)</a>
     <a href="#p11">Part 10 — The Recurring Design Principles (what to actually take away)</a>
-    <a href="#p12">Part 11 — Where Juan&#x27;s Work Maps (the consolidated bridge map)</a>
+    <a href="#cheat">Key Technical Terms Cheat Sheet</a>
   </nav>
   <main>
 <section class="card" id="diagram">
@@ -270,10 +270,41 @@
 <ol><li><strong>Decentralize authority to the edge.</strong> Push decision-making into self-forming, self-terminating field cells that survive loss of the center. Resilience comes from autonomy, not from a bigger control center.</li><li><strong>Reason from learned experience, not hardcoded rules.</strong> Retrieve the best-matched historical pattern (CaCSM, DNA, view pattern) and adapt it. The Learning Engine is the spine.</li><li><strong>Never actuate on an unvalidated plan.</strong> Simulate-before-commit at every level — it's even in the granted claims.</li><li><strong>Type your assets and mediate your data.</strong> DNA maps give every asset a typed, relationship-aware fingerprint; POV files give every consumer a role-appropriate, access-controlled view. Decoupling and security fall out of these two ideas.</li><li><strong>Make the whole thing one assembly line.</strong> Logistician → Portfolio Manager → Operation Loop Formation → Scout Command is a clean pipeline with a well-defined object passed at each handoff. Separation of concerns at the architecture level.</li></ol>
 </section>
 <section class="card">
-<h2 class="sec" id="p12">Part 11 — Where Juan's Work Maps (the consolidated bridge map)</h2>
-<table><thead><tr><th>AGMS layer / concept</th><th>What it does</th><th>Juan's analog</th><th>The one-liner</th></tr></thead><tbody><tr><td><strong>GWM</strong> alert correlation + decision support</td><td>Turn alert storms into a clean situation + recommendation</td><td>Databricks/PySpark substation analytics; HEMS edge ML</td><td>"I built the streaming-analytics + ML layer that feeds correlation."</td></tr><tr><td><strong>CaCSM</strong> simulate→promote</td><td>Reason a response, validate before going live</td><td><strong>CVXPY MPC solve-before-commit</strong></td><td>"I've shipped the validate-before-execute gate, just as one optimization."</td></tr><tr><td><strong>GWCH / Logistician</strong> orchestration</td><td>Turn abstract intent into placed, monitored resources</td><td><strong>OSED FastAPI control plane → K3s</strong></td><td>"That's my orchestration control plane, with grid semantics."</td></tr><tr><td><strong>ORACS index verification</strong></td><td>Gate assets on observability/reachability/controllability</td><td>OSED health/reachability gating; <strong>virtual sensing</strong></td><td>"I gate dispatch on node health — and ML-estimate state where observability is missing."</td></tr><tr><td><strong>Operation Loop Formation</strong> (granted)</td><td>Match DNA, build meta objects, <strong>simulate the loop</strong></td><td><strong>CVXPY MPC</strong> (literal match) + K3s manifests</td><td>"Their granted claim 3 is my solve-before-commit. The meta objects are my deployment descriptors."</td></tr><tr><td><strong>Scout Incubator</strong></td><td>Reconcile role-typed agents onto field devices</td><td><strong>K3s/K8s scheduler</strong></td><td>"The Incubator <em>is</em> a Kubernetes scheduler for the grid."</td></tr><tr><td><strong>DNA map</strong></td><td>Typed, relationship-aware asset fingerprint</td><td><strong>SI-MAPPER</strong> (CV→ontology knowledge graph)</td><td>"SI-MAPPER is the DNA map for building assets."</td></tr><tr><td><strong>Data Management / POV</strong></td><td>Role-filtered, access-controlled data views</td><td><strong>FastAPI service layer + Grafana</strong> over InfluxDB/TimescaleDB</td><td>"POV files are my API-mediated, role-scoped data layer."</td></tr><tr><td><strong>ga-authenticationkey / gAVA</strong></td><td>Authenticated, schema-enforced inter-module messaging</td><td><strong>gRPC auth + MQTT schema; MCP tool-call auth</strong></td><td>"Authenticated structured messaging — I've built it at gRPC and MCP layers."</td></tr><tr><td><strong>Island mode / federation</strong></td><td>Autonomous edge operation through WAN loss</td><td><strong>OSED edge autonomy + local buffering</strong></td><td>"My platform was designed to keep the control loop alive when the cloud drops."</td></tr></tbody></table>
-<p><strong>The master narrative:</strong> <em>"The patent family describes one self-organizing platform — perceive, reason, then run an assembly line (Logistician → verify → assemble+simulate → deploy) that pushes autonomous scouts onto field cells that survive losing the center. I've built the components of exactly this, independently, in buildings and DER: OSED is the edge runtime and orchestration control plane the scouts would land on, my K3s scheduler is the Scout Incubator with grid semantics, SI-MAPPER is the typed DNA-map asset model, CVXPY MPC is the simulate-before-commit gate that the granted Operation Loop patent — GE Vernova's own IP — puts in its claims, and my analytics stack is the GWM data foundation. Coming to GE Vernova means integrating those into a T&amp;D-scale version of precisely this architecture."</em></p>
-</section>
+      <h2 class="sec" id="cheat">Key Technical Terms Cheat Sheet</h2>
+      <table>
+        <thead><tr><th style="width:230px">Term</th><th>Meaning</th></tr></thead>
+        <tbody>
+          <tr><td>AGMS</td><td>Adaptive Grid Management System — the full platform</td></tr>
+          <tr><td>GWM</td><td>GridWideMind — the intelligence/alert correlation layer</td></tr>
+          <tr><td>GA</td><td>GridArtificer — the contextual reasoning and state machine layer</td></tr>
+          <tr><td>GWCH</td><td>GridWideCommandHub — the orchestration and execution layer</td></tr>
+          <tr><td>CaCSM</td><td>Contextual and Cognitive State Machine — the core grid reasoning engine</td></tr>
+          <tr><td>CAP</td><td>Contextual Abstraction Panel — a ranked contextual grouping that feeds CaCSM construction</td></tr>
+          <tr><td>ORACS</td><td>Operation loop / operating-cell unit. Patents (para [0209]) define it as <strong>Observability, Reachability, Adaptability, Controllability, Security</strong> — the 5 operational indexes (extended to 7 for verification with sustainability + stability). ("Operation+Role+Asset+Context+Scouts" was a Phase-1 note error, now corrected — not in any patent.)</td></tr>
+          <tr><td>Operation loop (ol)</td><td>The ORACS as executed; <code>oft</code> = operation formation type (e.g. <code>ioc.cc</code>, <code>ioc.sc</code>, <code>ioc.coc</code>, <code>ioc.fm</code>)</td></tr>
+          <tr><td>Logistician Module (1023A)</td><td>Logistics orchestrator; builds + procures + audits the provisional logistics list; owns inter-ORACS gap files</td></tr>
+          <tr><td>gWFCll / gWFClf</td><td>gridWideFederationCommand Logistics <strong>List</strong> / <strong>File</strong>; <code>.p</code> suffix = provisional</td></tr>
+          <tr><td>Federation command template</td><td>The object the Logistician matches a context meta-object against (tasks + class requirements)</td></tr>
+          <tr><td>Asset Portfolio Manager (1300)</td><td>Verifies the 7 operational indexes per asset → verified <code>ORACS(id).lf</code></td></tr>
+          <tr><td>Formation Construct Module (1400)</td><td>(Operation Loop patent) matches schema/DNA, builds per-asset meta objects, simulates loop, causes execution</td></tr>
+          <tr><td>Meta object (OC-meta-object)</td><td>Per-loop/per-asset object that "causes an asset to execute a task"; carries DNA.map, logistics, scout roster + launch plan</td></tr>
+          <tr><td>Scout Command (1230 / 1441→1444→1445→1447)</td><td>Incubates + role-assigns + launches scouts onto FADs</td></tr>
+          <tr><td>Scout Incubator Manager (1445)</td><td>Checks scout availability for <code>DNA.role(s_c,s_m,s_i,s_g)</code>; clones / self-forms to fill gaps</td></tr>
+          <tr><td>Launch plan</td><td>time + load + origin + destination + asset(id) — per host and per participant scout</td></tr>
+          <tr><td>POV file</td><td>Point of View file — role-filtered data view served by the data management module</td></tr>
+          <tr><td>Scout</td><td>Lightweight edge agent (meta-object + operation module) deployed to a field agent device</td></tr>
+          <tr><td>Roles</td><td>Coordinator (s_c, cell authority), Messenger (s_m, data-in-motion), Inspector (s_i, monitoring), Guard (s_g, security)</td></tr>
+          <tr><td>Operating cell</td><td>A cluster of FADs executing scouts + apps; can operate autonomously without WAN (island-mode)</td></tr>
+          <tr><td>DNA / schema</td><td>Synonyms (per Operation Loop patent): unique organized structure defining a loop/scout's cognitive behavior</td></tr>
+          <tr><td>DNA map / iO-DNA.map</td><td>Host-ORACS / inter-ORACS DNA mapping that drives scout incubation and launch</td></tr>
+          <tr><td>gwapd</td><td>gridWide asset portfolio database (1274) — multi-dimensional operational indexes per asset</td></tr>
+          <tr><td>gAVA</td><td>Grid Artificer Virtual Agent — inter-module message schema enforcer</td></tr>
+          <tr><td>ga-authenticationkey</td><td>Security token passed with every inter-module command; validated by ga-GateKeeper</td></tr>
+          <tr><td>for-id</td><td>Formation ID — unique identifier for a formation context</td></tr>
+          <tr><td>FAD</td><td>Field Agent Device — a physical edge device in an operating cell</td></tr>
+        </tbody>
+      </table>
+    </section>
     <footer>Rendered from the Markdown source — content unchanged.</footer>
   </main>
 </div>
