@@ -75,6 +75,7 @@ VIEWER_JS = """<script>
   }, {passive:false});
   var down=false, moved=false, sx=0, sy=0, ox=0, oy=0;
   stage.addEventListener('pointerdown', function(e){
+    e.preventDefault();
     down=true; moved=false; sx=e.clientX; sy=e.clientY; ox=tx; oy=ty;
     try{ stage.setPointerCapture(e.pointerId); }catch(_){}
     stage.classList.add('grabbing');

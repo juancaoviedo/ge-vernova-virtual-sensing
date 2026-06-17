@@ -19,7 +19,9 @@ import json
 import pathlib
 import re
 import shutil
+import subprocess
 import sys
+import tempfile
 import textwrap
 
 import markdown
@@ -190,6 +192,47 @@ _ASSET_SRCS = {
     "AGMS-architecture.svg":         RESEARCH / "patents" / "AGMS-architecture.svg",
     "AGMS-architecture.drawio.png":  RESEARCH / "patents" / "AGMS-architecture.drawio.png",
 }
+_DRAWIO_SRC = RESEARCH / "patents" / "AGMS-architecture.drawio"
+
+
+def render_diagram_from_drawio() -> None:
+    """Re-export the architecture SVG + PNG from the .drawio source so the published
+    assets never lag the diagram (the .drawio is the single source of truth).
+
+    Exports from a COPY of the .drawio — never the original — because the draw.io
+    desktop CLI rewrites any file it opens (viewport state, node re-serialization),
+    which would dirty the tracked source on every build. PNG is rendered at 2x for a
+    high-res download. No-op with a warning if the draw.io CLI is unavailable (e.g. a
+    headless CI box) so the build still succeeds against the committed assets.
+    """
+    drawio = shutil.which("drawio")
+    if not drawio:
+        print("  ! draw.io CLI not found — skipping diagram re-render (using committed SVG/PNG)")
+        return
+    if not _DRAWIO_SRC.exists():
+        print(f"  ! {_DRAWIO_SRC.name} missing — skipping diagram re-render")
+        return
+    svg_out = _ASSET_SRCS["AGMS-architecture.svg"]
+    png_out = _ASSET_SRCS["AGMS-architecture.drawio.png"]
+    with tempfile.TemporaryDirectory() as td:
+        tmp = pathlib.Path(td) / "diagram.drawio"
+        shutil.copy2(_DRAWIO_SRC, tmp)
+        jobs = [
+            (["-f", "svg", "-o", str(svg_out)], "AGMS-architecture.svg"),
+            (["-f", "png", "-s", "2", "-o", str(png_out)], "AGMS-architecture.drawio.png"),
+        ]
+        for extra, label in jobs:
+            try:
+                subprocess.run(
+                    [drawio, "-x", "--no-sandbox", *extra, str(tmp)],
+                    check=True, capture_output=True, timeout=180,
+                )
+                print(f"  re-rendered  AGMS-architecture.drawio  ->  {label}  (from source)")
+            except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as e:
+                detail = getattr(e, "stderr", b"") or b""
+                print(f"  ! draw.io export of {label} failed ({e}); keeping committed copy")
+                if detail:
+                    print("    " + detail.decode("utf-8", "replace").strip().splitlines()[-1][:200])
 
 # Link-rewrite map — keyed by target filename, value is list of (old, new) string pairs.
 # Applied to the trio + sources pages. (D-07/D-08; T-07-05)
@@ -961,6 +1004,11 @@ def main() -> None:
     write_manifest(manifest)
     print(f"\n  manifest written -> {MANIFEST_PATH.relative_to(REPO_ROOT)}")
     print(f"  total: {len(note_paths)} notes converted\n")
+
+    # Sync diagram assets from the .drawio source before copying/inlining them.
+    print("--- diagram re-render (from .drawio source) ---")
+    render_diagram_from_drawio()
+    print()
 
     # Plan 07-02: copy architecture research pages + diagram viewer
     print("--- architecture copy ---")

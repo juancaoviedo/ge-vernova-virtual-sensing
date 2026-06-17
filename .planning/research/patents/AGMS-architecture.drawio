@@ -1,6 +1,6 @@
 <mxfile host="65bd71144e">
     <diagram name="AGMS-Architecture" id="0">
-        <mxGraphModel dx="2796" dy="2228" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2100" pageHeight="1620" math="0" shadow="0">
+        <mxGraphModel dx="4809" dy="3937" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2100" pageHeight="1620" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
@@ -28,7 +28,7 @@
                 <mxCell id="ctx" value="Context Data (205)&lt;br&gt;Labeled feature store" style="shape=cylinder3;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" parent="gwm" vertex="1">
                     <mxGeometry x="1210" y="48" width="300" height="95" as="geometry"/>
                 </mxCell>
-                <mxCell id="4" value="Is &quot;reality&quot; stimated using the virtual sensing module?" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0a30a;fontColor=#000000;strokeColor=#BD7000;" vertex="1" parent="gwm">
+                <mxCell id="4" value="Is &quot;reality&quot; stimated using the virtual sensing module?" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0a30a;fontColor=#000000;strokeColor=#BD7000;" parent="gwm" vertex="1">
                     <mxGeometry x="920" y="158" width="160" height="45" as="geometry"/>
                 </mxCell>
                 <mxCell id="ga" value="GridArtificer (GA) — REASONING &amp;amp; DECISION  (210 / 315 / 960)&lt;br&gt;&lt;span style=&quot;font-weight: normal;&quot;&gt;&amp;nbsp;builds the Contextual &amp;amp; Cognitive State Machine (CaCSM):  draft → simulate → calibrate → promote&lt;/span&gt;" style="swimlane;startSize=40;html=1;fillColor=#eef7f1;strokeColor=#82b366;fontStyle=1;fontColor=#13433a;verticalAlign=top;" parent="1" vertex="1">
@@ -150,7 +150,13 @@
                     <mxGeometry x="20" y="270" width="340" height="200" as="geometry"/>
                 </mxCell>
                 <mxCell id="4DyDUN3vrFLzL9egiClx-17" value="POV files are interesting way of managing data access by role. But I wonder if the &quot;schema&quot; changes as the system evolves (like new devices enter the system). I that drift managed by updateing the POV?" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0a30a;fontColor=#000000;strokeColor=#BD7000;" parent="xcut" vertex="1">
-                    <mxGeometry x="20" y="950" width="160" height="130" as="geometry"/>
+                    <mxGeometry x="20" y="930" width="160" height="130" as="geometry"/>
+                </mxCell>
+                <mxCell id="4DyDUN3vrFLzL9egiClx-19" value="A cell can hand off authority to a neighbour. This is managed by the Federated Edge Transaction Manager. Is this transfer cell 1 notifies transfer to cloud, cloud terminates cell 1, cloud spawn cell 2 with same config as 1? Or is it really a local cell 1 transfer itself to cell 2 over local network without cloud involvement?" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0a30a;fontColor=#000000;strokeColor=#BD7000;" parent="xcut" vertex="1">
+                    <mxGeometry x="20" y="1080" width="160" height="180" as="geometry"/>
+                </mxCell>
+                <mxCell id="4DyDUN3vrFLzL9egiClx-4" value="How do cells define who is the scout-master? What is the scope of &quot;control&quot; of the scout-master?" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0a30a;fontColor=#000000;strokeColor=#BD7000;" parent="xcut" vertex="1">
+                    <mxGeometry x="200" y="1180" width="160" height="80" as="geometry"/>
                 </mxCell>
                 <mxCell id="e1" value="action stress frame&#xa;(va_n, sd_n, t_i)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#23445d;strokeWidth=2;fontSize=11;fontColor=#23445d;labelBackgroundColor=#ffffff;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" target="gap" edge="1">
                     <mxGeometry relative="1" as="geometry">
@@ -285,13 +291,10 @@
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
                 <mxCell id="4DyDUN3vrFLzL9egiClx-2" value="DB saves &quot;captured&quot;, &quot;stimated&quot; and &quot;real&quot; grid state for pattern extraction?&lt;div&gt;I mean, from virtual sensing and real sensing?&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0a30a;fontColor=#000000;strokeColor=#BD7000;" parent="1" vertex="1">
-                    <mxGeometry x="1420" y="-160" width="160" height="80" as="geometry"/>
-                </mxCell>
-                <mxCell id="4DyDUN3vrFLzL9egiClx-4" value="How do cells define who is the scout-master? What is the scope of &quot;control&quot; of the scout-master?" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0a30a;fontColor=#000000;strokeColor=#BD7000;" parent="1" vertex="1">
-                    <mxGeometry x="1820" y="1550" width="160" height="80" as="geometry"/>
+                    <mxGeometry x="1420" y="-180" width="160" height="80" as="geometry"/>
                 </mxCell>
                 <mxCell id="4DyDUN3vrFLzL9egiClx-5" value="Pattern extraction from DB? so the pattern recognition can work?" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0a30a;fontColor=#000000;strokeColor=#BD7000;" parent="1" vertex="1">
-                    <mxGeometry x="1240" y="-160" width="160" height="80" as="geometry"/>
+                    <mxGeometry x="1240" y="-180" width="160" height="80" as="geometry"/>
                 </mxCell>
                 <mxCell id="4DyDUN3vrFLzL9egiClx-6" value="Alerts come only from measurements? Or can they come from &quot;stimated&quot; states from the virtual sensing module? Like stimated over-voltage?" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0a30a;fontColor=#000000;strokeColor=#BD7000;" parent="1" vertex="1">
                     <mxGeometry x="40" y="-200" width="160" height="120" as="geometry"/>
@@ -300,40 +303,37 @@
                     <mxGeometry x="240" y="-200" width="160" height="120" as="geometry"/>
                 </mxCell>
                 <mxCell id="4DyDUN3vrFLzL9egiClx-8" value="Is the action stress frame computed using the states stimated from the virtual sensing module?" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0a30a;fontColor=#000000;strokeColor=#BD7000;" parent="1" vertex="1">
-                    <mxGeometry x="-160" y="180" width="160" height="80" as="geometry"/>
+                    <mxGeometry x="-160" y="450" width="160" height="80" as="geometry"/>
                 </mxCell>
                 <mxCell id="4DyDUN3vrFLzL9egiClx-11" value="Virtual sensing module uses the sim. eng. to compute global state? Or the sim. eng. only computes effects of the CaCSM actions?" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0a30a;fontColor=#000000;strokeColor=#BD7000;" parent="1" vertex="1">
-                    <mxGeometry x="1000" y="-160" width="160" height="80" as="geometry"/>
+                    <mxGeometry x="1000" y="-180" width="160" height="80" as="geometry"/>
                 </mxCell>
                 <mxCell id="4DyDUN3vrFLzL9egiClx-12" value="Isn&#39;t it heavy to create a learning engine agent for each state?" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0a30a;fontColor=#000000;strokeColor=#BD7000;" parent="1" vertex="1">
                     <mxGeometry x="1290" y="195" width="160" height="80" as="geometry"/>
                 </mxCell>
                 <mxCell id="4DyDUN3vrFLzL9egiClx-13" value="Does the acquisition agent really participate on an assets market? How are prefrences of the assets (busy/free) modeled? NEAT!" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0a30a;fontColor=#000000;strokeColor=#BD7000;" parent="1" vertex="1">
-                    <mxGeometry x="-160" y="800" width="160" height="80" as="geometry"/>
+                    <mxGeometry x="-160" y="1070" width="160" height="80" as="geometry"/>
                 </mxCell>
                 <mxCell id="4DyDUN3vrFLzL9egiClx-14" value="How to avoid infinite loops between logistician and asset portfolio manager? Procure device, not available, procure, not available, etc?" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0a30a;fontColor=#000000;strokeColor=#BD7000;" parent="1" vertex="1">
-                    <mxGeometry x="-160" y="920" width="160" height="80" as="geometry"/>
+                    <mxGeometry x="-160" y="1190" width="160" height="80" as="geometry"/>
                 </mxCell>
                 <mxCell id="4DyDUN3vrFLzL9egiClx-15" value="CaCSM produces an abstract intent, CaCSM does not have ORACS. But, its supposed to have at list the inventary of devices (what worked in the past), right? Otherwise it will be impossible to reconcile with the Logistician and Asset Portfolio Manager ORACS. What happends when the history is changed? Like new devices where added? What worked on the past might drift from what will work now. Continuous learning?" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0a30a;fontColor=#000000;strokeColor=#BD7000;" parent="1" vertex="1">
-                    <mxGeometry x="-160" y="520" width="160" height="240" as="geometry"/>
+                    <mxGeometry x="-160" y="790" width="160" height="240" as="geometry"/>
                 </mxCell>
-                <mxCell id="4DyDUN3vrFLzL9egiClx-18" value="1. No optimality ideas. Learning yes, but no optimality.&lt;div&gt;2. A giant adaptable lookup table: what worked on the past, lets solve it again in the same way.&lt;/div&gt;&lt;div&gt;3. CaCSM is not a reasoning engine, is a match engine. In this sense, the system will not be able to solve situations that never saw before. So, we will have self-healing only on previously healed conditions.&lt;/div&gt;&lt;div&gt;4. Lack of generalization over the learningWorks only in the network that was learned&quot;&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0a30a;fontColor=#000000;strokeColor=#BD7000;" parent="1" vertex="1">
-                    <mxGeometry x="1630" y="-400" width="160" height="280" as="geometry"/>
-                </mxCell>
-                <mxCell id="4DyDUN3vrFLzL9egiClx-19" value="A cell can hand off authority to a neighbour. This is managed by the Federated Edge Transaction Manager. Is this transfer cell 1 notifies transfer to cloud, cloud terminates cell 1, cloud spawn cell 2 with same config as 1? Or is it really a local cell 1 transfer itself to cell 2 over local network without cloud involvement?" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0a30a;fontColor=#000000;strokeColor=#BD7000;" parent="1" vertex="1">
-                    <mxGeometry x="1630" y="1550" width="160" height="180" as="geometry"/>
+                <mxCell id="4DyDUN3vrFLzL9egiClx-18" value="&lt;font style=&quot;color: rgb(0, 0, 0);&quot;&gt;1. No optimality ideas. Learning yes, but no optimality.&lt;/font&gt;&lt;div&gt;&lt;font style=&quot;color: rgb(0, 0, 0);&quot;&gt;2. A giant adaptable lookup table: what worked on the past, lets solve it again in the same way.&lt;/font&gt;&lt;/div&gt;&lt;div&gt;&lt;font style=&quot;color: rgb(0, 0, 0);&quot;&gt;3. CaCSM is not a reasoning engine, is a match engine. In this sense, the system will not be able to solve situations that never saw before. So, we will have self-healing only on previously healed conditions.&lt;/font&gt;&lt;/div&gt;&lt;div&gt;&lt;font style=&quot;color: rgb(0, 0, 0);&quot;&gt;4. Lack of generalization over the learningWorks only in the network that was learned&quot;&lt;/font&gt;&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0a30a;fontColor=#000000;strokeColor=#BD7000;" parent="1" vertex="1">
+                    <mxGeometry x="-160" y="120" width="160" height="280" as="geometry"/>
                 </mxCell>
                 <mxCell id="4DyDUN3vrFLzL9egiClx-20" value="Can the logistician rely on virtual sensing to replace a missing sensor? How to determine the realiability of the stimated state?" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0a30a;fontColor=#000000;strokeColor=#BD7000;" parent="1" vertex="1">
-                    <mxGeometry x="-160" y="1040" width="160" height="80" as="geometry"/>
+                    <mxGeometry x="-160" y="1310" width="160" height="80" as="geometry"/>
                 </mxCell>
-                <mxCell id="2" value="1. Does the virtual sensing module need to start from zero and stimate state for any grid?&amp;nbsp;&lt;div&gt;2. Does the virtual sensing module need to be decentralized? Or is it executed on the &quot;cloud&quot; i.e., centralized?&lt;/div&gt;&lt;div&gt;3. Cells can run&amp;nbsp;&amp;nbsp;&lt;span style=&quot;color: rgb(63, 63, 63); background-color: transparent;&quot;&gt;autonomously while&amp;nbsp;&lt;/span&gt;&lt;span style=&quot;color: rgb(63, 63, 63); background-color: transparent;&quot;&gt;&quot;disconnected&quot; from central control. Do they need virtual sensing capabilities? Will that make the virtual sensing module distributed as well?&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0a30a;fontColor=#000000;strokeColor=#BD7000;" parent="1" vertex="1">
-                    <mxGeometry x="1830" y="-400" width="160" height="280" as="geometry"/>
+                <mxCell id="2" value="1. Does the virtual sensing module need to start from zero and stimate state for any grid? &#xa;2. Does the virtual sensing module need to be decentralized? Or is it executed on the &quot;cloud&quot; i.e., centralized?&#xa;3. Cells can run autonomously while &quot;disconnected&quot; from central control. Do they need virtual sensing capabilities? Will that make the virtual sensing module distributed as well?" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0a30a;strokeColor=#BD7000;align=center;verticalAlign=middle;textShadow=0;" parent="1" vertex="1">
+                    <mxGeometry x="-160" y="-200" width="160" height="280" as="geometry"/>
                 </mxCell>
-                <mxCell id="3" value="Several modules talk about &quot;simulating&quot; the effects of the decisions/actions. However, that simulation needs an initial state of the system. Is that initial state of the system provided by virtual sensing? If so, how the uncertainity of that initial state is handled?" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0a30a;fontColor=#000000;strokeColor=#BD7000;" vertex="1" parent="1">
-                    <mxGeometry x="-160" y="320" width="160" height="150" as="geometry"/>
+                <mxCell id="3" value="Several modules talk about &quot;simulating&quot; the effects of the decisions/actions. However, that simulation needs an initial state of the system. Is that initial state of the system provided by virtual sensing? If so, how the uncertainity of that initial state is handled?" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0a30a;fontColor=#000000;strokeColor=#BD7000;" parent="1" vertex="1">
+                    <mxGeometry x="-160" y="590" width="160" height="150" as="geometry"/>
                 </mxCell>
-                <mxCell id="5" value="How do cells define who is the scout-master? What is the scope of &quot;control&quot; of the scout-master?" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0a30a;fontColor=#000000;strokeColor=#BD7000;" vertex="1" parent="1">
-                    <mxGeometry x="-430" y="1000" width="160" height="80" as="geometry"/>
+                <mxCell id="5" value="How do cells define who is the scout-master? What is the scope of &quot;control&quot; of the scout-master?" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0a30a;fontColor=#000000;strokeColor=#BD7000;" parent="1" vertex="1">
+                    <mxGeometry x="-160" y="1430" width="160" height="80" as="geometry"/>
                 </mxCell>
             </root>
         </mxGraphModel>
