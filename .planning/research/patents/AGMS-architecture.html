@@ -34,8 +34,21 @@
   .juan{background:var(--juan-bg);border-left:4px solid var(--juan-line);border-radius:0 8px 8px 0;padding:11px 18px;margin:14px 0;font-size:14.5px;}
   footer{grid-column:1/-1;text-align:center;color:var(--muted);font-size:12.5px;margin-top:24px;}
   figure.diagram-figure{margin:8px 0 0;}
-  figure.diagram-figure img{display:block;max-width:100%;height:auto;border:1px solid var(--line);border-radius:10px;background:#fff;cursor:zoom-in;}
   figure.diagram-figure figcaption{margin-top:8px;font-size:12.5px;color:var(--muted);text-align:center;}
+  .svgv{position:relative;border:1px solid var(--line);border-radius:10px;background:#fff;overflow:hidden;}
+  .svgv-stage{position:relative;width:100%;height:70vh;max-height:780px;overflow:hidden;cursor:grab;touch-action:none;background:#fff;}
+  .svgv-stage.grabbing{cursor:grabbing;}
+  .svgv-pan{position:absolute;top:0;left:0;transform-origin:0 0;will-change:transform;}
+  .svgv-pan svg{display:block;max-width:none;}
+  .svgv-pan a{color:inherit;text-decoration:none;}
+  .svgv-controls{position:absolute;top:10px;right:10px;z-index:3;display:flex;gap:6px;}
+  .svgv-controls button{width:34px;height:34px;padding:0;border:1px solid var(--line);background:rgba(255,255,255,.94);border-radius:8px;font:600 17px/1 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;color:var(--ink);cursor:pointer;box-shadow:0 1px 3px rgba(20,30,45,.12);}
+  .svgv-controls button:hover{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);}
+  .svgv-hint{position:absolute;left:10px;bottom:10px;z-index:3;font-size:11.5px;color:var(--muted);background:rgba(255,255,255,.86);border:1px solid var(--line);border-radius:6px;padding:3px 8px;pointer-events:none;}
+  .svgv:fullscreen{width:100vw;height:100vh;border:0;border-radius:0;}
+  .svgv:fullscreen .svgv-stage{height:100vh;max-height:none;}
+  .svgv:-webkit-full-screen{width:100vw;height:100vh;}
+  .svgv:-webkit-full-screen .svgv-stage{height:100vh;max-height:none;}
 </style>
 </head>
 <body>
@@ -60,10 +73,19 @@
   <main>
 <section class="card" id="diagram">
 <h2 class="sec">AGMS reference architecture</h2>
-<p>The whole system on one page — the self-organizing grid-management platform: perceive (GWM) &rarr; reason (CaCSM) &rarr; orchestrate (Logistician/GWCH) &rarr; deploy autonomous scouts. Click the image to open it full-size (4885&times;4265 px) in a new tab; the study annotations are legible at full zoom.</p>
+<p>The whole system on one page — the self-organizing grid-management platform: perceive (GWM) &rarr; reason (CaCSM) &rarr; orchestrate (Logistician/GWCH) &rarr; deploy autonomous scouts. The diagram below is the live vector: <strong>drag to pan, scroll to zoom</strong>, and <strong>click it for full-screen</strong> — the study annotations stay crisp at any zoom.</p>
 <figure class="diagram-figure">
-<a href="AGMS-architecture.drawio.png" target="_blank" rel="noopener"><img src="AGMS-architecture.drawio.png" alt="AGMS architecture diagram (with annotations)"></a>
-<figcaption>AGMS architecture — reconstructed from the director's six-patent family, with hand-added study annotations. PNG exported from draw.io (faithful colors). Also available: <a href="AGMS-architecture.svg">vector SVG</a>.</figcaption>
+<div class="svgv" id="svgv">
+<div class="svgv-controls">
+<button type="button" data-act="out" title="Zoom out" aria-label="Zoom out">&minus;</button>
+<button type="button" data-act="in" title="Zoom in" aria-label="Zoom in">+</button>
+<button type="button" data-act="reset" title="Reset / fit to view" aria-label="Reset view">&#8634;</button>
+<button type="button" data-act="fs" title="Full screen" aria-label="Full screen">&#9974;</button>
+</div>
+<div class="svgv-stage"><div class="svgv-pan"><!--AGMS_INLINE_SVG--></div></div>
+<span class="svgv-hint">Drag to pan &middot; scroll to zoom &middot; click for full-screen</span>
+</div>
+<figcaption>AGMS architecture — reconstructed from the director's six-patent family, with hand-added study annotations (live vector, faithful colors). <a href="AGMS-architecture.svg" target="_blank" rel="noopener">Open raw SVG</a> &middot; <a href="AGMS-architecture.drawio.png" target="_blank" rel="noopener">high-res PNG</a>.</figcaption>
 </figure>
 </section>
 <section class="card">
@@ -255,5 +277,69 @@
     <footer>Rendered from the Markdown source — content unchanged.</footer>
   </main>
 </div>
+<script>
+(function(){
+  var v=document.getElementById('svgv');
+  if(!v) return;
+  var stage=v.querySelector('.svgv-stage'), pan=v.querySelector('.svgv-pan'), svg=pan.querySelector('svg');
+  if(!svg) return;
+  var natW=parseFloat(svg.getAttribute('width'))||(svg.viewBox&&svg.viewBox.baseVal.width)||2432;
+  var natH=parseFloat(svg.getAttribute('height'))||(svg.viewBox&&svg.viewBox.baseVal.height)||2132;
+  svg.removeAttribute('width'); svg.removeAttribute('height');
+  svg.style.width=natW+'px'; svg.style.height=natH+'px'; svg.style.display='block';
+  var scale=1, tx=0, ty=0, minS=0.1, maxS=14;
+  function apply(){ pan.style.transform='translate('+tx+'px,'+ty+'px) scale('+scale+')'; }
+  function fit(){
+    var r=stage.getBoundingClientRect(); if(!r.width||!r.height) return;
+    var f=Math.min(r.width/natW, r.height/natH);
+    scale=f; minS=f*0.9;
+    tx=(r.width-natW*scale)/2; ty=(r.height-natH*scale)/2; apply();
+  }
+  function clamp(s){ return Math.max(minS, Math.min(maxS, s)); }
+  function zoomAt(cx,cy,fac){
+    var ns=clamp(scale*fac); if(ns===scale) return;
+    tx=cx-(cx-tx)*(ns/scale); ty=cy-(cy-ty)*(ns/scale); scale=ns; apply();
+  }
+  fit();
+  window.addEventListener('resize', fit);
+  stage.addEventListener('wheel', function(e){
+    e.preventDefault();
+    var r=stage.getBoundingClientRect();
+    zoomAt(e.clientX-r.left, e.clientY-r.top, e.deltaY<0?1.2:1/1.2);
+  }, {passive:false});
+  var down=false, moved=false, sx=0, sy=0, ox=0, oy=0;
+  stage.addEventListener('pointerdown', function(e){
+    down=true; moved=false; sx=e.clientX; sy=e.clientY; ox=tx; oy=ty;
+    try{ stage.setPointerCapture(e.pointerId); }catch(_){}
+    stage.classList.add('grabbing');
+  });
+  stage.addEventListener('pointermove', function(e){
+    if(!down) return;
+    var dx=e.clientX-sx, dy=e.clientY-sy;
+    if(Math.abs(dx)>4||Math.abs(dy)>4) moved=true;
+    tx=ox+dx; ty=oy+dy; apply();
+  });
+  stage.addEventListener('pointerup', function(){
+    down=false; stage.classList.remove('grabbing');
+    if(!moved) toggleFs();
+  });
+  function toggleFs(){
+    var fsEl=document.fullscreenElement||document.webkitFullscreenElement;
+    if(fsEl){ (document.exitFullscreen||document.webkitExitFullscreen).call(document); }
+    else { (v.requestFullscreen||v.webkitRequestFullscreen).call(v); }
+  }
+  function onFs(){ setTimeout(fit, 80); }
+  document.addEventListener('fullscreenchange', onFs);
+  document.addEventListener('webkitfullscreenchange', onFs);
+  v.querySelector('.svgv-controls').addEventListener('click', function(e){
+    var b=e.target.closest('button'); if(!b) return;
+    var a=b.getAttribute('data-act'), r=stage.getBoundingClientRect();
+    if(a==='in') zoomAt(r.width/2, r.height/2, 1.35);
+    else if(a==='out') zoomAt(r.width/2, r.height/2, 1/1.35);
+    else if(a==='reset') fit();
+    else if(a==='fs') toggleFs();
+  });
+})();
+</script>
 </body>
 </html>

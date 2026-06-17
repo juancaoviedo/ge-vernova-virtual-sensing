@@ -267,6 +267,21 @@ def build_architecture() -> None:
         _copy_and_rewrite(src, dst, rewrites)
         print(f"  copied+relinked  {src.relative_to(REPO_ROOT)!s:<60s}  ->  architecture/{fname}")
 
+    # Inline the architecture SVG into the walkthrough's vector viewer.
+    # Inlining (vs <img>) is required for crisp pan/zoom at any depth AND for
+    # offline file:// rendering (fetch() is CORS-blocked on file://). The SVG is
+    # self-contained (data-URI images, no network refs); strip the XML prolog so
+    # it embeds as valid inline HTML5 SVG.
+    agms_html = arch_dir / "AGMS-architecture.html"
+    if agms_html.exists():
+        html = agms_html.read_text(encoding="utf-8")
+        if "<!--AGMS_INLINE_SVG-->" in html:
+            svg_text = _ASSET_SRCS["AGMS-architecture.svg"].read_text(encoding="utf-8")
+            svg_inline = svg_text[svg_text.index("<svg"):]
+            html = html.replace("<!--AGMS_INLINE_SVG-->", svg_inline)
+            agms_html.write_text(html, encoding="utf-8")
+            print(f"  inlined SVG      AGMS-architecture.svg ({len(svg_inline)//1024} KB)  ->  architecture/AGMS-architecture.html viewer")
+
     # Copy + rewrite source siblings into architecture/sources/
     for fname, src in _SOURCES_SRCS.items():
         dst = arch_dir / "sources" / fname
