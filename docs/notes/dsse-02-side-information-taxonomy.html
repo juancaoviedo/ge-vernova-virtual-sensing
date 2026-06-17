@@ -1,0 +1,335 @@
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noindex,nofollow">
+        <title>DSSE-02: The Side-Information Taxonomy — Mapping Every Source Into the Estimator</title>
+        <link rel="stylesheet" href="../assets/site.css">
+        <link rel="stylesheet" href="../assets/pygments.css">
+        <script>
+window.MathJax = {
+  tex: { inlineMath: [["\\(","\\)"]], displayMath: [["\\[","\\]"]],
+         processEscapes: true, processEnvironments: true },
+  options: { ignoreHtmlClass: ".*", processHtmlClass: "arithmatex" }
+};
+</script>
+<script defer src="../vendor/mathjax/tex-chtml.js"></script>
+        </head>
+        <body>
+        <div class="wrap">
+          <header class="masthead"><h1>DSSE-02: The Side-Information Taxonomy — Mapping Every Source Into the Estimator</h1></header>
+          <nav class="toc"><h2>Contents</h2><div class="toc">
+<ul>
+<li><a href="#3-min-say-aloud-version">&lt;3-min say-aloud version</a></li>
+<li><a href="#1-the-four-estimator-roles">1. The Four Estimator Roles</a></li>
+<li><a href="#2-the-full-side-information-taxonomy-table">2. The Full Side-Information Taxonomy Table</a></li>
+<li><a href="#3-walking-through-each-source-oral-practice">3. Walking Through Each Source (Oral Practice)</a></li>
+<li><a href="#4-the-honest-covariance-discipline-why-this-is-the-hard-part">4. The Honest Covariance Discipline (Why This Is the Hard Part)</a></li>
+<li><a href="#5-the-four-categories-summary-quick-mental-map">5. The Four Categories Summary (Quick Mental Map)</a></li>
+<li><a href="#bridge-to-juans-work">→ Bridge to Juan's Work</a></li>
+<li><a href="#quick-recall-card-recite-before-the-interview">Quick-Recall Card (Recite Before the Interview)</a></li>
+</ul>
+</div>
+</nav>
+          <main>
+        <h1 id="dsse-02-the-side-information-taxonomy-mapping-every-source-into-the-estimator">DSSE-02: The Side-Information Taxonomy — Mapping Every Source Into the Estimator</h1>
+<p><strong>For:</strong> Oral rehearsal — speak through the taxonomy table top-to-bottom; you must be able to
+explain where each source enters the filter (measurement vs. process model vs. structural
+constraint vs. learned prior) without notes.
+<strong>Purpose:</strong> The organizing framework for distribution virtual sensing. Every source of
+side-information the grid offers can be cast into exactly one of four estimator roles. Knowing
+this taxonomy cold lets you answer "how would you handle [X] data source?" for any source the
+interviewer names — because you can immediately say where it enters and with what covariance.</p>
+<hr />
+<h2 id="3-min-say-aloud-version">&lt;3-min say-aloud version</h2>
+<blockquote>
+<p>"The classic state estimation curriculum treats the measurement set as given and asks how to
+solve the WLS problem. In distribution virtual sensing, <strong>the measurement set is the design
+choice</strong>. Every piece of information the grid offers — a topological constraint, a historical
+load profile, a smart inverter's self-report, a delayed AMI reading, an ML forecast — can be
+cast into the estimator in one of four ways: as a <strong>measurement</strong> <span class="arithmatex">\(z\)</span> with noise covariance <span class="arithmatex">\(R\)</span>,
+as a <strong>process model</strong> input (the <span class="arithmatex">\(F\)</span> or <span class="arithmatex">\(Bu\)</span> term), as a <strong>hard structural constraint</strong> (a
+virtual measurement with <span class="arithmatex">\(R \to 0\)</span>), or as a <strong>learned prior</strong> that calibrates <span class="arithmatex">\(Q\)</span> and <span class="arithmatex">\(R\)</span>
+from the historical archive.</p>
+<p>The taxonomy is the discipline. Network topology defines the <span class="arithmatex">\(H\)</span> matrix — Kirchhoff coupling is
+what lets the feeder-head measurement carry information downstream to unmetered nodes. Known-
+passive nodes contribute zero-injection virtual measurements that are essentially free information.
+Load cyclicality enters as the FASE process model — a year of archived 8 a.m. Tuesdays
+constrains tomorrow's 8 a.m. DER sources (smart inverters, batteries, EVSEs) are simultaneously
+sensors and actuators — they self-report their terminal <span class="arithmatex">\(P\)</span>, <span class="arithmatex">\(Q\)</span>, <span class="arithmatex">\(V\)</span>, giving you measurement
+points the feeder never had before DER penetration.</p>
+<p>The crucial discipline: every source must enter with an <strong>honest covariance</strong>. An overconfident
+pseudo-measurement — an ML forecast whose uncertainty is underestimated — becomes a de-facto
+leverage measurement at scale: a belief the filter trusts blindly, invisible to bad-data
+detection. The taxonomy is not just about where each source enters; it is about assigning the
+right <span class="arithmatex">\(R\)</span> so the filter knows how much to trust it."</p>
+</blockquote>
+<hr />
+<!-- greppable tag: side-information taxonomy -->
+
+<h2 id="1-the-four-estimator-roles">1. The Four Estimator Roles</h2>
+<p>Every information source falls into one of four categories:</p>
+<table>
+<thead>
+<tr>
+<th>Role</th>
+<th>What it is</th>
+<th>How it enters the estimator</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Measurement</strong> <span class="arithmatex">\(z\)</span></td>
+<td>Direct or indirect observation with noise</td>
+<td>Update step: <span class="arithmatex">\(y = z - h(\hat x)\)</span>; weighted by <span class="arithmatex">\(R^{-1}\)</span></td>
+</tr>
+<tr>
+<td><strong>Process model</strong> (<span class="arithmatex">\(F\)</span>, <span class="arithmatex">\(Bu\)</span>, <span class="arithmatex">\(Q\)</span>)</td>
+<td>How state evolves; known input; model uncertainty</td>
+<td>Predict step: <span class="arithmatex">\(\hat x \leftarrow F\hat x + Bu\)</span>; <span class="arithmatex">\(P \leftarrow FPF^\top + Q\)</span></td>
+</tr>
+<tr>
+<td><strong>Structural constraint</strong></td>
+<td>Hard physical fact (zero injection, flow balance)</td>
+<td>Virtual measurement: <span class="arithmatex">\(z = 0\)</span> with <span class="arithmatex">\(R \to 0\)</span> (near-infinite weight)</td>
+</tr>
+<tr>
+<td><strong>Learned prior</strong></td>
+<td>Historical archive indexed by context</td>
+<td>Calibrates <span class="arithmatex">\(Q\)</span>, <span class="arithmatex">\(R\)</span>, <span class="arithmatex">\(Bu\)</span> (the <code>v</code> ramp vector) for each time slot</td>
+</tr>
+</tbody>
+</table>
+<p>Most grid information sources contribute to more than one role across time. The discipline is
+knowing which role is primary and what covariance to assign.</p>
+<hr />
+<h2 id="2-the-full-side-information-taxonomy-table">2. The Full Side-Information Taxonomy Table</h2>
+<table>
+<thead>
+<tr>
+<th>Source</th>
+<th>What it is, physically</th>
+<th>Where it enters the estimator</th>
+<th>Covariance / notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Network topology</strong> (who connects to whom)</td>
+<td>Radial graph of lines and buses</td>
+<td>Defines the structure of <span class="arithmatex">\(H\)</span> — Kirchhoff coupling lets the head SCADA measurement carry information downstream to unmetered dark nodes</td>
+<td>Structural; <span class="arithmatex">\(H\)</span> entries are susceptances / line parameters</td>
+</tr>
+<tr>
+<td><strong>Known injecting vs. passive nodes</strong></td>
+<td>Which buses have DER vs. pure consumers</td>
+<td>Zero-injection nodes → near-zero-<span class="arithmatex">\(R\)</span> <strong>virtual measurements</strong> (<span class="arithmatex">\(z=0\)</span>); passive nodes → load-sign constraint (one-sided prior); DER nodes → injection can reverse</td>
+<td><span class="arithmatex">\(R_{zero\text{-}inj} \to 0\)</span> (hard fact, not a sensor guess)</td>
+</tr>
+<tr>
+<td><strong>Conductor / line parameters, ratings</strong></td>
+<td>Line impedances (resistance, reactance), thermal ratings</td>
+<td>The <em>parameters</em> of <span class="arithmatex">\(h(x)\)</span> and the power-flow model; recovering them (line parameter estimation) shrinks <span class="arithmatex">\(Q\)</span>; also unlocks IEEE 738 / C57.91 asset-health virtual sensors</td>
+<td>Distribution params are fuzzy → LinDistFlow + absorb error into <span class="arithmatex">\(Q\)</span></td>
+</tr>
+<tr>
+<td><strong>Power-flow equations</strong></td>
+<td>Kirchhoff coupling between buses</td>
+<td>The hard constraints <span class="arithmatex">\(h(x)\)</span> tying measured and unmeasured nodes in the update step; what lets one head measurement observe multiple downstream nodes</td>
+<td>Distribution PF is less accurate (unbalanced, high <span class="arithmatex">\(R/X\)</span>) than transmission</td>
+</tr>
+<tr>
+<td><strong>Load cyclicality / repeating profiles</strong></td>
+<td>Diurnal/weekly seasonality in load</td>
+<td><strong>Process model <span class="arithmatex">\(F\)</span>, known input <span class="arithmatex">\(Bu\)</span></strong> (FASE backbone): <span class="arithmatex">\(\hat x \leftarrow \hat x + v\,\Delta t\)</span> where <span class="arithmatex">\(v\)</span> = diurnal ramp vector; a year of 8 a.m. Tuesdays constrains tomorrow's 8 a.m.</td>
+<td><span class="arithmatex">\(Q\)</span> = uncertainty in the forecast; also time-indexed</td>
+</tr>
+<tr>
+<td><strong>Historical predictions + actuals + noise, indexed by time</strong></td>
+<td>The archive of past estimates, measurements, and residuals per time-of-day / season / weather</td>
+<td><strong>Learned, time-varying <span class="arithmatex">\(Q\)</span> and <span class="arithmatex">\(R\)</span></strong>, conditioned on context; calibrated pseudo-measurement covariances</td>
+<td>Source of the Learning Engine calibration requests in AGMS</td>
+</tr>
+<tr>
+<td><strong>Smart meters (AMI)</strong></td>
+<td>Slow (15-min interval avg), dense, delayed</td>
+<td>Low-rate measurement channel; anchors load pseudo-measurements with real energy data; bounds long-term drift</td>
+<td><span class="arithmatex">\(R_{ami}\)</span> large (stale + noisy); apply to the interval it describes, not "now"</td>
+</tr>
+<tr>
+<td><strong>EV chargers</strong></td>
+<td>Real-time, event-driven, large load steps</td>
+<td>High-rate measurement when charging (OCPP / MQTT telemetry); absent between sessions</td>
+<td><span class="arithmatex">\(R_{EV}\)</span> moderate; temporal pattern (evening peak) enters <span class="arithmatex">\(Bu\)</span></td>
+</tr>
+<tr>
+<td><strong>Batteries / smart inverters</strong></td>
+<td>Self-reporting actuators (IEEE 1547 / IEEE 2030.5)</td>
+<td><strong>Sensor + actuator</strong>: inverter knows its own terminal <span class="arithmatex">\(P\)</span>, <span class="arithmatex">\(Q\)</span>, <span class="arithmatex">\(V\)</span>; DER adds measurement points for free; self-report is a direct measurement <span class="arithmatex">\(z = P_{inv}\)</span></td>
+<td><span class="arithmatex">\(R_{inv}\)</span> small (factory-calibrated; direct self-measurement)</td>
+</tr>
+<tr>
+<td><strong>Multi-rate asynchronous arrival</strong></td>
+<td>Different comm frequencies across sources</td>
+<td>Native KF strength — <strong>update on arrival with each source's own <span class="arithmatex">\(R\)</span>; run predict between each arrival</strong></td>
+<td>Not a source itself; a fusion pattern that handles heterogeneous rates</td>
+</tr>
+<tr>
+<td><strong>ML load/PV/DER forecasts</strong></td>
+<td>Learned priors from edge-ML models</td>
+<td>High-quality <strong>pseudo-measurements with calibrated covariance</strong> — Juan's HEMS/Building-Intelligence forecasting work is exactly this</td>
+<td><span class="arithmatex">\(R_{pseudo}\)</span> from forecast error archive; calibrated covariance is the critical discipline</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="3-walking-through-each-source-oral-practice">3. Walking Through Each Source (Oral Practice)</h2>
+<p>Practice saying one sentence per source. Then practice explaining where it enters:</p>
+<p><strong>Network topology:</strong> "The graph defines the <span class="arithmatex">\(H\)</span> matrix. Kirchhoff coupling is how the head flow
+carries information about nodes it doesn't directly observe — the core mechanism of distribution
+virtual sensing."</p>
+<p><strong>Zero-injection constraints:</strong> "If I know a bus is a pure load node with no DER, its net
+injection is near zero at high time resolution. I add a virtual measurement <span class="arithmatex">\(z = 0\)</span> with <span class="arithmatex">\(R \to 0\)</span>.
+That is real information, not a sensor guess, and it is essentially free — no hardware needed."</p>
+<p><strong>Conductor parameters:</strong> "Line impedances parameterize the power-flow model. Fuzzy parameters
+(distribution feeders are less well-characterized than transmission) absorb into larger <span class="arithmatex">\(Q\)</span>, not
+into wrong <span class="arithmatex">\(H\)</span> entries."</p>
+<p><strong>Load cyclicality:</strong> "A year of historical load at 14:30 on weekdays tells me a lot about
+tomorrow's 14:30 load. That enters as the <code>Bu</code> term — the known diurnal ramp in the FASE predict
+step. This is the temporal-prior half of FASE."</p>
+<p><strong>Historical archive:</strong> "The archive lets me condition <span class="arithmatex">\(Q\)</span> and <span class="arithmatex">\(R\)</span> on time-of-day and weather.
+At 8 a.m. on a cold winter Monday, load variance is higher than at 2 a.m. Saturday. The filter
+should know that. AGMS's Learning Engine maintains this conditioned archive."</p>
+<p><strong>AMI:</strong> "Slow, dense, delayed. Its job is to bound long-term drift and to feed the Learning
+Engine recalibration. It must be applied to the interval it describes, not bluntly to 'now'."</p>
+<p><strong>EV chargers:</strong> "Event-driven measurement when connected (OCPP). The temporal pattern — evening
+charging peak — is learnable and enters <span class="arithmatex">\(Bu\)</span>. Between sessions, no measurement, so the uncertainty
+from that bus grows."</p>
+<p><strong>Smart inverters / batteries:</strong> "These are the most valuable new source. They self-report <span class="arithmatex">\(P\)</span>,
+<span class="arithmatex">\(Q\)</span>, <span class="arithmatex">\(V\)</span> at their own terminal — a direct measurement with small <span class="arithmatex">\(R\)</span>. They are simultaneously
+measurement points and actuators. DER penetration adds measurement density for free."</p>
+<p><strong>Multi-rate asynchronous fusion:</strong> "The KF handles this natively. Run the predict step for
+every time gap, apply the update step on each measurement arrival with that source's <span class="arithmatex">\(R\)</span>. No
+synchronization needed."</p>
+<p><strong>ML forecasts:</strong> "My HEMS edge-ML models produce calibrated probabilistic forecasts —
+mean and variance for load and PV. These are pseudo-measurements: <span class="arithmatex">\(z = \hat P_{forecast}\)</span>,
+<span class="arithmatex">\(R_{pseudo} = \sigma_{forecast}^2\)</span>. The calibration of <span class="arithmatex">\(R_{pseudo}\)</span> is the critical discipline."</p>
+<hr />
+<h2 id="4-the-honest-covariance-discipline-why-this-is-the-hard-part">4. The Honest Covariance Discipline (Why This Is the Hard Part)</h2>
+<p>Getting the taxonomy right is necessary but not sufficient. The dangerous failure mode is
+<strong>over-confident pseudo-measurements</strong> — pseudo-measurements whose <span class="arithmatex">\(R\)</span> is set too small.</p>
+<p>When <span class="arithmatex">\(R_{pseudo}\)</span> is too small, the filter trusts the pseudo-measurement blindly. It becomes a
+de-facto leverage measurement: if the ML forecast is wrong, the filter cannot correct itself
+because the fake "certainty" suppresses the Kalman gain for everything else. This is the
+<strong>critical-measurement trap replicated at scale</strong> — except now it's a model belief rather than
+a sensor reading.</p>
+<p>The calibration chain:
+1. Run ML forecasts on historical data; archive predicted value vs. actual.
+2. Estimate the empirical distribution of forecast errors per time slot, season, weather context.
+3. Set <span class="arithmatex">\(R_{pseudo}\)</span> from the empirical variance (not from model confidence scores, which are
+   systematically overconfident).
+4. Update periodically as the model evolves (Learning Engine calibration loop).</p>
+<p><strong>Interview sentence:</strong> "An overconfident pseudo-measurement is the critical-measurement trap at
+scale — the filter trusts it blindly and can't self-correct. Honest calibration of <span class="arithmatex">\(R_{pseudo}\)</span>
+from the empirical forecast-error archive is the most important discipline in pseudo-measurement
+design."</p>
+<hr />
+<h2 id="5-the-four-categories-summary-quick-mental-map">5. The Four Categories Summary (Quick Mental Map)</h2>
+<table>
+<thead>
+<tr>
+<th>Category</th>
+<th>Sources</th>
+<th>Key property</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Structural priors</strong></td>
+<td>Topology, zero-injections, conductor params</td>
+<td>Define <span class="arithmatex">\(H\)</span>; hard constraints; free information from physics</td>
+</tr>
+<tr>
+<td><strong>Temporal priors</strong></td>
+<td>Load cyclicality, historical archive, ML forecasts</td>
+<td>Enter as <code>Bu</code> or pseudo-measurements; the FASE backbone</td>
+</tr>
+<tr>
+<td><strong>Heterogeneous measurements</strong></td>
+<td>Head SCADA, inverter, AMI, EV charger, μPMU</td>
+<td>The direct measurement <span class="arithmatex">\(z\)</span> set; each with its own <span class="arithmatex">\(R\)</span> and rate</td>
+</tr>
+<tr>
+<td><strong>Learned priors</strong></td>
+<td>Historical predictions + actuals + noise archive</td>
+<td>Calibrate <span class="arithmatex">\(Q\)</span>, <span class="arithmatex">\(R\)</span>, <span class="arithmatex">\(v\)</span>; the Learning Engine's input</td>
+</tr>
+</tbody>
+</table>
+<p>This four-category taxonomy is the answer to: "How do you handle distribution under-
+observability?" — you source information across all four categories and fuse it through the
+recursive filter with honest covariances.</p>
+<hr />
+<h2 id="bridge-to-juans-work">→ Bridge to Juan's Work</h2>
+<!-- greppable tag: Bridge to your work -->
+
+<table>
+<thead>
+<tr>
+<th>DSSE taxonomy concept</th>
+<th>Juan's work</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ML load/PV forecasts as calibrated pseudo-measurements</td>
+<td>HEMS / Building Intelligence edge-ML forecasting — produces mean + variance estimates; the calibration discipline (empirical error archive) is already part of my workflow</td>
+</tr>
+<tr>
+<td>SI-MAPPER topology prior</td>
+<td>Ontology graph encodes the graph structure that defines <span class="arithmatex">\(H\)</span> and identifies zero-injection nodes</td>
+</tr>
+<tr>
+<td>Multi-rate asynchronous fusion</td>
+<td>OSED edge runtime handles multiple sensor streams at different rates — the same predict/update pattern</td>
+</tr>
+<tr>
+<td>Historical archive → time-indexed <span class="arithmatex">\(Q\)</span>, <span class="arithmatex">\(R\)</span></td>
+<td>The baseline-consumption analysis across billions of substation data points is the calibration of <span class="arithmatex">\(R\)</span> for the AMI channel at production scale</td>
+</tr>
+</tbody>
+</table>
+<p><strong>One-liner for the interview:</strong> "Every information source the grid offers maps to one of four
+estimator roles: measurement, process-model input, structural constraint, or learned prior. My
+HEMS forecasting is already the temporal-prior role; SI-MAPPER is the structural prior; OSED
+is the multi-rate fusion substrate."</p>
+<hr />
+<h2 id="quick-recall-card-recite-before-the-interview">Quick-Recall Card (Recite Before the Interview)</h2>
+<ol>
+<li><strong>Four roles:</strong> measurement (<span class="arithmatex">\(z\)</span>, <span class="arithmatex">\(R\)</span>); process model (<span class="arithmatex">\(F\)</span>, <span class="arithmatex">\(Bu\)</span>, <span class="arithmatex">\(Q\)</span>); structural constraint (<span class="arithmatex">\(R \to 0\)</span>); learned prior (calibrates <span class="arithmatex">\(Q\)</span>, <span class="arithmatex">\(R\)</span>, <span class="arithmatex">\(v\)</span>).</li>
+<li><strong>Topology:</strong> defines <span class="arithmatex">\(H\)</span> → Kirchhoff coupling → head SCADA informs dark nodes.</li>
+<li><strong>Zero-injection:</strong> near-zero <span class="arithmatex">\(R\)</span> virtual measurement at known-passive nodes — free information.</li>
+<li><strong>Cyclicality:</strong> enters as <code>Bu</code> = <span class="arithmatex">\(v\,\Delta t\)</span> in the FASE predict step — the temporal prior.</li>
+<li><strong>Historical archive:</strong> conditions <span class="arithmatex">\(Q\)</span>, <span class="arithmatex">\(R\)</span> on time-of-day/season/weather — the Learning Engine's input.</li>
+<li><strong>AMI:</strong> slow, dense, delayed; anchors drift; apply to the interval it describes, not "now"; feeds recalibration.</li>
+<li><strong>Smart inverters (IEEE 1547/2030.5):</strong> sensor + actuator; self-report <span class="arithmatex">\(P\)</span>, <span class="arithmatex">\(Q\)</span>, <span class="arithmatex">\(V\)</span>; small <span class="arithmatex">\(R\)</span>; the most valuable new DER telemetry source.</li>
+<li><strong>EV chargers:</strong> event-driven (OCPP/MQTT); temporal pattern enters <span class="arithmatex">\(Bu\)</span>; absent between sessions.</li>
+<li><strong>Multi-rate:</strong> update on arrival with each source's own <span class="arithmatex">\(R\)</span>; predict between arrivals — KF handles natively.</li>
+<li><strong>ML forecasts:</strong> pseudo-measurements; <span class="arithmatex">\(R_{pseudo}\)</span> from empirical error archive, NOT from model confidence; honest calibration = the hard part.</li>
+<li><strong>Honest covariance discipline:</strong> overconfident <span class="arithmatex">\(R_{pseudo}\)</span> → leverage trap at scale → filter goes deaf. Calibrate from the archive.</li>
+<li><strong>Four-category summary:</strong> structural priors + temporal priors + heterogeneous measurements + learned priors.</li>
+</ol>
+<hr />
+<p><em>Sources: Dehghanpour et al. (IEEE Trans. Smart Grid 2019) — DSSE pseudo-measurements, information
+sources; Debs &amp; Larson 1974 (FASE, augmented-load process model); IEEE 1547-2018 / IEEE 2030.5
+(smart inverter self-reporting requirements); Open Charge Point Protocol (OCPP) 2.0 (EV charger
+telemetry); AGMS patent (Director; Learning Engine calibration requests, ORACS Observability,
+Inspector scout); GE Vernova JD R5043890 (virtual sensing, federated, distribution, phase angles,
+smart inverters); KAL-03-fase-augmented-load-feeder-walk.md (worked example of this taxonomy
+in action); 01-RESEARCH.md verified equations.</em></p>
+            <footer><a href="../index.html">&larr; Back to study hub</a></footer>
+          </main>
+        </div>
+        </body>
+        </html>

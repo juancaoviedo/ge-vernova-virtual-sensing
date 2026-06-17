@@ -1,0 +1,341 @@
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noindex,nofollow">
+        <title>DSSE-03: Distribution-Specific Modeling &amp; the Pseudo-Measurement Honesty Problem</title>
+        <link rel="stylesheet" href="../assets/site.css">
+        <link rel="stylesheet" href="../assets/pygments.css">
+        <script>
+window.MathJax = {
+  tex: { inlineMath: [["\\(","\\)"]], displayMath: [["\\[","\\]"]],
+         processEscapes: true, processEnvironments: true },
+  options: { ignoreHtmlClass: ".*", processHtmlClass: "arithmatex" }
+};
+</script>
+<script defer src="../vendor/mathjax/tex-chtml.js"></script>
+        </head>
+        <body>
+        <div class="wrap">
+          <header class="masthead"><h1>DSSE-03: Distribution-Specific Modeling &amp; the Pseudo-Measurement Honesty Problem</h1></header>
+          <nav class="toc"><h2>Contents</h2><div class="toc">
+<ul>
+<li><a href="#3-min-say-aloud-version">&lt;3-min say-aloud version</a></li>
+<li><a href="#1-three-phase-unbalanced-radial-high-rx-why-distribution-is-different">1. Three-Phase Unbalanced, Radial, High R/X — Why Distribution Is Different</a><ul>
+<li><a href="#three-phase-unbalanced">Three-Phase Unbalanced</a></li>
+<li><a href="#high-rx-ratio">High R/X Ratio</a></li>
+<li><a href="#radial-topology">Radial Topology</a></li>
+</ul>
+</li>
+<li><a href="#2-the-branch-current-formulation-baran-kelley">2. The Branch-Current Formulation (Baran-Kelley)</a></li>
+<li><a href="#3-phase-angles-are-hard-in-distribution-pmus-are-the-solution">3. Phase Angles Are Hard in Distribution — μPMUs Are the Solution</a></li>
+<li><a href="#4-pseudo-measurements-restore-solvability-not-information">4. Pseudo-Measurements Restore Solvability, Not Information</a></li>
+<li><a href="#5-salvaging-the-classic-observability-bad-data-machinery-what-still-works">5. Salvaging the Classic Observability / Bad-Data Machinery — What Still Works</a><ul>
+<li><a href="#observability-rank-test-still-useful">Observability Rank Test (Still Useful)</a></li>
+<li><a href="#residual-covariance-still-definable">Residual Covariance (Still Definable)</a></li>
+<li><a href="#why-chi-squared-lnr-mostly-fails-in-distribution">Why Chi-Squared / LNR Mostly Fails in Distribution</a></li>
+<li><a href="#what-actually-works-for-distribution-bad-data-quality-monitoring">What Actually Works for Distribution Bad-Data / Quality Monitoring</a></li>
+</ul>
+</li>
+<li><a href="#6-the-dsse-modeling-choice-decision-tree">6. The DSSE Modeling Choice Decision Tree</a></li>
+<li><a href="#bridge-to-juans-work">→ Bridge to Juan's Work</a></li>
+<li><a href="#quick-recall-card-recite-before-the-interview">Quick-Recall Card (Recite Before the Interview)</a></li>
+</ul>
+</div>
+</nav>
+          <main>
+        <h1 id="dsse-03-distribution-specific-modeling-the-pseudo-measurement-honesty-problem">DSSE-03: Distribution-Specific Modeling &amp; the Pseudo-Measurement Honesty Problem</h1>
+<p><strong>For:</strong> Oral rehearsal — speak the branch-current formulation and the pseudo-measurement
+honesty argument aloud; these are the modeling decisions that separate distribution SE from
+a textbook WLS exercise.
+<strong>Purpose:</strong> Cover the three distribution-specific modeling choices (three-phase unbalanced /
+radial / high R/X; branch-current formulation; LinDistFlow) and the pseudo-measurement
+honesty problem that is the make-or-break for whether the DSSE is trustworthy in practice.
+Salvage the observability rank test and chi-squared/LNR machinery — but state plainly why
+they largely fail in distribution and what actually replaces them.</p>
+<hr />
+<h2 id="3-min-say-aloud-version">&lt;3-min say-aloud version</h2>
+<blockquote>
+<p>"Distribution grids are structurally different from transmission in three ways that matter for
+state estimation. First, feeders are <strong>radial</strong> — no mesh, no loops, so you have a tree structure
+rather than a cycle-rich network. Second, lines are <strong>unbalanced</strong> (three phases with different
+loads on each) and have <strong>high R/X ratios</strong> — resistance is comparable to reactance, so the
+lossless and small-angle approximations that make DC power flow work on transmission are badly
+wrong on distribution. Third, <strong>phase angles across short feeders are tiny</strong> — fractions of a
+degree — so inferring angles from power flow is ill-conditioned. μPMUs / D-PMUs that measure
+angle directly with GPS synchronization are the solution, and they appear explicitly in the
+job description.</p>
+<p>For the power flow model, the <strong>branch-current formulation</strong> (Baran and Kelley) is better
+conditioned for radial feeders than the bus-injection formulation: work in branch currents along
+the tree rather than bus voltages, exploit the radial structure directly. Voltage recovery uses
+<strong>LinDistFlow</strong> — the linear branch-flow approximation that works well for radial, low-voltage
+feeders with high R/X.</p>
+<p>The critical practical issue is pseudo-measurements. Pseudo-measurements are what restore
+<em>solvability</em> to the under-determined DSSE — without them the gain matrix is singular. But
+restoring solvability is NOT the same as restoring information. A pseudo-measurement is a guess.
+The whole ballgame is honest, calibrated uncertainty on that guess. Assign a covariance that is
+too small and the pseudo-measurement becomes a leverage measurement at scale — the filter trusts
+it blindly, cannot self-correct, and silently produces wrong estimates. The residual is near-zero
+not because the estimate is right but because the filter has been told to believe it. This is the
+chi-squared blind spot generalized from a single sensor to an entire load model."</p>
+</blockquote>
+<hr />
+<!-- greppable tag: branch current Baran Kelley -->
+
+<h2 id="1-three-phase-unbalanced-radial-high-rx-why-distribution-is-different">1. Three-Phase Unbalanced, Radial, High R/X — Why Distribution Is Different</h2>
+<h3 id="three-phase-unbalanced">Three-Phase Unbalanced</h3>
+<p>Transmission networks are balanced (or nearly so) — three phases carry equal loads, so single-
+phase equivalent models work well. Distribution feeders are <strong>intentionally unbalanced</strong>: single-
+phase laterals, asymmetric loading (residential loads connect to one phase), unequal conductor
+geometries. A three-phase distribution DSSE must track per-phase voltage and injection separately:</p>
+<div class="arithmatex">\[x = [V_{a,1}, V_{b,1}, V_{c,1}, \theta_{a,1}, \theta_{b,1}, \theta_{c,1}, \ldots]^\top\]</div>
+<p>State dimension: <span class="arithmatex">\(6n\)</span> for <span class="arithmatex">\(n\)</span> three-phase buses. Even more states; even more under-determined.</p>
+<p><strong>Interview awareness:</strong> If the interviewer asks about three-phase modeling, state: "Distribution
+is inherently unbalanced and requires per-phase tracking. Single-phase equivalents lose the
+inter-phase coupling that matters for voltage unbalance monitoring — a JD-mentioned concern."</p>
+<h3 id="high-rx-ratio">High R/X Ratio</h3>
+<p>Transmission lines: <span class="arithmatex">\(r \ll x\)</span> (reactance dominates). The DC power-flow approximation assumes
+<span class="arithmatex">\(r = 0\)</span>; losses are negligible. Works well on transmission.</p>
+<p>Distribution lines: <span class="arithmatex">\(r \approx x\)</span> or <span class="arithmatex">\(r &gt; x\)</span> (resistance is comparable to or dominates reactance).
+The DC approximation fails:
+- Real-power flow depends significantly on both resistance and angle
+- Reactive power contributes substantially to voltage drops
+- The lossless-line assumption produces large voltage-estimation errors</p>
+<p><strong>Consequence for DSSE:</strong> Cannot use <span class="arithmatex">\(P = B\theta\)</span> (the susceptance-Laplacian model). Must use
+a formulation that handles resistance explicitly. The <strong>branch-current</strong> formulation and
+<strong>LinDistFlow</strong> are the standard choices.</p>
+<h3 id="radial-topology">Radial Topology</h3>
+<p>Distribution feeders are radial (tree-structured, no loops) for operational simplicity and fault
+isolation. This is a structural property that can be exploited:
+- The radial tree structure means there is a unique path from the substation to each node
+- Branch currents flow one-directionally (toward the loads) in normal operation (reversed only
+  by DER overvoltage events)
+- The branch-current Baran-Kelley equations are simpler to set up than the bus-injection
+  formulation for trees</p>
+<hr />
+<h2 id="2-the-branch-current-formulation-baran-kelley">2. The Branch-Current Formulation (Baran-Kelley)</h2>
+<p>For a radial feeder, work in <strong>branch currents</strong> <span class="arithmatex">\(I_{branch}\)</span> along the tree rather than bus
+voltages <span class="arithmatex">\(V\)</span>. The advantage: the radial structure means each branch current is uniquely
+determined by the downstream load sum (no Kirchhoff-matrix inversion needed). The formulation
+is better conditioned numerically for distribution.</p>
+<p><strong>The LinDistFlow model (simplified branch-flow for radial feeders):</strong></p>
+<p>For a branch from bus <span class="arithmatex">\(i\)</span> to bus <span class="arithmatex">\(j\)</span> with resistance <span class="arithmatex">\(r_{ij}\)</span> and reactance <span class="arithmatex">\(x_{ij}\)</span>, carrying
+real power <span class="arithmatex">\(P_{ij}\)</span> and reactive power <span class="arithmatex">\(Q_{ij}\)</span>:</p>
+<div class="arithmatex">\[V_j^2 \approx V_i^2 - 2(r_{ij}\,P_{ij} + x_{ij}\,Q_{ij})\]</div>
+<p>Linearizing around a flat voltage profile (<span class="arithmatex">\(V \approx 1.0\)</span> pu, <span class="arithmatex">\(V^2 \approx 2V - 1\)</span>):</p>
+<div class="arithmatex">\[V_j \approx V_i - r_{ij}\,P_{ij} - x_{ij}\,Q_{ij}\]</div>
+<p>This is <strong>LinDistFlow</strong> — a linear relationship between bus voltages and branch power flows,
+holding for radial, low-voltage feeders where the nonlinear terms in <span class="arithmatex">\(V^2\)</span> are small. It is
+the distribution analog of DC power flow, but it retains resistance (crucial for high-R/X feeders).</p>
+<p><strong>Why this matters for DSSE:</strong> LinDistFlow gives you a <em>linear</em> measurement model <span class="arithmatex">\(h(x)\)</span> for
+the voltage-to-injection relationship. It allows a Kalman / FASE update step without EKF
+Jacobian computation (the model is already linear) — trading some accuracy for tractability.
+Model error from the linearization absorbs into a larger <span class="arithmatex">\(Q\)</span> in the process model.</p>
+<p><strong>Interview sentence:</strong> "LinDistFlow is the distribution analog of DC power flow — it's linear,
+accounts for resistance (unlike DC power flow), and works well on radial feeders. Modeling error
+from the linearization absorbs into <span class="arithmatex">\(Q\)</span>, not into wrong <span class="arithmatex">\(H\)</span> entries."</p>
+<hr />
+<!-- greppable tag: microPMU angle -->
+
+<h2 id="3-phase-angles-are-hard-in-distribution-pmus-are-the-solution">3. Phase Angles Are Hard in Distribution — μPMUs Are the Solution</h2>
+<p>In transmission, voltage angles span several degrees across a long line (<span class="arithmatex">\(\theta_1 - \theta_2 \approx\)</span>
+5–10°). The DC power-flow approximation gives small-angle sine <span class="arithmatex">\(\approx\)</span> argument — a good
+approximation.</p>
+<p>In distribution, the angle difference across a short, low-voltage feeder is tiny:
+<span class="arithmatex">\(\theta_1 - \theta_2 \approx 0.01\)</span>–0.1° in many cases. The consequences:</p>
+<ol>
+<li><strong>Ill-conditioned angle estimation from power flow.</strong> A 1% error in a measured power flow
+   can produce a huge relative error in the inferred angle. The angle sensitivity <span class="arithmatex">\(\partial P / \partial \theta\)</span>
+   is high, so <span class="arithmatex">\(\partial \theta / \partial P\)</span> is tiny — small power measurement noise translates to
+   large angle uncertainty.</li>
+<li><strong>Reactive power / voltage coupling is dominant.</strong> On high-R/X feeders, <span class="arithmatex">\(V\)</span> drops are driven
+   more by <span class="arithmatex">\(Q\)</span> flows than by angle differences. Angle inference from voltage magnitudes is nearly
+   impossible without angle measurements.</li>
+</ol>
+<p><strong>μPMU / D-PMU solution:</strong> Micro-Phasor Measurement Units deployed at distribution substations
+and key feeder nodes measure <strong>voltage phasor magnitude AND angle directly</strong>, GPS-synchronized to
+sub-microsecond accuracy. IEEE C37.118 protocol, adapted for distribution (D-PMU).</p>
+<p>With μPMU measurements:
+- Angles become direct observations <span class="arithmatex">\(z = \theta\)</span> rather than inferred quantities
+- The ill-conditioning of angle estimation disappears
+- Observability of the feeder is dramatically improved even with sparse μPMU placement</p>
+<p><strong>Why this is in the JD:</strong> "Phase angles" appears explicitly in the GE Vernova JD. The reason is
+that distribution angle estimation is the hard problem, and μPMUs are the emerging solution —
+understanding this positions you as distribution-aware, not just transmission-aware.</p>
+<p><strong>Interview sentence:</strong> "Phase angles across a short distribution feeder are tiny — fractions of
+a degree — so inferring them from power flow is ill-conditioned. μPMUs measure angle directly
+with GPS synchronization, which is why they appear in the JD as the key new sensing technology
+for distribution observability."</p>
+<hr />
+<!-- greppable tag: pseudo-measurement honesty -->
+
+<h2 id="4-pseudo-measurements-restore-solvability-not-information">4. Pseudo-Measurements Restore Solvability, Not Information</h2>
+<p><strong>What pseudo-measurements are:</strong> When <span class="arithmatex">\(m \ll n\)</span> and <span class="arithmatex">\(G\)</span> is singular, you cannot solve the DSSE.
+You inject <strong>pseudo-measurements</strong> — values for state variables derived not from sensors but from
+load models, historical profiles, or ML forecasts — to make the system nominally over-determined.
+The most common pseudo-measurement is a load estimate: "bus 42 is a residential node, typical
+load at this time is 8 kW, uncertainty ±5 kW."</p>
+<p><strong>The solvability/information distinction:</strong></p>
+<blockquote>
+<p>Pseudo-measurements restore SOLVABILITY, not INFORMATION.</p>
+</blockquote>
+<p>Making the gain matrix <span class="arithmatex">\(G\)</span> full-rank via pseudo-measurements gives you a solution. It does NOT
+give you ground-truth measurements. The solution is only as good as the pseudo-measurement
+model — and that model is a guess, calibrated from historical data, subject to errors that no
+sensor can detect in real time.</p>
+<p><strong>The honest covariance is everything.</strong> If you set <span class="arithmatex">\(R_{pseudo}\)</span> too small:
+- The filter trusts the pseudo-measurement as if it were a direct sensor
+- No measurement can contradict it (Kalman gain for real measurements shrinks)
+- The filter produces a smooth, internally consistent estimate that is wrong in a systematic way
+- Bad pseudo-measurements produce no innovation residual — they are invisible to chi-squared</p>
+<p>This is the <strong>critical-measurement trap generalized to load models</strong>: one overconfident model
+corrupting the entire feeder estimate, invisible to detection, because it has been assigned
+near-zero <span class="arithmatex">\(R\)</span>.</p>
+<p><strong>The correct calibration chain:</strong>
+1. Run the load model on historical data; compare predicted to measured (from AMI when available)
+2. Estimate empirical forecast-error distribution per time-slot, season, weather
+3. Set <span class="arithmatex">\(R_{pseudo}\)</span> to the empirical variance (not the model's self-reported confidence)
+4. Update as model evolves (Learning Engine calibration request in AGMS)</p>
+<p><strong>Interview sentence:</strong> "Pseudo-measurements restore solvability, not information. An overconfident
+pseudo-measurement — too small <span class="arithmatex">\(R_{pseudo}\)</span> — becomes a leverage measurement at scale: the filter
+trusts it blindly, and a systematic model error is invisible to chi-squared detection. Honest
+calibration of <span class="arithmatex">\(R_{pseudo}\)</span> from the empirical forecast-error archive is the most important
+discipline in distribution DSSE design."</p>
+<hr />
+<h2 id="5-salvaging-the-classic-observability-bad-data-machinery-what-still-works">5. Salvaging the Classic Observability / Bad-Data Machinery — What Still Works</h2>
+<p>The observability rank test and residual-based bad-data detection machinery from classical SE are
+not useless in distribution — they need to be applied appropriately with awareness of their limits.</p>
+<h3 id="observability-rank-test-still-useful">Observability Rank Test (Still Useful)</h3>
+<p>The condition <span class="arithmatex">\(\text{rank}(H) = n\)</span> (or equivalently, <span class="arithmatex">\(G = H^\top W H\)</span> nonsingular) remains the
+definition of observability. In DSSE:</p>
+<ul>
+<li>Use it to <strong>assess before running</strong> whether the augmented measurement set (real sensors +
+  pseudo-measurements + zero-injections) is nominally full-rank</li>
+<li>Identify which nodes are still unobservable even with pseudo-measurements</li>
+<li>Guide μPMU / sensor placement to achieve full observability</li>
+</ul>
+<div class="arithmatex">\[\text{Observable (nominally)} \iff \text{rank}(H) = n\]</div>
+<p>In Python: <code>numpy.linalg.matrix_rank(H) == n</code>. Note: with pseudo-measurements padded in, this
+will often be true by construction — but "nominally observable" and "well-observed" are different
+things. <span class="arithmatex">\(\text{rank}(H) = n\)</span> with <span class="arithmatex">\(H\)</span> rows from highly uncertain pseudo-measurements gives poor
+estimates despite the rank condition passing.</p>
+<h3 id="residual-covariance-still-definable">Residual Covariance (Still Definable)</h3>
+<div class="arithmatex">\[\Omega = R - H\,G^{-1}\,H^\top\]</div>
+<p>The diagonal <span class="arithmatex">\(\Omega_{ii}\)</span> is the expected residual variance for measurement <span class="arithmatex">\(i\)</span>. The
+normalized residual <span class="arithmatex">\(r_i^N = |r_i| / \sqrt{\Omega_{ii}}\)</span> is still formally definable.</p>
+<h3 id="why-chi-squared-lnr-mostly-fails-in-distribution">Why Chi-Squared / LNR Mostly Fails in Distribution</h3>
+<ol>
+<li><strong>No real redundancy.</strong> With real sensors at <span class="arithmatex">\(m &lt; n\)</span>, there are no degrees of freedom. The
+   chi-squared test requires <span class="arithmatex">\(m - n &gt; 0\)</span>.</li>
+<li><strong>Pseudo-measurements are not independent sensors.</strong> Padding with pseudo-measurements creates
+   apparent redundancy, but a wrong pseudo-measurement is a biased prior, not a random measurement
+   error. Chi-squared tests for random Gaussian errors — systematic model bias evades it.</li>
+<li><strong>Near-zero residuals by design.</strong> Leverage pseudo-measurements have near-zero residuals when
+   the filter commits to them. A systematically wrong load model looks consistent.</li>
+</ol>
+<h3 id="what-actually-works-for-distribution-bad-data-quality-monitoring">What Actually Works for Distribution Bad-Data / Quality Monitoring</h3>
+<table>
+<thead>
+<tr>
+<th>Technique</th>
+<th>What it detects</th>
+<th>When to use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Innovation / NIS monitoring over time</strong> (<span class="arithmatex">\(y_k^\top S_k^{-1} y_k \sim \chi^2(m_k)\)</span>)</td>
+<td>Filter diverging (model wrong, sensor failed, topology changed)</td>
+<td>Continuously; sustained NIS &gt; threshold = problem</td>
+</tr>
+<tr>
+<td><strong>Cross-source consistency check</strong></td>
+<td>AMI vs. pseudo-measurement vs. inverter tell conflicting stories</td>
+<td>When AMI arrives; compare to filter prediction at that interval</td>
+</tr>
+<tr>
+<td><strong>Prediction-error analysis</strong></td>
+<td>ML forecasts consistently off in one direction</td>
+<td>Offline; feeds Learning Engine recalibration</td>
+</tr>
+<tr>
+<td><strong>Topology change detection</strong></td>
+<td>Sudden jump in innovation after feeder reconfiguration</td>
+<td>Monitor for NIS spikes; cross-reference with switching events</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Interview sentence:</strong> "Chi-squared bad-data detection relies on redundancy that distribution
+doesn't have. What replaces it is NIS monitoring over time — if the sequential innovation is not
+white and zero-mean, the model is wrong or a sensor failed — plus cross-source consistency when
+multiple sources cover the same interval."</p>
+<hr />
+<h2 id="6-the-dsse-modeling-choice-decision-tree">6. The DSSE Modeling Choice Decision Tree</h2>
+<p>When setting up a distribution DSSE, the key modeling decisions in order:</p>
+<ol>
+<li><strong>Single-phase equivalent or three-phase?</strong> → Three-phase for voltage unbalance monitoring;
+   single-phase adequate for aggregate load estimation.</li>
+<li><strong>Bus-injection (WLS) or branch-current (Baran-Kelley)?</strong> → Branch-current for radial feeders;
+   better conditioned, exploits tree structure.</li>
+<li><strong>Full nonlinear power flow (EKF) or LinDistFlow (linear KF)?</strong> → LinDistFlow for tractability
+   on radial feeders; model error absorbs into <span class="arithmatex">\(Q\)</span>.</li>
+<li><strong>How many pseudo-measurements needed?</strong> → Enough to nominally satisfy <span class="arithmatex">\(\text{rank}(H) = n\)</span>;
+   prioritize real sensors and zero-injections first; fill with ML pseudo-measurements last.</li>
+<li><strong>How are <span class="arithmatex">\(R_{pseudo}\)</span> set?</strong> → From empirical forecast-error archive, never from model self-
+   confidence scores.</li>
+<li><strong>μPMU placement?</strong> → At feeder head and key junctions to anchor angle estimates; use
+   observability analysis to identify highest-leverage placement.</li>
+</ol>
+<hr />
+<h2 id="bridge-to-juans-work">→ Bridge to Juan's Work</h2>
+<!-- greppable tag: Bridge to your work -->
+
+<table>
+<thead>
+<tr>
+<th>DSSE-03 concept</th>
+<th>Juan's work</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>LinDistFlow linear model</td>
+<td>OSED uses linear RC thermal model — same tradeoff: linear approximation, absorb model error into noise covariance, tractable Kalman</td>
+</tr>
+<tr>
+<td>Pseudo-measurement calibration from error archive</td>
+<td>HEMS ML forecasting: I archive prediction vs. actual, estimate empirical forecast error distribution, and use it to set uncertainty in downstream models — exactly the <span class="arithmatex">\(R_{pseudo}\)</span> calibration chain</td>
+</tr>
+<tr>
+<td>Innovation / NIS monitoring for bad-data</td>
+<td>My baseline-consumption error analysis: I monitored residuals across billions of substation data points to detect corrupted readings — the same NIS-over-time discipline at production scale</td>
+</tr>
+<tr>
+<td>Three-phase unbalance awareness</td>
+<td>Not directly built, but SI-MAPPER's per-device ontology graph can represent per-phase topology — the structural prior extends naturally to three-phase</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="quick-recall-card-recite-before-the-interview">Quick-Recall Card (Recite Before the Interview)</h2>
+<ol>
+<li><strong>Three-phase unbalanced:</strong> per-phase tracking; <span class="arithmatex">\(6n\)</span> states; single-phase equivalents lose inter-phase coupling.</li>
+<li><strong>High R/X:</strong> DC power flow fails (assumes <span class="arithmatex">\(r=0\)</span>); use branch-current (Baran-Kelley) or LinDistFlow.</li>
+<li><strong>Radial topology:</strong> tree structure; branch-current formulation exploits it; better conditioned than bus-injection for distribution.</li>
+<li><strong>LinDistFlow:</strong> <span class="arithmatex">\(V_j \approx V_i - r_{ij}P_{ij} - x_{ij}Q_{ij}\)</span>; linear; retains resistance; model error → larger <span class="arithmatex">\(Q\)</span>.</li>
+<li><strong>Phase angles in distribution:</strong> tiny (fractions of a degree across short feeders); ill-conditioned to infer from power flow; μPMU / D-PMU measure angle directly with GPS — the key JD-mentioned sensing technology.</li>
+<li><strong>Pseudo-measurements:</strong> restore solvability, NOT information. The guess is not a measurement.</li>
+<li><strong>Honest <span class="arithmatex">\(R_{pseudo}\)</span>:</strong> from empirical forecast-error archive; overconfident <span class="arithmatex">\(R_{pseudo}\)</span> → leverage trap at scale → filter goes deaf to real measurements.</li>
+<li><strong>Observability rank test:</strong> <span class="arithmatex">\(\text{rank}(H) = n\)</span> with pseudo-measurements padded ≠ well-observed. Use it for sensor placement guidance.</li>
+<li><strong>Residual covariance:</strong> <span class="arithmatex">\(\Omega = R - HG^{-1}H^\top\)</span>; LNR = <span class="arithmatex">\(|r_i|/\sqrt{\Omega_{ii}}\)</span>; formally definable but leverage residuals are near-zero even when wrong.</li>
+<li><strong>Chi-squared / LNR in distribution:</strong> mostly fails — no redundancy; pseudo-measurement bias evades Gaussian residual tests.</li>
+<li><strong>What works:</strong> NIS monitoring over time + cross-source consistency checks + offline prediction-error analysis feeding Learning Engine.</li>
+</ol>
+<hr />
+<p><em>Sources: Baran &amp; Kelley, "Network reconfiguration in distribution systems for loss reduction and load balancing" (IEEE Trans. Power Delivery, 1989) — branch-current formulation and LinDistFlow; Kersting, "Distribution System Modeling and Analysis" (2012) — three-phase distribution modeling, high R/X; Monticelli, "State Estimation" (1999) — observability rank test, residual covariance; Abur &amp; Expósito (2004) — LNR, leverage measurements; Von Meier et al., "Precision micro-synchrophasors for distribution systems" (IEEE Trans. Smart Grid, 2017) — μPMU / D-PMU; Dehghanpour et al. (IEEE Trans. Smart Grid, 2019) — pseudo-measurement methods; AGMS patent (Director; Learning Engine, ORACS Observability); GE Vernova JD R5043890 (phase angles, virtual sensing); 01-RESEARCH.md verified equations.</em></p>
+            <footer><a href="../index.html">&larr; Back to study hub</a></footer>
+          </main>
+        </div>
+        </body>
+        </html>

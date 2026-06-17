@@ -1,0 +1,284 @@
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noindex,nofollow">
+        <title>KAL-01: Virtual Sensing &amp; the Kalman Filter as a Fusion Engine</title>
+        <link rel="stylesheet" href="../assets/site.css">
+        <link rel="stylesheet" href="../assets/pygments.css">
+        <script>
+window.MathJax = {
+  tex: { inlineMath: [["\\(","\\)"]], displayMath: [["\\[","\\]"]],
+         processEscapes: true, processEnvironments: true },
+  options: { ignoreHtmlClass: ".*", processHtmlClass: "arithmatex" }
+};
+</script>
+<script defer src="../vendor/mathjax/tex-chtml.js"></script>
+        </head>
+        <body>
+        <div class="wrap">
+          <header class="masthead"><h1>KAL-01: Virtual Sensing &amp; the Kalman Filter as a Fusion Engine</h1></header>
+          <nav class="toc"><h2>Contents</h2><div class="toc">
+<ul>
+<li><a href="#3-min-say-aloud-version">&lt;3-min say-aloud version</a></li>
+<li><a href="#1-the-central-reframe-filter-as-vessel-information-as-the-job">1. The Central Reframe — Filter as Vessel, Information as the Job</a></li>
+<li><a href="#2-transmission-redundancy-from-space-vs-distribution-under-observability">2. Transmission (Redundancy from Space) vs. Distribution (Under-Observability)</a><ul>
+<li><a href="#transmission-the-happy-case">Transmission: the happy case</a></li>
+<li><a href="#distribution-the-hard-case-the-roles-actual-domain">Distribution: the hard case (the role's actual domain)</a></li>
+</ul>
+</li>
+<li><a href="#3-the-information-budget-mental-model">3. The Information-Budget Mental Model</a></li>
+<li><a href="#4-deliverable-estimate-calibrated-covariance-oracs-observability-index">4. Deliverable = Estimate + Calibrated Covariance = ORACS Observability Index</a></li>
+<li><a href="#5-bridges-to-juans-work">5. Bridges to Juan's Work</a></li>
+<li><a href="#6-the-reframe-in-three-sentences-use-to-open-any-answer">6. The Reframe in Three Sentences (Use to Open Any Answer)</a></li>
+<li><a href="#quick-recall-card-recite-before-the-interview">Quick-Recall Card (Recite Before the Interview)</a></li>
+</ul>
+</div>
+</nav>
+          <main>
+        <h1 id="kal-01-virtual-sensing-the-kalman-filter-as-a-fusion-engine">KAL-01: Virtual Sensing &amp; the Kalman Filter as a Fusion Engine</h1>
+<p><strong>For:</strong> Oral rehearsal — speak each section aloud before the interview.
+<strong>Purpose:</strong> Establish <em>why</em> the Kalman filter exists in this role. The filter is not the point;
+the hard, valuable problem is <strong>manufacturing observability for under-measured distribution nodes</strong>
+by finding and fusing every available source of side-information. State estimation is reframed as
+an <strong>information-sourcing-and-fusion problem</strong>.</p>
+<hr />
+<h2 id="3-min-say-aloud-version">&lt;3-min say-aloud version</h2>
+<blockquote>
+<p>"Virtual sensing is the job of manufacturing a state estimate at a node where you have no direct
+sensor — and crucially, delivering that estimate <em>with a calibrated uncertainty</em>. The Kalman filter
+is the vessel you pour information into; the real engineering problem is sourcing the information
+in the first place.</p>
+<p>Transmission state estimation works because redundancy comes from <strong>space</strong>: you have more
+measurements than states, the Jacobian has full column rank, WLS converges, and chi-squared
+bad-data detection gives you a pass/fail. Distribution is the opposite: hundreds to thousands of
+nodes, but real-time telemetry might be just the feeder head plus a handful of inverters and
+delayed AMI — you are severely under-determined. The gain matrix <span class="arithmatex">\(G = H^\top W H\)</span> is <strong>singular</strong>;
+there is no unique WLS solution. Classical snapshot SE cannot even start.</p>
+<p>So the job shifts: instead of batch-solving a redundant measurement soup, you <em>accumulate</em> every
+scrap of information the grid offers — topology coupling, zero-injection constraints, forecasts,
+ML priors, smart-inverter self-reports, delayed AMI — and you fuse them through a <strong>recursive
+filter</strong> that borrows information across time as well as space. The prior from two minutes ago is
+itself an information source; so is the physics model; so is the Kirchhoff constraint that ties
+an unmetered node to its metered neighbors.</p>
+<p>The deliverable is not just a number but a <strong>posterior covariance</strong> — and that covariance is the
+ORACS Observability index in the AGMS architecture. It gates every downstream decision. When
+observability degrades — comms drops, a sensor fails — the covariance inflates, and AGMS sees
+it immediately. Because the filter is recursive and local, it keeps running <strong>in island mode when
+the WAN is down</strong>. That is the resilience bet the AGMS Inspector-scout architecture is built on,
+and it falls out of the filter's structure itself."</p>
+</blockquote>
+<hr />
+<!-- greppable tag: virtual sensing reframe -->
+
+<h2 id="1-the-central-reframe-filter-as-vessel-information-as-the-job">1. The Central Reframe — Filter as Vessel, Information as the Job</h2>
+<p>The standard ML/controls framing of the Kalman filter emphasizes the algorithm: predict,
+innovate, update. That framing is correct but misleading for this role. Here the filter is the
+<em>easy part</em>. The hard engineering problem is:</p>
+<p><strong>How do you manufacture enough information to make an under-observed distribution node
+estimable in the first place?</strong></p>
+<p>Every source of side-information — network topology, zero-injection constraints, diurnal load
+profiles, ML forecasts, smart-inverter telemetry, delayed AMI, physical line parameters — is a
+piece of observability. The filter fuses them by weighting each by its inverse covariance. Your
+job as a virtual-sensing engineer is to find, model, and honestly characterize <em>every one of
+those sources</em>, then hand them to the filter in the right form.</p>
+<p><strong>Interview sentence:</strong> "I think of the Kalman filter as the accounting engine; the real work is
+auditing every information source the grid offers, assigning it an honest covariance, and casting
+it as either a measurement, a process prior, or a structural constraint."</p>
+<hr />
+<!-- greppable tag: transmission vs distribution observability -->
+
+<h2 id="2-transmission-redundancy-from-space-vs-distribution-under-observability">2. Transmission (Redundancy from Space) vs. Distribution (Under-Observability)</h2>
+<p>Understanding this contrast precisely is what separates a transmission-SE practitioner from a
+distribution virtual-sensing engineer. The role is the latter.</p>
+<h3 id="transmission-the-happy-case">Transmission: the happy case</h3>
+<p>A large transmission network is instrumented with SCADA meters, PMUs, and voltage sensors. The
+measurement count <span class="arithmatex">\(m\)</span> <strong>exceeds</strong> the state count <span class="arithmatex">\(n\)</span>:</p>
+<div class="arithmatex">\[m &gt; n \quad\Longrightarrow\quad G = H^\top W H \text{ is full-rank and invertible}\]</div>
+<p>The WLS objective has a unique minimum:</p>
+<div class="arithmatex">\[J(x) = [z - h(x)]^\top W\,[z - h(x)], \qquad W = R^{-1}\]</div>
+<p>Gauss-Newton iteration (linearize <span class="arithmatex">\(H\)</span>, form <span class="arithmatex">\(G\)</span>, solve <span class="arithmatex">\(\Delta x = G^{-1} H^\top W [z - h(\hat x)]\)</span>,
+update <span class="arithmatex">\(\hat x\)</span>) converges in 2–4 iterations. After convergence, the weighted residual cost
+<span class="arithmatex">\(J(\hat x) \sim \chi^2(m-n)\)</span>, giving a clean bad-data detection test, and the largest-normalized-residual
+(LNR) test <span class="arithmatex">\(r_i^N = |r_i|/\sqrt{\Omega_{ii}}\)</span> identifies the culprit.</p>
+<p><strong>The critical-measurement trap (awareness):</strong> a leverage measurement at a sparsely instrumented
+bus has near-zero normalized residual even when corrupted — the estimator has no independent
+reading to contradict it. This is the main failure mode of chi-squared bad-data detection. But on
+a well-instrumented transmission network, leverage measurements are the exception.</p>
+<h3 id="distribution-the-hard-case-the-roles-actual-domain">Distribution: the hard case (the role's actual domain)</h3>
+<p>A distribution feeder has hundreds to thousands of nodes. Real-time telemetry might be:
+- One feeder-head SCADA flow (fast)
+- A handful of smart-inverter self-reports (fast but sparse)
+- AMI reads at 15-minute intervals, delayed by minutes-to-hours</p>
+<p>That gives <span class="arithmatex">\(m \ll n\)</span>. The gain matrix <span class="arithmatex">\(G = H^\top W H\)</span> is <strong>rank-deficient / singular</strong>. WLS has no
+unique solution. The chi-squared test requires <span class="arithmatex">\((m - n) &gt; 0\)</span> degrees of freedom — there are none.
+<strong>Bad-data detection mostly fails because almost every real measurement is critical</strong> — the
+leverage/critical-measurement trap is the <em>normal condition</em>, not an edge case.</p>
+<table>
+<thead>
+<tr>
+<th>Dimension</th>
+<th>Transmission</th>
+<th>Distribution</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Measurement count</td>
+<td><span class="arithmatex">\(m &gt; n\)</span> (over-determined)</td>
+<td><span class="arithmatex">\(m \ll n\)</span> (under-determined)</td>
+</tr>
+<tr>
+<td>Gain matrix <span class="arithmatex">\(G = H^\top W H\)</span></td>
+<td>Full rank, invertible</td>
+<td>Singular or near-singular</td>
+</tr>
+<tr>
+<td>WLS solution</td>
+<td>Unique</td>
+<td>Does not exist without additional priors</td>
+</tr>
+<tr>
+<td>Bad-data detection</td>
+<td>Chi-squared / LNR works (has redundancy)</td>
+<td>Mostly fails (no redundancy; leverage is normal)</td>
+</tr>
+<tr>
+<td>Critical-measurement trap</td>
+<td>Exceptional</td>
+<td>Standard operating condition</td>
+</tr>
+<tr>
+<td>What fills the observability gap</td>
+<td>More sensors (space)</td>
+<td>Priors + forecasts + topology + time</td>
+</tr>
+</tbody>
+</table>
+<p><strong>The energy-transition double-edge.</strong> DER penetration makes the physics harder (bidirectional,
+volatile, weather-coupled flow → larger process uncertainty <span class="arithmatex">\(Q\)</span>) while simultaneously
+<em>instrumenting</em> the grid (every smart inverter, battery, EVSE, and AMI meter is a new
+telemetry source). Distribution virtual sensing must net this out positive.</p>
+<hr />
+<h2 id="3-the-information-budget-mental-model">3. The Information-Budget Mental Model</h2>
+<p>For any unmetered distribution node, the state estimate is built from a <strong>budget</strong> of information
+sources. Each source contributes via its own covariance:</p>
+<div class="arithmatex">\[\underbrace{\text{estimate at node}}_{\hat x_i,\;P_i} = \underbrace{\text{direct measurement}}_{\text{if any, small }R} + \underbrace{\text{physical coupling}}_{\text{topology + power flow}} + \underbrace{\text{zero-injection constraints}}_{\text{virtual measurement, }R\to0} + \underbrace{\text{temporal prior}}_{\text{forecast/FASE}} + \underbrace{\text{learned prior}}_{\text{ML pseudo-measurement}}\]</div>
+<p>The Kalman gain <span class="arithmatex">\(K\)</span> automatically weights each by its inverse covariance. A high-confidence
+ML forecast (small <span class="arithmatex">\(R_{pseudo}\)</span>) pulls the estimate strongly; a stale AMI reading (large <span class="arithmatex">\(R_{ami}\)</span>)
+pulls weakly. The filter is the accountant; you supply the line items.</p>
+<p><strong>The compact WLS recap (frame as the static baseline that fails under distribution sparsity,
+motivating the recursive/dynamic approach that borrows information across time):</strong></p>
+<div class="arithmatex">\[J(x) = [z - h(x)]^\top W\,[z - h(x)], \qquad W = R^{-1}\]</div>
+<div class="arithmatex">\[G = H^\top W H, \qquad \Delta x = G^{-1} H^\top W\,[z - h(\hat x)], \qquad \hat x \leftarrow \hat x + \Delta x\]</div>
+<p>WLS gives the best static snapshot when <span class="arithmatex">\(G\)</span> is invertible. When it is not — the distribution
+case — you need the recursive Kalman structure that <strong>borrows information across time</strong>: the prior
+from the last step is itself a measurement with covariance <span class="arithmatex">\(P_{k|k-1}\)</span>.</p>
+<p><strong>Interview sentence:</strong> "WLS gives you the best static snapshot; Kalman-based distribution SE
+gives you a running film with uncertainty quantification at every frame, and the prior from two
+minutes ago is itself an information source."</p>
+<hr />
+<h2 id="4-deliverable-estimate-calibrated-covariance-oracs-observability-index">4. Deliverable = Estimate + Calibrated Covariance = ORACS Observability Index</h2>
+<p>The virtual-sensing estimator does not just produce a number <span class="arithmatex">\(\hat x\)</span>. It produces a <strong>posterior
+distribution</strong> <span class="arithmatex">\(\mathcal N(\hat x, P)\)</span>. The covariance <span class="arithmatex">\(P\)</span> is the formal statement of how much the
+filter knows. This is not a secondary output; it <em>is</em> the primary engineering deliverable.</p>
+<p>In the AGMS architecture (the director's patent), the posterior covariance maps directly to the
+<strong>ORACS Observability index</strong> that the <strong>Asset Portfolio Manager</strong> (module 1300) gates on. The
+pipeline:</p>
+<ol>
+<li>Inspector scout <span class="arithmatex">\(s_i\)</span> on a Field Agent Device (FAD) runs the local virtual-sensing filter.</li>
+<li>Posterior covariance <span class="arithmatex">\(P\)</span> is published to the Grid Operating Cell (inter-ORACS).</li>
+<li>Asset Portfolio Manager 1300 reads <span class="arithmatex">\(P\)</span> and computes the Observability index.</li>
+<li>If observability is sufficient: the continuous voltage-control <strong>CaCSM</strong> (Worked Example 2 in
+   the patent — rooftop-solar overvoltage at unmetered nodes, no fault/alarm, only virtual
+   sensing knows) is armed.</li>
+<li>The estimate <span class="arithmatex">\((\hat x, P)\)</span> seeds <strong>simulate-before-commit</strong> (patent claim 3) before any
+   control action is dispatched.</li>
+<li>The <strong>Learning Engine</strong> sees the innovation sequence and issues a calibration request to
+   refine <span class="arithmatex">\(Q\)</span>, <span class="arithmatex">\(R\)</span>, and the pseudo-measurement priors.</li>
+</ol>
+<p><strong>Recursive structure = island-mode safety.</strong> Because the filter carries its own state and
+propagates forward with the process model, it keeps producing estimates (with growing, honestly-
+reported uncertainty) even when all external measurements drop. A centralized batch WLS stops
+cold when the data feed breaks. The Inspector scout continues — it just inflates <span class="arithmatex">\(P\)</span>, which AGMS
+interprets as degraded observability rather than a system failure.</p>
+<p><strong>Interview sentence:</strong> "The posterior covariance is not a footnote — it IS the ORACS Observability
+index that the AGMS Asset Portfolio Manager gates on, and the recursive structure is what keeps
+the Inspector scout alive in island mode when the WAN drops."</p>
+<hr />
+<h2 id="5-bridges-to-juans-work">5. Bridges to Juan's Work</h2>
+<!-- greppable tag: Bridge to your work -->
+
+<table>
+<thead>
+<tr>
+<th>AGMS / Virtual Sensing Concept</th>
+<th>Juan's Work</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Calibrated pseudo-measurement / temporal prior generator</td>
+<td>Edge-ML load/PV forecasting in HEMS / Building Intelligence — produces calibrated probabilistic forecasts that enter the filter as pseudo-measurements</td>
+</tr>
+<tr>
+<td>Topology / structural prior (who connects to whom, zero-injections)</td>
+<td>SI-MAPPER ontology graph — inferring structured topology from heterogeneous signals</td>
+</tr>
+<tr>
+<td>Inspector-scout substrate (FAD edge runtime)</td>
+<td>OSED edge runtime — the physical platform the scout runs on</td>
+</tr>
+<tr>
+<td>Simulate-before-commit consumer</td>
+<td>CVXPY MPC in OSED/HEMS — takes state + covariance as inputs; MPC is the "commit" step that the estimate seeds</td>
+</tr>
+</tbody>
+</table>
+<p><strong>How to say this in the interview:</strong></p>
+<blockquote>
+<p>"Every component of the AGMS virtual-sensing stack maps to something I've built. My HEMS
+edge-ML forecasting is the temporal prior generator — it produces calibrated probabilistic
+load/PV forecasts that enter the filter as pseudo-measurements with known covariance. My
+SI-MAPPER ontology graph is the structural prior — it encodes topology and zero-injection
+constraints. OSED is the FAD substrate the Inspector scout runs on. And my CVXPY MPC is the
+simulate-before-commit step: it takes the posterior estimate and covariance, propagates them
+forward, and only dispatches commands when the constraint-satisfaction probability is high
+enough. I haven't operated these in a GE Vernova context, but the building blocks are the same."</p>
+</blockquote>
+<hr />
+<h2 id="6-the-reframe-in-three-sentences-use-to-open-any-answer">6. The Reframe in Three Sentences (Use to Open Any Answer)</h2>
+<p>Memorize these three sentences as the opening for any virtual-sensing question:</p>
+<ol>
+<li>"Virtual sensing is manufacturing observability for under-measured nodes — the filter is just
+   the accounting engine."</li>
+<li>"The real engineering problem is sourcing, modeling, and honestly characterizing every
+   information source the grid offers."</li>
+<li>"The deliverable is a posterior covariance, not just a number — that covariance IS the
+   observability index downstream systems gate on."</li>
+</ol>
+<hr />
+<h2 id="quick-recall-card-recite-before-the-interview">Quick-Recall Card (Recite Before the Interview)</h2>
+<ol>
+<li><strong>The reframe:</strong> filter = vessel; the job = manufacturing observability from side-information.</li>
+<li><strong>Transmission:</strong> <span class="arithmatex">\(m &gt; n\)</span>, <span class="arithmatex">\(G\)</span> invertible, WLS works, chi-squared / LNR bad-data detection works.</li>
+<li><strong>Distribution:</strong> <span class="arithmatex">\(m \ll n\)</span>, <span class="arithmatex">\(G\)</span> singular, WLS unsolvable without priors; bad-data detection mostly fails because leverage is normal.</li>
+<li><strong>The double-edge:</strong> DER = harder physics (volatile, bidirectional) + more telemetry (smart inverters, EVSEs, AMI) — net it out positive.</li>
+<li><strong>Information budget:</strong> direct measurement + topology coupling + zero-injection constraints + temporal prior + learned prior — filter weights each by <span class="arithmatex">\(R^{-1}\)</span>.</li>
+<li><strong>WLS recap:</strong> <span class="arithmatex">\(J(x) = [z-h(x)]^\top W[z-h(x)]\)</span>; <span class="arithmatex">\(G = H^\top WH\)</span>; <span class="arithmatex">\(\Delta x = G^{-1}H^\top W[z-h(\hat x)]\)</span>. Fails when <span class="arithmatex">\(G\)</span> is singular.</li>
+<li><strong>Deliverable:</strong> <span class="arithmatex">\(\hat x\)</span> AND <span class="arithmatex">\(P\)</span> — the covariance IS the ORACS Observability index.</li>
+<li><strong>AGMS pipeline:</strong> Inspector scout <span class="arithmatex">\(s_i\)</span> → posterior <span class="arithmatex">\(P\)</span> → Asset Portfolio Manager 1300 → CaCSM voltage control → simulate-before-commit → Learning Engine calibration.</li>
+<li><strong>Island-mode safety:</strong> recursive structure keeps producing estimates (with inflating <span class="arithmatex">\(P\)</span>) when WAN drops; centralized batch WLS stops cold.</li>
+<li><strong>My bridges:</strong> HEMS forecasts = temporal prior; SI-MAPPER = structural prior; OSED = FAD substrate; CVXPY MPC = simulate-before-commit.</li>
+</ol>
+<hr />
+<p><em>Sources: arXiv 2502.18229 (JuliaGrid WLS); ResearchGate 329665834 (WLS framework); AGMS patent
+(Director; Inspector scout s_i, ORACS Observability, Asset Portfolio Manager 1300,
+simulate-before-commit, Learning Engine); GE Vernova JD R5043890 (virtual sensing, federated,
+distribution); 01-RESEARCH.md verified equations.</em></p>
+            <footer><a href="../index.html">&larr; Back to study hub</a></footer>
+          </main>
+        </div>
+        </body>
+        </html>

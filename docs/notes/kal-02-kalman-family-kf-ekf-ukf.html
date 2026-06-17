@@ -4,7 +4,7 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="robots" content="noindex,nofollow">
-        <title>KAL-02: Kalman Filter Family — KF, EKF, UKF</title>
+        <title>KAL-02: The Kalman Filter Family — KF, EKF, UKF</title>
         <link rel="stylesheet" href="../assets/site.css">
         <link rel="stylesheet" href="../assets/pygments.css">
         <script>
@@ -18,7 +18,7 @@ window.MathJax = {
         </head>
         <body>
         <div class="wrap">
-          <header class="masthead"><h1>KAL-02: Kalman Filter Family — KF, EKF, UKF</h1></header>
+          <header class="masthead"><h1>KAL-02: The Kalman Filter Family — KF, EKF, UKF</h1></header>
           <nav class="toc"><h2>Contents</h2><div class="toc">
 <ul>
 <li><a href="#1-linear-kalman-filter-kf">1. Linear Kalman Filter (KF)</a><ul>
@@ -54,36 +54,42 @@ window.MathJax = {
 <li><a href="#adaptive-tuning-sage-husa-awareness-level">Adaptive Tuning (Sage-Husa — Awareness Level)</a></li>
 </ul>
 </li>
-<li><a href="#connection-to-kal-03-worked-example">Connection to KAL-03 (Worked Example)</a></li>
+<li><a href="#connection-to-kal-03-and-kal-04-worked-examples">Connection to KAL-03 and KAL-04 (Worked Examples)</a></li>
+<li><a href="#fase-preview-cyclicality-learned-qr-and-the-bu-term">FASE Preview — Cyclicality, Learned Q/R, and the Bu Term</a></li>
 <li><a href="#quick-recall-card-recite-before-the-interview">Quick-Recall Card (Recite Before the Interview)</a></li>
 </ul>
 </div>
 </nav>
           <main>
-        <h1 id="kal-02-kalman-filter-family-kf-ekf-ukf">KAL-02: Kalman Filter Family — KF, EKF, UKF</h1>
+        <h1 id="kal-02-the-kalman-filter-family-kf-ekf-ukf">KAL-02: The Kalman Filter Family — KF, EKF, UKF</h1>
 <p><strong>For:</strong> Oral rehearsal — speak the equations aloud; you must be able to recite the
 predict-update cycle and name what each matrix means without looking at notes.
-<strong>Purpose:</strong> Provide the exact mathematical progression you need to demonstrate Kalman
-depth in the interview, including EKF Jacobians, UKF sigma points, a decision table,
-and the Q/R tuning + divergence detection that separates practitioners from theorists.</p>
+<strong>Purpose:</strong> These mechanics are the engine of a <em>virtual sensing module</em> that fuses sparse,
+multi-rate distribution telemetry — not a transmission denoiser. The filter processes
+heterogeneous, asynchronous measurements (SCADA head flows, smart-inverter self-reports,
+delayed AMI) and produces a posterior state estimate plus calibrated covariance at every step.
+Mastering the algorithm means you can credibly explain FASE (KAL-03) and the distribution
+state-estimation centerpiece to the interviewer.</p>
 <hr />
 <h2 id="1-linear-kalman-filter-kf">1. Linear Kalman Filter (KF)</h2>
 <p>The Kalman Filter is the <strong>optimal recursive estimator for linear-Gaussian systems</strong>. Optimal
 means minimum mean-squared error among all linear estimators when the noise is Gaussian and
 the dynamics are linear. Two stages: <strong>Predict</strong> (extrapolate using the physics model) and
-<strong>Update</strong> (correct with the new measurement).</p>
+<strong>Update</strong> (correct with the new measurement). In the distribution virtual-sensing context,
+each update may arrive from a different sensor at a different rate — the filter handles this
+natively by running the predict step for each time gap and the update step on arrival.</p>
 <h3 id="state-space-model">State-Space Model</h3>
 <div class="arithmatex">\[\begin{aligned}
 x_k &amp;= F\, x_{k-1} + B\, u_k + w_k &amp; &amp;(w_k \sim \mathcal{N}(0, Q)) \\
 z_k &amp;= H\, x_k + v_k               &amp; &amp;(v_k \sim \mathcal{N}(0, R))
 \end{aligned}\]</div>
 <ul>
-<li><span class="arithmatex">\(x_k\)</span> = state vector at time <span class="arithmatex">\(k\)</span></li>
+<li><span class="arithmatex">\(x_k\)</span> = state vector at time <span class="arithmatex">\(k\)</span> (e.g., load injections at each distribution node)</li>
 <li><span class="arithmatex">\(F\)</span> = state transition matrix (physics: how the state evolves one step)</li>
-<li><span class="arithmatex">\(B\)</span> = control input matrix; <span class="arithmatex">\(u_k\)</span> = known input (e.g., load dispatch)</li>
-<li><span class="arithmatex">\(Q\)</span> = process noise covariance (uncertainty in the model)</li>
+<li><span class="arithmatex">\(B\)</span> = control input matrix; <span class="arithmatex">\(u_k\)</span> = <strong>known input</strong> — in the FASE distribution context this is the diurnal ramp / cyclicality forecast (the <code>Bu</code> term is where load forecasts enter)</li>
+<li><span class="arithmatex">\(Q\)</span> = process noise covariance (uncertainty in the model — can be learned and time-indexed per time-of-day/season)</li>
 <li><span class="arithmatex">\(H\)</span> = measurement matrix (which linear combination of states you observe)</li>
-<li><span class="arithmatex">\(R\)</span> = measurement noise covariance (sensor uncertainty)</li>
+<li><span class="arithmatex">\(R\)</span> = measurement noise covariance (sensor uncertainty — also learnable per source and per time slot)</li>
 </ul>
 <h3 id="predict-step">Predict Step</h3>
 <div class="arithmatex">\[\begin{aligned}
@@ -336,18 +342,45 @@ algorithm estimates <span class="arithmatex">\(R\)</span> online from empirical 
 innovation covariance and adjusts <span class="arithmatex">\(R\)</span> to match. Know this exists; the detail matters less
 than the principle.</p>
 <hr />
-<h2 id="connection-to-kal-03-worked-example">Connection to KAL-03 (Worked Example)</h2>
-<p>Everything in this file is realized in the IEEE 738 conductor temperature EKF (KAL-03):</p>
-<ul>
-<li><span class="arithmatex">\(f(T_c, u)\)</span> = the discretized IEEE 738 ODE (process model)</li>
-<li><span class="arithmatex">\(h(T_c) = R_{25}[1 + \alpha_R(T_c - 25)]\)</span> — resistance as a function of temperature (measurement model)</li>
-<li><span class="arithmatex">\(A = \partial f/\partial T_c\)</span> — scalar Jacobian from the ODE linearization</li>
-<li><span class="arithmatex">\(H = \partial h/\partial T_c = R_{25} \times \alpha_R\)</span> — scalar measurement Jacobian (a constant)</li>
-<li><span class="arithmatex">\(Q\)</span> = model uncertainty from wind + aging (<span class="arithmatex">\(\approx 0.01\)</span>–<span class="arithmatex">\(0.1\,{}^\circ\text{C}^2/\text{step}\)</span>)</li>
-<li><span class="arithmatex">\(R\)</span> = CT accuracy (<span class="arithmatex">\(\approx (0.002 \times I_\text{rated})^2\)</span> in current units, then propagated through <span class="arithmatex">\(h\)</span>)</li>
-</ul>
-<p>The scalar state makes the matrix equations collapse to scalars, which makes the worked
-example easy to trace step by step. All the same logic applies for vector-state grid DSE.</p>
+<h2 id="connection-to-kal-03-and-kal-04-worked-examples">Connection to KAL-03 and KAL-04 (Worked Examples)</h2>
+<p>The mechanics in this file are realized in two complementary worked examples:</p>
+<p><strong>KAL-03 — FASE augmented-load feeder walk (the vector-state distribution centerpiece):</strong>
+Everything above runs on a 3-bus feeder where the state is <span class="arithmatex">\(x = [P_1, P_2]^\top\)</span> (load injections,
+not voltages). Measurements arrive asynchronously from three channels at different rates. The
+<strong>money shot</strong> is Event 2: the head SCADA update observes the <em>dark</em>, unmetered bus <span class="arithmatex">\(P_2\)</span> via
+Kirchhoff coupling — covariance collapses 100 → 4.73, off-diagonal goes negative. The comms-gap
+predict step inflates uncertainty honestly; the voltage map propagates the posterior covariance
+into a voltage confidence interval that trips the AGMS voltage-support CaCSM near the 0.95 pu
+limit. This is the distribution virtual-sensing centerpiece. Read KAL-03 first.</p>
+<p><strong>KAL-04 — IEEE 738 line-temperature EKF (the scalar asset-health secondary example):</strong>
+A <em>scalar</em> EKF where the state is conductor temperature <span class="arithmatex">\(T_c\)</span>:
+- <span class="arithmatex">\(f(T_c, u)\)</span> = the discretized IEEE 738 ODE (process model)
+- <span class="arithmatex">\(h(T_c) = R_{25}[1 + \alpha_R(T_c - 25)]\)</span> — resistance as a function of temperature
+- <span class="arithmatex">\(A = \partial f/\partial T_c\)</span> — scalar Jacobian; <span class="arithmatex">\(H = R_{25} \cdot \alpha_R\)</span> (constant scalar)
+- <span class="arithmatex">\(Q\)</span> = model uncertainty from wind + aging; <span class="arithmatex">\(R\)</span> = CT accuracy</p>
+<p>The scalar state collapses matrix equations to scalars, making the mechanics easy to trace.
+This is the <em>asset-health</em> companion to the network state-estimation problem in KAL-03.</p>
+<hr />
+<h2 id="fase-preview-cyclicality-learned-qr-and-the-bu-term">FASE Preview — Cyclicality, Learned Q/R, and the Bu Term</h2>
+<p><strong>Forecasting-Aided State Estimation (FASE)</strong> is the distribution virtual-sensing architecture
+that operationalizes everything above. Two key additions over vanilla KF:</p>
+<ol>
+<li><strong>Cyclicality / load forecasts enter as the known-input <code>Bu</code> term.</strong> The diurnal profile of a
+   feeder — morning ramp, lunchtime plateau, evening peak — is repeatable. The Holt-Winters or
+   Debs-Larson forecast of the load ramp becomes the <span class="arithmatex">\(v\,\Delta t\)</span> increment to <span class="arithmatex">\(\hat x\)</span> in the
+   predict step:</li>
+</ol>
+<p>$<span class="arithmatex">\(\hat{x}_{k|k-1} = \hat{x}_{k-1} + v\,\Delta t\)</span>$</p>
+<p>where <span class="arithmatex">\(v\)</span> is the expected load ramp (kW/min) from the temporal prior. This is the <code>Bu</code> term —
+   not a measurement, not a model parameter, but a <em>known input</em> derived from historical patterns.</p>
+<ol start="2">
+<li><strong><span class="arithmatex">\(Q\)</span> and <span class="arithmatex">\(R\)</span> can be learned and time-indexed.</strong> A year of archived predictions, actuals, and
+   residuals — indexed by hour-of-day, day-of-week, season, weather — lets you condition <span class="arithmatex">\(Q\)</span> and
+   <span class="arithmatex">\(R\)</span> on context. At 8 a.m. Monday, load variance is higher than at 2 a.m. Sunday; the filter
+   should know that. The Learning Engine in AGMS closes this loop by analyzing innovation sequences
+   and issuing calibration requests.</li>
+</ol>
+<p>Full numeric worked example: <strong>KAL-03 — the 3-bus feeder walk.</strong></p>
 <hr />
 <h2 id="quick-recall-card-recite-before-the-interview">Quick-Recall Card (Recite Before the Interview)</h2>
 <p><strong>Linear KF:</strong>
@@ -367,9 +400,12 @@ nonlinear (rotor angle DSE, near voltage collapse). Particle filter for non-Gaus
 <p><strong>Divergence detection:</strong> <span class="arithmatex">\(\text{NIS}_k = y^\top S^{-1} y \sim \chi^2(m)\)</span>. Sustained NIS &gt; threshold = diverging.
 Check: sensor failure, model mismatch, <span class="arithmatex">\(Q\)</span> too small.</p>
 <p><strong>Q/R trap:</strong> <span class="arithmatex">\(Q=0\)</span> → <span class="arithmatex">\(K\to0\)</span> → filter goes deaf. Always set <span class="arithmatex">\(Q&gt;0\)</span>.</p>
+<p><strong>Distribution virtual sensing:</strong> state = load injections <span class="arithmatex">\([P_1, P_2, \ldots]\)</span> (not voltages); update on arrival from each source with its own <span class="arithmatex">\(R\)</span>; predict with diurnal ramp <span class="arithmatex">\(v\Delta t\)</span> between updates; covariance = observability index.</p>
+<p><strong>FASE:</strong> cyclicality enters as <code>Bu</code> = <span class="arithmatex">\(v\,\Delta t\)</span>; <span class="arithmatex">\(Q\)</span>, <span class="arithmatex">\(R\)</span> are learned and time-indexed from historical archive.</p>
 <hr />
 <p><em>Sources: Welch &amp; Bishop, Edinburgh CVonline EKF formulation; filterpy ReadTheDocs UKF equations;
-Stone Soup UKF tutorial; arXiv 2012.06069 (power system DSE with EKF/UKF); 01-RESEARCH.md verified equations</em></p>
+Stone Soup UKF tutorial; arXiv 2012.06069 (power system DSE with EKF/UKF); AGMS patent (Director;
+FASE, Learning Engine, Inspector scout); 01-RESEARCH.md verified equations.</em></p>
             <footer><a href="../index.html">&larr; Back to study hub</a></footer>
           </main>
         </div>

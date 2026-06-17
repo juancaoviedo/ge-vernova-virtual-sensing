@@ -1,0 +1,338 @@
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noindex,nofollow">
+        <title>DSSE-01: The Under-Observability Problem &amp; the Information-Sourcing Reframe</title>
+        <link rel="stylesheet" href="../assets/site.css">
+        <link rel="stylesheet" href="../assets/pygments.css">
+        <script>
+window.MathJax = {
+  tex: { inlineMath: [["\\(","\\)"]], displayMath: [["\\[","\\]"]],
+         processEscapes: true, processEnvironments: true },
+  options: { ignoreHtmlClass: ".*", processHtmlClass: "arithmatex" }
+};
+</script>
+<script defer src="../vendor/mathjax/tex-chtml.js"></script>
+        </head>
+        <body>
+        <div class="wrap">
+          <header class="masthead"><h1>DSSE-01: The Under-Observability Problem &amp; the Information-Sourcing Reframe</h1></header>
+          <nav class="toc"><h2>Contents</h2><div class="toc">
+<ul>
+<li><a href="#3-min-say-aloud-version">&lt;3-min say-aloud version</a></li>
+<li><a href="#1-the-distribution-under-observability-diagnosis">1. The Distribution Under-Observability Diagnosis</a></li>
+<li><a href="#2-the-critical-measurement-trap-as-the-normal-condition">2. The Critical-Measurement Trap as the Normal Condition</a></li>
+<li><a href="#3-the-transmission-vs-distribution-contrast-table">3. The Transmission vs. Distribution Contrast Table</a></li>
+<li><a href="#4-the-energy-transition-double-edge">4. The Energy-Transition Double-Edge</a></li>
+<li><a href="#5-the-information-budget-mental-model">5. The Information-Budget Mental Model</a></li>
+<li><a href="#6-why-recursion-beats-batch-for-distribution">6. Why Recursion Beats Batch for Distribution</a></li>
+<li><a href="#bridge-to-juans-work">→ Bridge to Juan's Work</a></li>
+<li><a href="#quick-recall-card-recite-before-the-interview">Quick-Recall Card (Recite Before the Interview)</a></li>
+</ul>
+</div>
+</nav>
+          <main>
+        <h1 id="dsse-01-the-under-observability-problem-the-information-sourcing-reframe">DSSE-01: The Under-Observability Problem &amp; the Information-Sourcing Reframe</h1>
+<p><strong>For:</strong> Oral rehearsal — speak the contrast table and the information-budget model aloud;
+you must be able to deliver the transmission vs. distribution contrast in under 2 minutes.
+<strong>Purpose:</strong> Establish the foundational framing for all four DSSE notes: distribution state
+estimation is a severe under-observability problem, not a well-instrumented redundancy problem.
+The solution is not better batch algebra — it is <strong>information sourcing</strong>: finding, modeling,
+and honestly characterizing every scrap of side-information the grid offers, then fusing it
+through a recursive estimator.</p>
+<hr />
+<h2 id="3-min-say-aloud-version">&lt;3-min say-aloud version</h2>
+<blockquote>
+<p>"Transmission state estimation is a solved problem because redundancy comes from <strong>space</strong>:
+you have more measurements than states, the Jacobian <span class="arithmatex">\(H\)</span> has full column rank, WLS converges,
+and chi-squared bad-data detection works cleanly. Distribution is the hard, unsolved problem,
+and it is where this role lives.</p>
+<p>A typical distribution feeder has hundreds to a thousand nodes. States are per-node voltage
+magnitude and angle — or in the FASE formulation, per-node load injection — times three for
+three-phase unbalance. Real-time telemetry: feeder-head SCADA (one reading for the whole
+feeder), a handful of smart inverter self-reports, and AMI meters that arrive 15 minutes late.
+That is <span class="arithmatex">\(m \ll n\)</span> — severely under-determined. The gain matrix <span class="arithmatex">\(G = H^\top W H\)</span> is singular. There
+is no unique WLS solution. And because almost every real measurement is critical —
+remove any one and that part of the feeder goes unobservable — the chi-squared bad-data
+detection test has no redundancy to work with. The leverage/critical-measurement trap is the
+<strong>normal operating condition</strong> in distribution, not an edge case.</p>
+<p>So the job is not to solve a well-posed inverse problem — it is to <strong>manufacture observability</strong>
+from every information source available: network topology (Kirchhoff coupling), zero-injection
+constraints at known-passive nodes, conductor parameters, load cyclicality, ML forecasts, smart-
+inverter self-reports, delayed AMI. Each source goes into the filter with an honest covariance.
+DER penetration is both the problem and the solution: bidirectional volatile flows make the
+physics harder, but every smart inverter, battery, and EVSE is a new telemetry point."</p>
+</blockquote>
+<hr />
+<!-- greppable tag: under-observability -->
+
+<h2 id="1-the-distribution-under-observability-diagnosis">1. The Distribution Under-Observability Diagnosis</h2>
+<p><strong>What the state is.</strong> A three-phase distribution feeder with <span class="arithmatex">\(n\)</span> buses has up to <span class="arithmatex">\(6n\)</span> state
+variables: real and imaginary voltage (or magnitude/angle) at each phase at each node. In
+simplified single-phase form: <span class="arithmatex">\(2n\)</span> states (magnitude + angle per node).</p>
+<p><strong>What the measurements are.</strong> In a typical feeder:
+- <strong>Head SCADA</strong> — one three-phase power measurement at the substation (fast, reliable, but
+  covers the entire feeder with one equation)
+- <strong>Smart inverter self-reports</strong> — a handful of buses with DER, reporting their own terminal
+  <span class="arithmatex">\(P\)</span>, <span class="arithmatex">\(Q\)</span>, <span class="arithmatex">\(V\)</span> (fast, but only at DER-instrumented buses)
+- <strong>AMI smart meters</strong> — 15-minute interval averages, delayed minutes-to-hours, covering
+  most residential loads but with coarse time resolution</p>
+<p>Result: <span class="arithmatex">\(m \ll n\)</span>. For a 100-node feeder, you might have <span class="arithmatex">\(m = 5\)</span>–10 real-time measurements
+against <span class="arithmatex">\(n = 200\)</span> state variables. <strong>The gain matrix <span class="arithmatex">\(G = H^\top W H\)</span> is rank-deficient.</strong></p>
+<p><strong>The WLS failure mode.</strong> Attempting classical Gauss-Newton WLS:
+$<span class="arithmatex">\(\Delta x = G^{-1} H^\top W [z - h(\hat x)]\)</span>$
+fails at the very first step: <span class="arithmatex">\(G\)</span> is singular, <span class="arithmatex">\(G^{-1}\)</span> does not exist, the normal equations
+have infinitely many solutions. There is no unique operating-point estimate. This is not a
+numerical issue — it is a fundamental absence of information.</p>
+<hr />
+<!-- greppable tag: critical measurement trap normal -->
+
+<h2 id="2-the-critical-measurement-trap-as-the-normal-condition">2. The Critical-Measurement Trap as the Normal Condition</h2>
+<p>In transmission SE, <strong>leverage measurements</strong> (measurements whose removal renders part of the
+network unobservable) are exceptional and must be identified and flagged. The chi-squared and
+LNR bad-data tests work for the non-leverage measurements — they have redundancy.</p>
+<p>In distribution SE, <strong>nearly every real measurement is a leverage measurement.</strong> Remove the
+one feeder-head SCADA reading and the entire feeder is unobservable. Remove an inverter self-
+report and that bus goes dark. The consequences:</p>
+<ol>
+<li><strong>Chi-squared test has no degrees of freedom.</strong> <span class="arithmatex">\(J(\hat x) \sim \chi^2(m-n)\)</span> requires
+   <span class="arithmatex">\(m &gt; n\)</span>. With <span class="arithmatex">\(m \ll n\)</span>, <span class="arithmatex">\(m - n &lt; 0\)</span> — the test is undefined. There is no "residual
+   distribution" to compare against.</li>
+<li><strong>LNR test is structurally blind.</strong> The normalized residual for a leverage measurement is
+   near zero <em>by construction</em>, because the estimator fits the estimate entirely to that reading
+   — there is nothing to contradict it. A corrupted leverage measurement gives a wrong-but-
+   consistent estimate that passes every check.</li>
+<li><strong>You cannot detect bad data by statistical redundancy because there is no statistical
+   redundancy.</strong></li>
+</ol>
+<p>What replaces bad-data detection in distribution?
+- <strong>Innovation / NIS monitoring over time</strong> (is the sequential residual white and zero-mean?)
+- <strong>Cross-source consistency checks</strong> (do AMI, inverter, and head tell a consistent story
+  when they overlap?)
+- <strong>Robust pseudo-measurement priors</strong> (don't let an overconfident prior become a de-facto
+  leverage measurement at scale — see DSSE-03)</p>
+<p><strong>Interview sentence:</strong> "In distribution, the leverage/critical-measurement trap is the normal
+operating condition, not an exception. Chi-squared bad-data detection mostly fails because there
+is no redundancy — nearly every real measurement is critical. What replaces it is NIS monitoring
+over time and cross-source consistency checks."</p>
+<hr />
+<h2 id="3-the-transmission-vs-distribution-contrast-table">3. The Transmission vs. Distribution Contrast Table</h2>
+<table>
+<thead>
+<tr>
+<th>Dimension</th>
+<th>Transmission SE</th>
+<th>Distribution SE (DSSE)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Measurement count</td>
+<td><span class="arithmatex">\(m &gt; n\)</span> (over-determined)</td>
+<td><span class="arithmatex">\(m \ll n\)</span> (under-determined)</td>
+</tr>
+<tr>
+<td>Gain matrix <span class="arithmatex">\(G = H^\top WH\)</span></td>
+<td>Full rank, invertible</td>
+<td>Singular or near-singular</td>
+</tr>
+<tr>
+<td>WLS unique solution</td>
+<td>Yes</td>
+<td>No (without additional priors/constraints)</td>
+</tr>
+<tr>
+<td>Bad-data detection</td>
+<td>Chi-squared / LNR works (has redundancy)</td>
+<td>Mostly fails — no redundancy</td>
+</tr>
+<tr>
+<td>Critical-measurement (leverage) trap</td>
+<td>Exceptional; flagged and managed</td>
+<td><strong>Standard operating condition</strong></td>
+</tr>
+<tr>
+<td>Redundancy source</td>
+<td>Space (dense sensors)</td>
+<td>Time (temporal priors + recursion)</td>
+</tr>
+<tr>
+<td>What fills the observability gap</td>
+<td>More sensors</td>
+<td>Topology priors + forecasts + zero-injections + ML</td>
+</tr>
+<tr>
+<td>Filter structure</td>
+<td>Often batch WLS (snapshot)</td>
+<td>Recursive Kalman / FASE (borrows from time)</td>
+</tr>
+<tr>
+<td>Comms gap behavior</td>
+<td>Batch SE stops cold</td>
+<td>Recursive filter inflates <span class="arithmatex">\(P\)</span> honestly, keeps running</td>
+</tr>
+<tr>
+<td>Island-mode safety</td>
+<td>Requires full measurement set</td>
+<td>Recursive structure preserves estimate in island mode</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="4-the-energy-transition-double-edge">4. The Energy-Transition Double-Edge</h2>
+<p>DER penetration changes distribution SE in two directions simultaneously:</p>
+<p><strong>Makes physics harder:</strong>
+- Bidirectional flows (net load can be negative during PV overvoltage events)
+- Volatile, weather-coupled injections (PV output correlated with irradiance; EV charging
+  correlated with time-of-day and events)
+- Larger process uncertainty <span class="arithmatex">\(Q\)</span> — the diurnal profile is less predictable when DER is large
+- Near-limit operation: 0.95–1.05 pu voltage corridor is violated by rooftop solar overvoltage
+  at unmetered nodes — exactly the AGMS Worked Example 2 scenario</p>
+<p><strong>Instruments the grid:</strong>
+- Every smart inverter is a real-time measurement point (<span class="arithmatex">\(P\)</span>, <span class="arithmatex">\(Q\)</span>, <span class="arithmatex">\(V\)</span> at its terminal)
+- EV chargers (OCPP/MQTT) report load events
+- Batteries (IEEE 1547 / 2030.5) self-report their state and can be queried
+- AMI rollout extends metering to nearly every end-point (albeit at low rate)
+- Grid-edge compute (FADs, gateways) enables local processing of that telemetry</p>
+<p><strong>The virtual-sensing engineer's job:</strong> net this out positive. Use the new instrumentation to
+compensate for the harder physics. The AGMS Inspector scout on a FAD does exactly this: it
+fuses the local DER telemetry with topology priors and temporal forecasts to maintain an
+estimate even as the physics gets more volatile.</p>
+<hr />
+<h2 id="5-the-information-budget-mental-model">5. The Information-Budget Mental Model</h2>
+<p>For any under-instrumented distribution node, the state estimate is assembled from a budget:</p>
+<table>
+<thead>
+<tr>
+<th>Information Source</th>
+<th>Where it enters</th>
+<th>Covariance</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Direct real-time measurement (inverter, μPMU)</td>
+<td>Measurement <span class="arithmatex">\(z\)</span> with small <span class="arithmatex">\(R\)</span></td>
+<td>Small <span class="arithmatex">\(R\)</span> (high trust)</td>
+</tr>
+<tr>
+<td>Feeder-head SCADA</td>
+<td>Measurement <span class="arithmatex">\(z\)</span> via Kirchhoff <span class="arithmatex">\(h(x)\)</span></td>
+<td>Moderate <span class="arithmatex">\(R\)</span>; broad coupling</td>
+</tr>
+<tr>
+<td>Zero-injection constraint at known-passive node</td>
+<td>Virtual measurement <span class="arithmatex">\(z=0\)</span>, <span class="arithmatex">\(R\to 0\)</span></td>
+<td>Near-zero <span class="arithmatex">\(R\)</span> (hard constraint)</td>
+</tr>
+<tr>
+<td>Network topology (who connects to whom)</td>
+<td>Defines <span class="arithmatex">\(H\)</span> structure — Kirchhoff coupling lets head flow inform dark nodes</td>
+<td>Structural (not stochastic)</td>
+</tr>
+<tr>
+<td>Load cyclicality / diurnal profile</td>
+<td>Process model <code>Bu</code> term (FASE predict step)</td>
+<td><span class="arithmatex">\(Q\)</span> = forecast uncertainty, time-indexed</td>
+</tr>
+<tr>
+<td>ML load/PV forecast</td>
+<td>Pseudo-measurement with calibrated covariance</td>
+<td><span class="arithmatex">\(R_{pseudo}\)</span> from forecast error archive</td>
+</tr>
+<tr>
+<td>AMI (delayed, 15-min)</td>
+<td>Low-rate measurement, applied with large <span class="arithmatex">\(R\)</span></td>
+<td>Large <span class="arithmatex">\(R\)</span> (noisy, stale)</td>
+</tr>
+<tr>
+<td>EV charger telemetry (OCPP)</td>
+<td>Event-driven measurement when present</td>
+<td>Moderate <span class="arithmatex">\(R\)</span>; absent between sessions</td>
+</tr>
+</tbody>
+</table>
+<p>The Kalman gain <span class="arithmatex">\(K\)</span> weights each source by its inverse covariance. High-quality, recent
+inverter telemetry pulls hard; stale AMI pulls softly. The filter is the accountant; you
+supply the line items with honest covariances.</p>
+<p><strong>Interview sentence:</strong> "The distribution information budget is topology coupling plus
+zero-injection constraints plus temporal prior plus ML pseudo-measurements plus delayed AMI —
+the filter weights each by its honest covariance. There is no single source that makes the node
+observable; observability comes from the aggregate."</p>
+<hr />
+<h2 id="6-why-recursion-beats-batch-for-distribution">6. Why Recursion Beats Batch for Distribution</h2>
+<p>Classical transmission SE is a batch snapshot: gather all SCADA readings for one scan, solve
+the WLS system, produce an estimate, discard, repeat. This works because measurement density
+is high enough that each scan is independently observable.</p>
+<p>Distribution uses a <strong>recursive Kalman / FASE</strong> structure because:</p>
+<ol>
+<li><strong>Measurements arrive at different rates.</strong> Inverter reports come every few seconds; AMI
+   comes every 15 minutes; head SCADA is somewhere in between. The recursive filter handles
+   this natively: run the predict step for each time gap, apply the update step on arrival.</li>
+<li><strong>The prior from the previous step is itself an information source.</strong> With <span class="arithmatex">\(m \ll n\)</span>, the
+   prior covariance <span class="arithmatex">\(P_{k-1}\)</span> contributes to the current-step observability — the history is
+   informative in a way it never is in the transmission batch case.</li>
+<li><strong>Comms gaps do not kill the estimate.</strong> When measurements drop, the recursive predict step
+   continues: <span class="arithmatex">\(\hat x\)</span> advances with the diurnal forecast and <span class="arithmatex">\(P\)</span> inflates honestly. The AGMS
+   Asset Portfolio Manager 1300 sees <span class="arithmatex">\(P\)</span> growing and responds. The system degrades gracefully
+   rather than failing hard.</li>
+<li><strong>Island-mode safety.</strong> The Inspector scout on a FAD can keep producing estimates even when
+   the WAN is down. This is not an afterthought — it is the entire resilience bet of the AGMS
+   architecture, and it falls out of the recursive filter's structure itself.</li>
+</ol>
+<p><strong>Interview sentence:</strong> "Batch WLS stops cold when the data feed breaks. The recursive Kalman
+filter inflates <span class="arithmatex">\(P\)</span> honestly and keeps running — that is why island-mode safety falls out of
+the filter's structure in AGMS."</p>
+<hr />
+<h2 id="bridge-to-juans-work">→ Bridge to Juan's Work</h2>
+<!-- greppable tag: Bridge to your work -->
+
+<table>
+<thead>
+<tr>
+<th>DSSE concept</th>
+<th>Juan's work</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Information-sourcing problem</td>
+<td>HEMS edge-ML: I source and fuse load/PV forecasts from multiple signals to produce calibrated probabilistic estimates — the same "find and characterize every source" discipline</td>
+</tr>
+<tr>
+<td>Temporal prior / recursion</td>
+<td>OSED edge runtime: recursive state propagation between measurements is how the HEMS MPC maintains a live building thermal state estimate even when some sensors drop</td>
+</tr>
+<tr>
+<td>Topology prior (zero-injections, Kirchhoff <span class="arithmatex">\(H\)</span> structure)</td>
+<td>SI-MAPPER ontology graph: encodes the structural constraints that define <span class="arithmatex">\(H\)</span> and identify zero-injection nodes</td>
+</tr>
+<tr>
+<td>AMI vs. real-time fusion</td>
+<td>My baseline-consumption analysis across billions of substation data points: the detect-and-correct loop for corrupted low-rate aggregate readings</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="quick-recall-card-recite-before-the-interview">Quick-Recall Card (Recite Before the Interview)</h2>
+<ol>
+<li><strong>Distribution states:</strong> per-node <span class="arithmatex">\(V\)</span>, <span class="arithmatex">\(\theta\)</span> (or injection <span class="arithmatex">\(P\)</span>, <span class="arithmatex">\(Q\)</span>) × 3 phases × <span class="arithmatex">\(n\)</span> nodes. States = hundreds to thousands.</li>
+<li><strong>Distribution measurements:</strong> feeder head + a few inverters + delayed AMI = <span class="arithmatex">\(m \ll n\)</span>. <span class="arithmatex">\(G\)</span> singular.</li>
+<li><strong>Under-determined result:</strong> WLS has no unique solution without additional priors. Cannot even begin without augmentation.</li>
+<li><strong>Bad-data detection:</strong> chi-squared requires <span class="arithmatex">\(m &gt; n\)</span> (degrees of freedom). LNR is blind to leverage measurements. Both mostly fail in distribution.</li>
+<li><strong>Leverage/critical trap is normal:</strong> remove any real-time sensor and a section goes unobservable. This is the default condition, not an edge case.</li>
+<li><strong>Energy-transition double-edge:</strong> DER = harder physics + more telemetry. Net out positive with virtual sensing.</li>
+<li><strong>Information budget:</strong> topology coupling + zero-injections + temporal prior + ML forecasts + AMI — each with honest <span class="arithmatex">\(R\)</span>.</li>
+<li><strong>Recursion beats batch:</strong> multi-rate arrival, prior is informative, comms gaps handled gracefully, island-mode safe.</li>
+<li><strong>Covariance = observability:</strong> <span class="arithmatex">\(P\)</span> growing = ORACS Observability degrading; AGMS Asset Portfolio Manager 1300 gates on it.</li>
+<li><strong>My bridge:</strong> information-sourcing discipline from HEMS forecasting + SI-MAPPER topology + OSED runtime + baseline-error analysis.</li>
+</ol>
+<hr />
+<p><em>Sources: Monticelli, "State Estimation in Electric Power Systems" (1999) — classical SE, observability, bad-data; Abur &amp; Expósito, "Power System State Estimation" (2004) — LNR, residual covariance; Dehghanpour et al., "A Survey on State Estimation Techniques and Challenges in Smart Distribution Systems" (IEEE Trans. Smart Grid, 2019) — DSSE under-observability, pseudo-measurements; AGMS patent (Director; Inspector scout, ORACS Observability, Asset Portfolio Manager 1300, island-mode resilience); GE Vernova JD R5043890 (virtual sensing, distribution, federated); 02-RESEARCH.md verified equations.</em></p>
+            <footer><a href="../index.html">&larr; Back to study hub</a></footer>
+          </main>
+        </div>
+        </body>
+        </html>

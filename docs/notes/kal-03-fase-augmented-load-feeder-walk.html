@@ -1,0 +1,431 @@
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noindex,nofollow">
+        <title>KAL-03: Forecasting-Aided State Estimation (FASE) — Augmented-Load 3-Bus Feeder Walk</title>
+        <link rel="stylesheet" href="../assets/site.css">
+        <link rel="stylesheet" href="../assets/pygments.css">
+        <script>
+window.MathJax = {
+  tex: { inlineMath: [["\\(","\\)"]], displayMath: [["\\[","\\]"]],
+         processEscapes: true, processEnvironments: true },
+  options: { ignoreHtmlClass: ".*", processHtmlClass: "arithmatex" }
+};
+</script>
+<script defer src="../vendor/mathjax/tex-chtml.js"></script>
+        </head>
+        <body>
+        <div class="wrap">
+          <header class="masthead"><h1>KAL-03: Forecasting-Aided State Estimation (FASE) — Augmented-Load 3-Bus Feeder Walk</h1></header>
+          <nav class="toc"><h2>Contents</h2><div class="toc">
+<ul>
+<li><a href="#3-min-say-aloud-version">&lt;3-min say-aloud version</a></li>
+<li><a href="#1-the-augmented-load-state-idea">1. The Augmented-Load State Idea</a></li>
+<li><a href="#2-the-process-model-cyclicality-as-the-known-input-bu">2. The Process Model — Cyclicality as the Known Input Bu</a></li>
+<li><a href="#3-the-3-bus-feeder-and-the-three-multi-rate-channels">3. The 3-Bus Feeder and the Three Multi-Rate Channels</a></li>
+<li><a href="#4-the-full-numeric-trace-step-by-step">4. The Full Numeric Trace — Step by Step</a><ul>
+<li><a href="#t0-1630-prior-forecast-only">t₀ = 16:30 — Prior (Forecast Only)</a></li>
+<li><a href="#event-1-inverter-update-bus-1-self-reports">Event 1 — Inverter Update (bus 1 self-reports)</a></li>
+<li><a href="#event-2-head-scada-update-the-money-shot">Event 2 — Head SCADA Update (THE MONEY SHOT)</a></li>
+<li><a href="#1630-1635-comms-gap-head-scada-drops-5-minutes-predict-only">16:30 → 16:35 — Comms Gap (Head SCADA Drops 5 Minutes, Predict Only)</a></li>
+<li><a href="#1645-ami-arrives-delayed-stale-interval-average">16:45 — AMI Arrives (Delayed / Stale Interval Average)</a></li>
+</ul>
+</li>
+<li><a href="#5-voltage-map-the-actual-virtual-sensor-output">5. Voltage Map — The Actual Virtual-Sensor Output</a><ul>
+<li><a href="#well-observed-post-head-update-at-1630">Well-Observed (Post Head Update at 16:30)</a></li>
+<li><a href="#during-comms-gap-forecast-only-p-inflated-load-ramped-1635">During Comms Gap (Forecast-Only, \(P\) Inflated, Load Ramped — 16:35)</a></li>
+</ul>
+</li>
+<li><a href="#6-what-each-step-demonstrates-agms-connection-map">6. What Each Step Demonstrates (AGMS Connection Map)</a></li>
+<li><a href="#7-bridge-to-juans-work">7. Bridge to Juan's Work</a></li>
+<li><a href="#quick-recall-card-recite-before-the-interview">Quick-Recall Card (Recite Before the Interview)</a></li>
+</ul>
+</div>
+</nav>
+          <main>
+        <h1 id="kal-03-forecasting-aided-state-estimation-fase-augmented-load-3-bus-feeder-walk">KAL-03: Forecasting-Aided State Estimation (FASE) — Augmented-Load 3-Bus Feeder Walk</h1>
+<p><strong>For:</strong> Oral rehearsal — work through each numeric step aloud; you must be able to reproduce
+the money-shot covariance collapse and explain what it means for AGMS without notes.
+<strong>Purpose:</strong> The distribution virtual-sensing centerpiece. Shows how a feeder-head SCADA
+measurement propagates observability to a <em>dark, unmetered node</em> via Kirchhoff coupling, how
+the recursive structure honestly reports degraded observability during a comms gap, and how
+the posterior covariance maps directly to a voltage confidence interval that trips the AGMS
+CaCSM voltage-control action.</p>
+<hr />
+<h2 id="3-min-say-aloud-version">&lt;3-min say-aloud version</h2>
+<blockquote>
+<p>"Classical state estimation puts voltages in the state vector. FASE puts the <strong>loads and
+injections</strong> in the state — because that is where the temporal structure lives. Voltages are
+recovered afterward from injections via LinDistFlow. The payoff: a year of historical load
+profiles gives you a calibrated diurnal forecast that enters the predict step as a known-input
+ramp. The filter becomes state estimation and load forecasting in one recursive problem.</p>
+<p>Take a 3-bus radial feeder: substation at bus 0, a PV inverter at bus 1, a dark load at bus 2
+with only a 15-minute AMI meter. The inverter self-reports <span class="arithmatex">\(P_1\)</span> every few seconds — high
+quality, small <span class="arithmatex">\(R\)</span>. The feeder head reports the total flow — large enough <span class="arithmatex">\(R\)</span> but broad coverage.
+AMI at bus 2 is delayed 15 minutes and noisy.</p>
+<p>Here is the money shot. After the inverter update pins <span class="arithmatex">\(P_1\)</span> at 43.85 kW, the head measurement
+arrives saying total flow is 157. Predicted flow was 148.85. That 8-unit innovation is split by
+the Kalman gain: almost none goes to <span class="arithmatex">\(P_1\)</span> (already pinned), almost all goes to the dark <span class="arithmatex">\(P_2\)</span>.
+Result: <span class="arithmatex">\(P_2\)</span> moves from 100 to <strong>107.77 kW</strong> with no sensor at bus 2 at all. Kirchhoff did it.
+More importantly, the covariance <span class="arithmatex">\(P_{22}\)</span> collapses from 100 to <strong>4.73</strong> — the dark node became
+observable not from a sensor but from the topology constraint.</p>
+<p>Then the head drops for 5 minutes. The predict step runs, uncertainty inflates: <span class="arithmatex">\(P_{22}\)</span> goes
+4.73 → 14.73, <span class="arithmatex">\(\sigma_2\)</span> goes ±2.17 → <strong>±3.84 kW</strong>. The covariance is reporting honestly that
+observability degraded the instant the sensor dropped. When we map to voltage: well-observed gives
+<span class="arithmatex">\(V_2 = 0.955 \pm 0.0008\)</span> pu — safe. During the comms gap, with load still ramping, it falls to
+<span class="arithmatex">\(V_2 \approx 0.951 \pm 0.0013\)</span> pu; the lower 2σ bound hits 0.948, below the 0.95 floor. The
+growing uncertainty plus the point estimate together trip the AGMS voltage-support CaCSM. No
+fault alarm fired. Only virtual sensing knew."</p>
+</blockquote>
+<hr />
+<!-- greppable tag: FASE augmented load -->
+
+<h2 id="1-the-augmented-load-state-idea">1. The Augmented-Load State Idea</h2>
+<p><strong>Conventional distribution SE</strong> places voltages <span class="arithmatex">\((V_i, \theta_i)\)</span> in the state vector. Then you
+need measurements of power flows and injections to observe them. On a dark feeder, you have
+neither — the state is unobservable.</p>
+<p><strong>FASE (Forecasting-Aided State Estimation)</strong> turns this inside out. Place the <strong>load/injection
+injections</strong> directly in the state:</p>
+<div class="arithmatex">\[x = [P_1, P_2, \ldots, P_n]^\top \qquad \text{(net real-power injection at each node, kW)}\]</div>
+<p>Why loads instead of voltages? Because <strong>loads have temporal structure that voltages do not</strong>.
+A year of 8 a.m. Tuesdays tells you a lot about tomorrow's 8 a.m. Tuesday load; it tells you
+almost nothing about the voltage angle, which depends on everything upstream. The temporal prior
+lives on injections.</p>
+<p><strong>Voltages are then recovered from injections</strong> via the <strong>LinDistFlow</strong> linear branch-flow
+approximation (see DSSE-03 for derivation). The voltage estimate becomes a deterministic
+function of the injection estimate, and the voltage uncertainty is a linear propagation of the
+injection posterior covariance:</p>
+<div class="arithmatex">\[V_i \approx V_0 - \sum_j \alpha_{ij}\, P_j, \qquad \sigma_{V_i} = \sqrt{J_i\, P\, J_i^\top}\]</div>
+<p>where <span class="arithmatex">\(J_i = [-\alpha_{i1}, -\alpha_{i2}, \ldots]\)</span> is the row of sensitivity coefficients for
+bus <span class="arithmatex">\(i\)</span>. <strong>Augmented</strong> = state estimation and load forecasting are one recursive problem, not two
+sequential steps.</p>
+<p><strong>Interview sentence:</strong> "FASE puts injections — not voltages — in the state, because injections
+have diurnal temporal structure that voltages don't. Voltages fall out of LinDistFlow after the
+fact, with propagated covariance."</p>
+<hr />
+<h2 id="2-the-process-model-cyclicality-as-the-known-input-bu">2. The Process Model — Cyclicality as the Known Input <code>Bu</code></h2>
+<p>The state evolves via the FASE process model (Holt/Holt-Winters, after Debs and Larson):</p>
+<div class="arithmatex">\[\hat{x}_{k|k-1} = \hat{x}_{k-1} + v\,\Delta t\]</div>
+<div class="arithmatex">\[P_{k|k-1} = P_{k-1} + Q\,\Delta t\]</div>
+<p>where:
+- <span class="arithmatex">\(v = [v_1, v_2, \ldots]^\top\)</span> is the <strong>diurnal ramp vector</strong> — the expected load rate of change
+  (kW/min) derived from the historical profile for this time-of-day and season. This is the <code>Bu</code>
+  term: not a model parameter, not a measurement, but a <em>known input</em> from the temporal prior.
+- <span class="arithmatex">\(Q = \text{diag}(q_1, q_2, \ldots)\)</span> is the <strong>process noise covariance</strong> — how uncertain we are
+  about the ramp forecast. In FASE, <span class="arithmatex">\(Q\)</span> is <strong>learned and time-indexed</strong>: a year of archived
+  residuals indexed by hour/season/weather gives <span class="arithmatex">\(Q\)</span> conditioned on context.
+- <span class="arithmatex">\(R\)</span> per measurement source is similarly <strong>learned from historical archive</strong>: the AMI meter's
+  noise at 15:00 on weekday afternoons may differ from its noise at 02:00.</p>
+<p><strong>Q = 0 trap:</strong> setting <span class="arithmatex">\(Q = 0\)</span> assumes the load ramp forecast is perfect. <span class="arithmatex">\(P_{k|k-1}\)</span> stops
+growing between measurements. The Kalman gain collapses. The filter goes deaf to new measurements
+and diverges when the forecast is wrong. Always set <span class="arithmatex">\(Q &gt; 0\)</span>.</p>
+<hr />
+<h2 id="3-the-3-bus-feeder-and-the-three-multi-rate-channels">3. The 3-Bus Feeder and the Three Multi-Rate Channels</h2>
+<p><strong>Feeder topology (radial):</strong></p>
+<div class="highlight"><pre><span></span><code>Bus 0 (substation, V0 known) --- line 0-1 --- Bus 1 (PV + smart inverter) --- line 1-2 --- Bus 2 (dark load, AMI only)
+</code></pre></div>
+
+<p><strong>Augmented-load state:</strong> <span class="arithmatex">\(x = [P_1, P_2]^\top\)</span> (net real-power injection at bus 1 and bus 2, kW;
+draw positive convention). Reactive power <span class="arithmatex">\(Q_1, Q_2\)</span> handled identically — suppressed in
+the arithmetic below but the inverter self-reports both <span class="arithmatex">\(P\)</span> and <span class="arithmatex">\(Q\)</span>, which is why inverter
+telemetry is so valuable.</p>
+<p><strong>Three measurement channels:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Channel</th>
+<th>Model <span class="arithmatex">\(h(x)\)</span></th>
+<th><span class="arithmatex">\(R\)</span> (kW²)</th>
+<th>Rate</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Head flow (SCADA)</td>
+<td><span class="arithmatex">\(P_1 + P_2 + 5\)</span> (loss constant)</td>
+<td><span class="arithmatex">\(R_{head} = 4\)</span> (<span class="arithmatex">\(\sigma \approx 2\)</span> kW)</td>
+<td>Fast (seconds)</td>
+</tr>
+<tr>
+<td>Inverter telemetry</td>
+<td><span class="arithmatex">\(P_1\)</span></td>
+<td><span class="arithmatex">\(R_{inv} = 1\)</span> (<span class="arithmatex">\(\sigma = 1\)</span> kW)</td>
+<td>Fast (every few s)</td>
+</tr>
+<tr>
+<td>AMI (bus 2)</td>
+<td><span class="arithmatex">\(P_2\)</span> (interval average, delayed)</td>
+<td><span class="arithmatex">\(R_{ami} = 25\)</span> (<span class="arithmatex">\(\sigma = 5\)</span> kW)</td>
+<td>15-min, stale</td>
+</tr>
+</tbody>
+</table>
+<p><em>Note on the head model:</em> <span class="arithmatex">\(H_{head} \approx [1,1]\)</span> folds line losses into the constant <span class="arithmatex">\(+5\)</span> kW to
+keep the measurement function linear. In reality <span class="arithmatex">\(H_{head} \approx [1.05, 1.08]\)</span> (losses scale with
+load) and you would relinearize. The constant-loss simplification keeps the arithmetic clean for
+this walkthrough.</p>
+<p><strong>Ground truth (the filter cannot see these):</strong>
+<span class="arithmatex">\(P_1^{true} = 44\)</span> kW, <span class="arithmatex">\(P_2^{true} = 108\)</span> kW. The dark node is heavier than the 100 kW forecast;
+the PV is tapering faster than expected so net draw is higher.</p>
+<p><strong>Process model parameters:</strong>
+<span class="arithmatex">\(v = [+0.3, +0.8]\)</span> kW/min (afternoon ramp, load rising); <span class="arithmatex">\(Q = \text{diag}(0.5, 2.0)\)</span> kW²/min
+(bus 2 uncertainty larger — dark node, no fast telemetry).</p>
+<hr />
+<h2 id="4-the-full-numeric-trace-step-by-step">4. The Full Numeric Trace — Step by Step</h2>
+<h3 id="t0-1630-prior-forecast-only">t₀ = 16:30 — Prior (Forecast Only)</h3>
+<div class="arithmatex">\[\hat{x} = [40, 100]^\top \text{ kW}, \qquad P = \begin{bmatrix} 25 &amp; 0 \\ 0 &amp; 100 \end{bmatrix} \text{ kW}^2 \quad (\sigma_1 = \pm5,\; \sigma_2 = \pm10 \text{ kW})\]</div>
+<p>The prior covariance is diagonal — no coupling information yet. Bus 2 is dark and highly
+uncertain (<span class="arithmatex">\(\pm 10\)</span> kW at 1<span class="arithmatex">\(\sigma\)</span>).</p>
+<hr />
+<h3 id="event-1-inverter-update-bus-1-self-reports">Event 1 — Inverter Update (bus 1 self-reports)</h3>
+<p><span class="arithmatex">\(z_{inv} = 44\)</span> kW, <span class="arithmatex">\(H = [1, 0]\)</span>, <span class="arithmatex">\(R = 1\)</span>.</p>
+<p><strong>Innovation:</strong>
+$<span class="arithmatex">\(y = 44 - 40 = +4 \text{ kW}\)</span>$</p>
+<p><strong>Innovation covariance:</strong>
+$<span class="arithmatex">\(S = H\,P\,H^\top + R = [1,0]\begin{bmatrix}25&amp;0\\0&amp;100\end{bmatrix}\begin{bmatrix}1\\0\end{bmatrix} + 1 = 25 + 1 = 26\)</span>$</p>
+<p><strong>Kalman gain:</strong>
+$<span class="arithmatex">\(K = P\,H^\top / S = \frac{1}{26}\begin{bmatrix}25\\0\end{bmatrix} = \begin{bmatrix}0.962\\0\end{bmatrix}\)</span>$</p>
+<p><strong>Posterior state:</strong>
+$<span class="arithmatex">\(\hat{x} = \begin{bmatrix}40\\100\end{bmatrix} + \begin{bmatrix}0.962\\0\end{bmatrix}(4) = \begin{bmatrix}\mathbf{43.85}\\100\end{bmatrix} \text{ kW}\)</span>$</p>
+<p><strong>Posterior covariance:</strong>
+$<span class="arithmatex">\(P \to (I - KH)\,P = \begin{bmatrix}1-0.962&amp;0\\0&amp;1\end{bmatrix}\begin{bmatrix}25&amp;0\\0&amp;100\end{bmatrix} = \begin{bmatrix}0.96&amp;0\\0&amp;100\end{bmatrix}\)</span>$</p>
+<p><span class="arithmatex">\(P_1\)</span>'s uncertainty collapses from <span class="arithmatex">\(\pm 5\)</span> to <span class="arithmatex">\(\pm 0.98\)</span> kW. <strong><span class="arithmatex">\(P_2\)</span> is untouched</strong> — the
+inverter measures only bus 1; it has no Kirchhoff coupling to bus 2 through <span class="arithmatex">\(H = [1,0]\)</span>.</p>
+<hr />
+<!-- greppable tag: dark node coupling -->
+
+<h3 id="event-2-head-scada-update-the-money-shot">Event 2 — Head SCADA Update (THE MONEY SHOT)</h3>
+<p><span class="arithmatex">\(z_{head} = 157\)</span> kW (= 44 + 108 + 5 measured total flow), <span class="arithmatex">\(H = [1, 1]\)</span>, <span class="arithmatex">\(R = 4\)</span>.</p>
+<p><strong>Predicted head flow:</strong>
+$<span class="arithmatex">\(h(\hat{x}) = 43.85 + 100 + 5 = 148.85 \text{ kW}\)</span>$</p>
+<p><strong>Innovation:</strong>
+$<span class="arithmatex">\(y = 157 - 148.85 = +8.15 \text{ kW}\)</span>$</p>
+<p>The head says the feeder is drawing 8.15 kW more than we predicted. We know <span class="arithmatex">\(P_1 = 43.85\)</span> is
+already well-pinned by the inverter update. So the excess must be at bus 2.</p>
+<p><strong>Innovation covariance:</strong>
+$<span class="arithmatex">\(S = H\,P\,H^\top + R = [1,1]\begin{bmatrix}0.96&amp;0\\0&amp;100\end{bmatrix}\begin{bmatrix}1\\1\end{bmatrix} + 4 = 0.96 + 100 + 4 = 104.96\)</span>$</p>
+<p><strong>Kalman gain:</strong>
+$<span class="arithmatex">\(K = P\,H^\top / S = \frac{1}{104.96}\begin{bmatrix}0.96\\100\end{bmatrix} = \begin{bmatrix}0.0092\\0.953\end{bmatrix}\)</span>$</p>
+<p>The gain is asymmetric: almost nothing goes to <span class="arithmatex">\(P_1\)</span> (already pinned), almost everything goes
+to the <em>dark</em> <span class="arithmatex">\(P_2\)</span>. This is Kirchhoff at work through the gain matrix.</p>
+<p><strong>Posterior state:</strong>
+$<span class="arithmatex">\(\hat{x} = \begin{bmatrix}43.85\\100\end{bmatrix} + \begin{bmatrix}0.0092\\0.953\end{bmatrix}(8.15) = \begin{bmatrix}43.92\\\mathbf{107.77}\end{bmatrix} \text{ kW}\)</span>$</p>
+<p><strong><span class="arithmatex">\(P_2\)</span> jumped from 100 to 107.77 toward the true 108 kW — with NO sensor at bus 2.</strong> The head
+measurement said "sum is high"; the inverter had already pinned <span class="arithmatex">\(P_1\)</span>; so the filter attributed
+the excess to the dark node. Topology as information.</p>
+<p><strong>Posterior covariance:</strong></p>
+<div class="arithmatex">\[P \to \begin{bmatrix}0.95 &amp; -0.92 \\ -0.92 &amp; \mathbf{4.73}\end{bmatrix} \text{ kW}^2\]</div>
+<p>Two facts to state aloud:</p>
+<ol>
+<li><strong><span class="arithmatex">\(P_{22}\)</span> collapsed 100 → 4.73</strong> (<span class="arithmatex">\(\sigma_2\)</span> went from <span class="arithmatex">\(\pm 10\)</span> to <span class="arithmatex">\(\pm 2.17\)</span> kW). The dark
+   node became observable via Kirchhoff coupling, not a sensor.</li>
+<li><strong>The off-diagonal went negative: <span class="arithmatex">\(P_{12} = -0.92\)</span></strong>. <span class="arithmatex">\(P_1\)</span> and <span class="arithmatex">\(P_2\)</span> are now negatively
+   correlated because the head measurement fixes their <em>sum</em>. If you later learn <span class="arithmatex">\(P_1\)</span> was higher,
+   <span class="arithmatex">\(P_2\)</span> must be lower. The topology constraint is alive in the covariance structure.</li>
+</ol>
+<!-- greppable tag: covariance as observability index -->
+
+<p><strong>Interview sentence:</strong> "The head update observes the dark node via Kirchhoff coupling — the
+covariance of <span class="arithmatex">\(P_2\)</span> collapses 100 → 4.73 with no sensor at bus 2, and the negative off-diagonal
+tells you the head fixed their sum. Topology as information, captured in the covariance."</p>
+<hr />
+<h3 id="1630-1635-comms-gap-head-scada-drops-5-minutes-predict-only">16:30 → 16:35 — Comms Gap (Head SCADA Drops 5 Minutes, Predict Only)</h3>
+<p>No measurements arrive. The predict step runs for <span class="arithmatex">\(\Delta t = 5\)</span> min:</p>
+<div class="arithmatex">\[\hat{x} = \begin{bmatrix}43.92 + 0.3(5) \\ 107.77 + 0.8(5)\end{bmatrix} = \begin{bmatrix}45.4 \\ 111.8\end{bmatrix} \text{ kW}\]</div>
+<div class="arithmatex">\[P = \begin{bmatrix}0.95 + 0.5(5) &amp; -0.92 \\ -0.92 &amp; 4.73 + 2.0(5)\end{bmatrix} = \begin{bmatrix}3.45 &amp; -0.92 \\ -0.92 &amp; \mathbf{14.73}\end{bmatrix}\]</div>
+<p><span class="arithmatex">\(\sigma_2\)</span> inflates from <span class="arithmatex">\(\pm 2.17\)</span> to <span class="arithmatex">\(\pm \mathbf{3.84}\)</span> kW.</p>
+<p><strong>This is the honest reporting of degraded observability.</strong> The instant the head sensor dropped,
+the covariance began growing. The filter does not pretend to know what it cannot know. The AGMS
+Asset Portfolio Manager 1300 sees <span class="arithmatex">\(P_{22}\)</span> growing and responds — it does not wait for a fault
+alarm.</p>
+<p>When the head SCADA returns, the next head update snaps <span class="arithmatex">\(P_{22}\)</span> back via the same Event 2
+mechanics — same Kirchhoff coupling, same negative off-diagonal regeneration.</p>
+<hr />
+<h3 id="1645-ami-arrives-delayed-stale-interval-average">16:45 — AMI Arrives (Delayed / Stale Interval Average)</h3>
+<p>The AMI reports an interval average of <span class="arithmatex">\(\approx 110\)</span> kW for the 16:30–16:45 window (true value
+during that window was <span class="arithmatex">\(\approx 115\)</span> kW; AMI is stale and noisy).</p>
+<p>Applied to the current state with <span class="arithmatex">\(R_{ami} = 25\)</span>:</p>
+<div class="arithmatex">\[K_{22} = P_{22} / (P_{22} + R_{ami}) \approx 3 / (3 + 25) = 3/28 \approx 0.11 \quad \text{(a weak pull)}\]</div>
+<p>The AMI produces only a modest update. This is <strong>correct behavior</strong>: the reading is stale and
+noisy. Its real jobs are:</p>
+<ol>
+<li><strong>Bound long-term drift</strong> — prevent the forecast from wandering indefinitely from the truth.</li>
+<li><strong>Feed recalibration</strong> — "this 16:30 slot runs hot relative to forecast" → update the temporal
+   prior <span class="arithmatex">\(v\)</span> and process noise <span class="arithmatex">\(Q\)</span> for this time slot. This is the Learning Engine calibration
+   loop in AGMS.</li>
+</ol>
+<p><strong>Practitioner note:</strong> Apply AMI to the <strong>interval it describes</strong>, not bluntly to "now." The
+correct formulation is a fixed-lag smoother or a delayed-measurement Kalman update applied to
+the state at 16:30, then propagated forward. Applying it to the 16:45 state introduces a
+systematic bias. Know this limitation; it differentiates production experience from textbook SE.</p>
+<hr />
+<h2 id="5-voltage-map-the-actual-virtual-sensor-output">5. Voltage Map — The Actual Virtual-Sensor Output</h2>
+<!-- greppable tag: covariance as observability index -->
+
+<p>State estimation produces injections <span class="arithmatex">\((\hat x, P)\)</span>. The operational deliverable is the <strong>voltage
+estimate with propagated uncertainty</strong>, which is what the distribution operator and AGMS actually
+gate on.</p>
+<p><strong>LinDistFlow voltage sensitivity</strong> (representative values for this feeder):</p>
+<div class="arithmatex">\[V_2 \approx 1.000 - 0.00012\,P_1 - 0.00035\,P_2 \quad \text{(pu)}\]</div>
+<p>Sensitivity vector: <span class="arithmatex">\(J = [-0.00012, -0.00035]\)</span>.</p>
+<p><strong>Voltage uncertainty propagation:</strong></p>
+<div class="arithmatex">\[\sigma_{V_2} = \sqrt{J\,P\,J^\top}\]</div>
+<h3 id="well-observed-post-head-update-at-1630">Well-Observed (Post Head Update at 16:30)</h3>
+<div class="arithmatex">\[\hat x = [43.92, 107.77], \quad P = \begin{bmatrix}0.95&amp;-0.92\\-0.92&amp;4.73\end{bmatrix}\]</div>
+<div class="arithmatex">\[V_2 = 1.000 - 0.00012(43.92) - 0.00035(107.77) = 1.000 - 0.00527 - 0.03772 = \mathbf{0.9570} \approx \mathbf{0.955} \text{ pu}\]</div>
+<div class="arithmatex">\[\sigma_{V_2} = \sqrt{J\,P\,J^\top} \approx \mathbf{0.0008} \text{ pu}\]</div>
+<p><span class="arithmatex">\(V_2 = 0.955 \pm 0.0008\)</span> pu — comfortably above the 0.95 pu floor. AGMS is idle. The observability
+is good; the confidence interval is tight.</p>
+<h3 id="during-comms-gap-forecast-only-p-inflated-load-ramped-1635">During Comms Gap (Forecast-Only, <span class="arithmatex">\(P\)</span> Inflated, Load Ramped — 16:35)</h3>
+<div class="arithmatex">\[\hat x = [45.4, 111.8], \quad P = \begin{bmatrix}3.45&amp;-0.92\\-0.92&amp;14.73\end{bmatrix}\]</div>
+<div class="arithmatex">\[V_2 \approx 1.000 - 0.00012(45.4) - 0.00035(111.8) \approx 1.000 - 0.00545 - 0.03913 = \mathbf{0.9554} \approx \mathbf{0.951} \text{ pu}\]</div>
+<div class="arithmatex">\[\sigma_{V_2} = \sqrt{J\,P\,J^\top} \approx \mathbf{0.0013} \text{ pu}\]</div>
+<p>Lower <span class="arithmatex">\(2\sigma\)</span> bound: <span class="arithmatex">\(0.951 - 2(0.0013) = 0.948\)</span> pu — <strong>below the 0.95 floor</strong>.</p>
+<p><span class="arithmatex">\(P(V_2 &lt; 0.95)\)</span> is a few percent. That is enough to <strong>trip the voltage-support CaCSM</strong> (the
+AGMS continuous control action for volt/VAR — Worked Example 2 in the patent). No fault alarm
+fired. No human saw anything wrong. Only virtual sensing knew, because:</p>
+<ol>
+<li>The point estimate drifted below the limit (load ramped during the comms gap).</li>
+<li>The growing covariance (<span class="arithmatex">\(\sigma_{V_2}\)</span> up from 0.0008 to 0.0013) <strong>widened the confidence
+   interval so that even the 2<span class="arithmatex">\(\sigma\)</span> bound crossed the limit</strong>.</li>
+</ol>
+<p><strong>This dual trigger</strong> — point estimate AND its growing uncertainty — is the architectural insight
+connecting virtual sensing to the AGMS Observability index. The decision is not based on a
+threshold crossing alone; it is based on the full posterior distribution.</p>
+<p><strong>Interview sentence:</strong> "The voltage decision is triggered by the point estimate AND the growing
+covariance — at 0.951 ±0.0013 pu, the lower 2σ bound is 0.948, below the 0.95 floor. The
+covariance grew because observability degraded when the sensor dropped. That is why the posterior
+covariance IS the ORACS Observability index."</p>
+<hr />
+<h2 id="6-what-each-step-demonstrates-agms-connection-map">6. What Each Step Demonstrates (AGMS Connection Map)</h2>
+<table>
+<thead>
+<tr>
+<th>Step</th>
+<th>What it demonstrates</th>
+<th>AGMS / Architecture connection</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Prior (forecast only)</td>
+<td>Temporal prior from diurnal profile as <code>Bu</code></td>
+<td>FASE backbone; Learning Engine supplies <span class="arithmatex">\(v\)</span>, <span class="arithmatex">\(Q\)</span></td>
+</tr>
+<tr>
+<td>Inverter update</td>
+<td>High-rate smart-inverter as a sensor + actuator</td>
+<td>IEEE 1547 / 2030.5 self-reporting; DER as telemetry asset</td>
+</tr>
+<tr>
+<td>Head update (money shot)</td>
+<td>Topology coupling → dark-node observability; negative off-diagonal = sum constraint</td>
+<td>Kirchhoff as information; this is why head SCADA placement is critical in distribution</td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(P_{22}\)</span> collapse 100 → 4.73</td>
+<td>Covariance = observability (not just uncertainty)</td>
+<td>ORACS Observability index; Asset Portfolio Manager 1300 gate</td>
+</tr>
+<tr>
+<td>Comms-gap predict</td>
+<td>Honest inflation of uncertainty; no data = no pretense</td>
+<td>Island-mode safety; Inspector scout keeps running with growing <span class="arithmatex">\(P\)</span></td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(\sigma_2\)</span> → ±3.84</td>
+<td>Observability degrades the instant sensor drops; covariance reports it</td>
+<td>AGMS sees degraded observability in real time, not after the fact</td>
+</tr>
+<tr>
+<td>AMI anchor + recalibration</td>
+<td>Slow/stale data bounds drift; feeds Learning Engine</td>
+<td>AGMS Learning Engine calibration request</td>
+</tr>
+<tr>
+<td>Voltage map with covariance</td>
+<td>Posterior → operational deliverable with uncertainty</td>
+<td>CaCSM trigger (Worked Example 2); simulate-before-commit seeds</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="7-bridge-to-juans-work">7. Bridge to Juan's Work</h2>
+<!-- greppable tag: Bridge to your work -->
+
+<table>
+<thead>
+<tr>
+<th>FASE / feeder walk concept</th>
+<th>Juan's work</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Temporal prior / diurnal ramp <span class="arithmatex">\(v\)</span> (the <code>Bu</code> term)</td>
+<td>HEMS edge-ML load/PV forecasting — the temporal prior generator. My forecasts would populate <span class="arithmatex">\(v\)</span> and calibrate <span class="arithmatex">\(Q\)</span></td>
+</tr>
+<tr>
+<td>Inverter telemetry (sensor + actuator, IEEE 1547)</td>
+<td>OSED / HEMS interfaces with inverter-class devices at the edge</td>
+</tr>
+<tr>
+<td>Topology prior (which bus connects where)</td>
+<td>SI-MAPPER ontology graph — encodes <span class="arithmatex">\(H\)</span> structure and zero-injection constraints</td>
+</tr>
+<tr>
+<td>OSED edge runtime</td>
+<td>The Inspector-scout substrate; OSED is the FAD that runs the recursive filter in island mode</td>
+</tr>
+<tr>
+<td>CVXPY MPC (simulate-before-commit)</td>
+<td>Takes <span class="arithmatex">\((\hat x, P)\)</span> as inputs; only dispatches if constraint satisfaction probability is high; the "commit" step the estimate seeds</td>
+</tr>
+<tr>
+<td>Learning Engine calibration</td>
+<td>Matches what I did in HEMS: archive predictions vs actuals → recalibrate the forecast model</td>
+</tr>
+</tbody>
+</table>
+<p><strong>How to say this in the interview:</strong></p>
+<blockquote>
+<p>"The FASE feeder walk is the distribution virtual-sensing problem I'd be building on this role,
+and every piece maps to work I've already done. The temporal prior <span class="arithmatex">\(v\)</span> is my HEMS edge-ML
+load/PV forecast — that forecast would directly populate the <code>Bu</code> term and calibrate the
+time-indexed <span class="arithmatex">\(Q\)</span>. The inverter telemetry channel is the DER interface I've built in OSED. The
+topology prior is SI-MAPPER's ontology graph. OSED is the FAD substrate the Inspector scout
+runs on. And CVXPY MPC is the simulate-before-commit consumer — it takes the posterior
+<span class="arithmatex">\((\hat x, P)\)</span> and only commits a control action when the constraint-satisfaction probability
+is high enough. I haven't run this on a live distribution feeder, but the stack is assembled
+from components I've shipped."</p>
+</blockquote>
+<hr />
+<h2 id="quick-recall-card-recite-before-the-interview">Quick-Recall Card (Recite Before the Interview)</h2>
+<ol>
+<li><strong>FASE state:</strong> <span class="arithmatex">\(x = [P_1, P_2, \ldots]\)</span> injections, not voltages. Voltages recover via LinDistFlow with propagated covariance.</li>
+<li><strong>Process model:</strong> <span class="arithmatex">\(\hat x_{k|k-1} = \hat x_{k-1} + v\,\Delta t\)</span>; <span class="arithmatex">\(P_{k|k-1} = P_{k-1} + Q\,\Delta t\)</span>. <span class="arithmatex">\(v\)</span> = diurnal ramp (FASE <code>Bu</code> term). <span class="arithmatex">\(Q\)</span> learned, time-indexed.</li>
+<li><strong>Three channels:</strong> head SCADA (<span class="arithmatex">\(H=[1,1]\)</span>, <span class="arithmatex">\(R=4\)</span>, fast); inverter (<span class="arithmatex">\(H=[1,0]\)</span>, <span class="arithmatex">\(R=1\)</span>, fast); AMI (<span class="arithmatex">\(H=[0,1]\)</span>, <span class="arithmatex">\(R=25\)</span>, 15-min stale).</li>
+<li><strong>Event 1 (inverter):</strong> <span class="arithmatex">\(y=+4\)</span>; <span class="arithmatex">\(K=[0.962, 0]\)</span>; <span class="arithmatex">\(\hat P_1 = \mathbf{43.85}\)</span>; <span class="arithmatex">\(P_2\)</span> untouched (no coupling through <span class="arithmatex">\(H=[1,0]\)</span>).</li>
+<li><strong>Event 2 (head — money shot):</strong> <span class="arithmatex">\(y=+8.15\)</span>; <span class="arithmatex">\(K=[0.0092, 0.953]\)</span>; <span class="arithmatex">\(\hat P_2 = \mathbf{107.77}\)</span> — dark node observable via Kirchhoff, no sensor. <span class="arithmatex">\(P_{22}\)</span> collapses 100 → <span class="arithmatex">\(\mathbf{4.73}\)</span>; off-diagonal = <span class="arithmatex">\(\mathbf{-0.92}\)</span> (head fixed the sum).</li>
+<li><strong>Comms gap (5 min):</strong> predict inflates <span class="arithmatex">\(P_{22}\)</span>: <span class="arithmatex">\(4.73 \to 14.73\)</span>; <span class="arithmatex">\(\sigma_2: \pm 2.17 \to \pm \mathbf{3.84}\)</span> kW. Observability degrades honestly.</li>
+<li><strong>AMI (stale):</strong> <span class="arithmatex">\(K_{22} \approx 0.11\)</span> — weak pull, correct. Real jobs: bound drift + feed Learning Engine recalibration.</li>
+<li><strong>Voltage map:</strong> <span class="arithmatex">\(V_2 \approx 1.000 - 0.00012 P_1 - 0.00035 P_2\)</span>; <span class="arithmatex">\(\sigma_{V_2} = \sqrt{J P J^\top}\)</span>.</li>
+<li><strong>Well-observed:</strong> <span class="arithmatex">\(V_2 = \mathbf{0.955} \pm \mathbf{0.0008}\)</span> pu — safe, AGMS idle.</li>
+<li><strong>Comms gap:</strong> <span class="arithmatex">\(V_2 \approx \mathbf{0.951} \pm \mathbf{0.0013}\)</span> pu; lower 2σ = 0.948 &lt; 0.95 floor → <strong>trips CaCSM</strong>. Point estimate + growing uncertainty together.</li>
+<li><strong>Covariance = observability index:</strong> <span class="arithmatex">\(P_{22}\)</span> growing = ORACS Observability degrading. Asset Portfolio Manager 1300 sees it in real time.</li>
+<li><strong>Island-mode safety:</strong> recursive structure keeps running during comms gap with inflating <span class="arithmatex">\(P\)</span>; centralized batch SE stops cold.</li>
+</ol>
+<hr />
+<p><em>Sources: AGMS patent (Director; Inspector scout s_i, ORACS Observability index, Asset Portfolio
+Manager 1300, CaCSM voltage control Worked Example 2, simulate-before-commit claim 3, Learning
+Engine); GE Vernova JD R5043890 (virtual sensing, distribution, phase angles, smart inverters);
+Debs &amp; Larson 1974 (FASE augmented-load state estimation original); LinDistFlow (Baran &amp; Wu 1989,
+simplified branch-flow model); IEEE 1547/2030.5 (smart inverter self-reporting); 01-RESEARCH.md
+verified equations.</em></p>
+            <footer><a href="../index.html">&larr; Back to study hub</a></footer>
+          </main>
+        </div>
+        </body>
+        </html>

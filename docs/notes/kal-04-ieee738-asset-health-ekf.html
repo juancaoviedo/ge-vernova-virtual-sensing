@@ -1,0 +1,772 @@
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noindex,nofollow">
+        <title>KAL-04: IEEE 738 Line-Temperature EKF — Secondary Asset-Health Virtual Sensor</title>
+        <link rel="stylesheet" href="../assets/site.css">
+        <link rel="stylesheet" href="../assets/pygments.css">
+        <script>
+window.MathJax = {
+  tex: { inlineMath: [["\\(","\\)"]], displayMath: [["\\[","\\]"]],
+         processEscapes: true, processEnvironments: true },
+  options: { ignoreHtmlClass: ".*", processHtmlClass: "arithmatex" }
+};
+</script>
+<script defer src="../vendor/mathjax/tex-chtml.js"></script>
+        </head>
+        <body>
+        <div class="wrap">
+          <header class="masthead"><h1>KAL-04: IEEE 738 Line-Temperature EKF — Secondary Asset-Health Virtual Sensor</h1></header>
+          <nav class="toc"><h2>Contents</h2><div class="toc">
+<ul>
+<li><a href="#positioning-say-this-first">Positioning (Say This First)</a></li>
+<li><a href="#1-the-ieee-738-thermal-ode-the-physics">1. The IEEE 738 Thermal ODE — The Physics</a><ul>
+<li><a href="#acsr-drake-conductor-parameters-worked-example-reference">ACSR Drake Conductor Parameters (Worked Example Reference)</a></li>
+</ul>
+</li>
+<li><a href="#2-state-space-mapping-to-the-ekf">2. State-Space Mapping to the EKF</a><ul>
+<li><a href="#state-inputs-and-measurement">State, Inputs, and Measurement</a></li>
+<li><a href="#discretized-process-model-euler-delta-t-1-s">Discretized Process Model (Euler, \(\Delta t = 1\) s)</a></li>
+<li><a href="#ekf-jacobians">EKF Jacobians</a></li>
+</ul>
+</li>
+<li><a href="#3-full-numeric-worked-example-one-predict-update-step">3. Full Numeric Worked Example — One Predict-Update Step</a><ul>
+<li><a href="#step-3a-heat-balance-at-t_c-45c-compute-net-heat-input">Step 3a: Heat Balance at \(T_c = 45\)°C (compute net heat input)</a></li>
+<li><a href="#step-3b-steady-state-temperature-and-dlr">Step 3b: Steady-State Temperature and DLR</a></li>
+<li><a href="#step-3c-ekf-predict-step">Step 3c: EKF Predict Step</a></li>
+<li><a href="#step-3d-ekf-update-step">Step 3d: EKF Update Step</a></li>
+<li><a href="#step-3e-summary-of-one-full-predict-update-cycle">Step 3e: Summary of One Full Predict-Update Cycle</a></li>
+</ul>
+</li>
+<li><a href="#4-q-and-r-tuning">4. Q and R Tuning</a><ul>
+<li><a href="#physical-interpretation">Physical Interpretation</a></li>
+<li><a href="#tuning-table">Tuning Table</a></li>
+<li><a href="#the-q-0-trap">The Q = 0 Trap</a></li>
+<li><a href="#adaptive-tuning-sage-husa-awareness-level">Adaptive Tuning (Sage-Husa — Awareness Level)</a></li>
+</ul>
+</li>
+<li><a href="#5-innovation-sequence-and-divergence-detection">5. Innovation Sequence and Divergence Detection</a><ul>
+<li><a href="#the-innovation-sequence">The Innovation Sequence</a></li>
+<li><a href="#nis-normalized-innovation-squared">NIS — Normalized Innovation Squared</a></li>
+<li><a href="#worked-nis-calculation-for-step-3">Worked NIS Calculation for Step 3</a></li>
+<li><a href="#practical-response-to-divergence">Practical Response to Divergence</a></li>
+</ul>
+</li>
+<li><a href="#6-dlr-caveat-when-dlr-decreases-capacity">6. DLR Caveat — When DLR Decreases Capacity</a></li>
+<li><a href="#7-building-rc-conductor-ode-isomorphism">7. Building-RC &lt;-&gt; Conductor-ODE Isomorphism</a><ul>
+<li><a href="#side-by-side-ode-comparison">Side-by-Side ODE Comparison</a></li>
+<li><a href="#structural-mapping-table">Structural Mapping Table</a></li>
+<li><a href="#time-constants">Time Constants</a></li>
+<li><a href="#the-key-bridge-sentence">The Key Bridge Sentence</a></li>
+<li><a href="#interview-delivery">Interview Delivery</a></li>
+</ul>
+</li>
+<li><a href="#8-quick-recall-card-recite-before-the-interview">8. Quick-Recall Card (Recite Before the Interview)</a></li>
+</ul>
+</div>
+</nav>
+          <main>
+        <h1 id="kal-04-ieee-738-line-temperature-ekf-secondary-asset-health-virtual-sensor">KAL-04: IEEE 738 Line-Temperature EKF — Secondary Asset-Health Virtual Sensor</h1>
+<!-- greppable tag: IEEE 738 asset health -->
+
+<p><strong>For:</strong> Oral rehearsal — work through the one-step trace aloud so you can narrate it in under
+90 seconds.
+<strong>Purpose:</strong> A <em>scalar</em> EKF worked example that (a) makes the predict/update mechanics concrete
+with real numbers, and (b) demonstrates a valid JD "line temperature / asset health" virtual-sensing
+parameter. This is the <strong>asset-health companion</strong> to KAL-03's network state estimation — not the
+distribution virtual-sensing centerpiece. The centerpiece is KAL-03 (FASE augmented-load feeder
+walk). IEEE 738 is valuable precisely because it is simple: one state, one ODE, tractable
+Jacobians — the mechanics are transparent, making it the ideal whiteboard example for the
+scalar-EKF half of the story. Use it to introduce the predict/update cycle; then redirect to
+KAL-03 for the distribution network state-estimation problem.</p>
+<hr />
+<h2 id="positioning-say-this-first">Positioning (Say This First)</h2>
+<blockquote>
+<p>"Let me give you two worked examples at different scales. The scalar case — which I'll describe
+first because it makes the mechanics transparent — is IEEE 738 line temperature: a single hidden
+state, a single ODE, a single EKF. Then I'll describe the distribution network version (KAL-03)
+where the state is a vector of load injections, measurements arrive asynchronously from multiple
+channels, and observability of dark nodes comes from Kirchhoff coupling rather than direct
+sensors. The scalar case is where the algorithm is easiest to see; the vector case is the one
+that matters for this role."</p>
+</blockquote>
+<hr />
+<h2 id="1-the-ieee-738-thermal-ode-the-physics">1. The IEEE 738 Thermal ODE — The Physics</h2>
+<p>IEEE Standard 738 defines the transient thermal balance of a bare overhead conductor as:</p>
+<div class="arithmatex">\[mC_p \frac{dT_c}{dt} = q_i + q_s - q_c - q_r\]</div>
+<p>This is the <strong>process model</strong> — the system dynamics that the EKF predict step will encode. Each
+term is a power per unit length (W/m):</p>
+<table>
+<thead>
+<tr>
+<th>Term</th>
+<th>Name</th>
+<th>Expression</th>
+<th>Physical Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><span class="arithmatex">\(T_c\)</span></td>
+<td>Conductor temperature (°C)</td>
+<td>—</td>
+<td>The <strong>hidden state</strong> — not directly measured</td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(mC_p\)</span></td>
+<td>Thermal capacitance</td>
+<td>~534 J/(m·°C) for Drake ACSR</td>
+<td>Thermal inertia; determines how fast <span class="arithmatex">\(T_c\)</span> changes</td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(q_i\)</span></td>
+<td>Resistive (Joule) heating</td>
+<td><span class="arithmatex">\(I^2 \cdot R(T_c)\)</span></td>
+<td>Current through the conductor's resistance generates heat — the dominant controllable term</td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(q_s\)</span></td>
+<td>Solar heat gain</td>
+<td><span class="arithmatex">\(\alpha_s \cdot Q_{se} \cdot \sin(\theta) \cdot D\)</span></td>
+<td>Sun shines on the conductor; not controllable, but measurable from irradiance sensors</td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(q_c\)</span></td>
+<td>Convective cooling</td>
+<td><span class="arithmatex">\(0.0205 \cdot \rho_f^{0.5} \cdot D^{0.75} \cdot (T_c - T_a)^{1.25}\)</span> (natural convection)</td>
+<td>Air removes heat; proportional to temperature difference, strongly dependent on wind</td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(q_r\)</span></td>
+<td>Radiative cooling</td>
+<td><span class="arithmatex">\(0.0178 \cdot D \cdot \varepsilon \cdot [(T_c+273)^4 - (T_a+273)^4] / 100^4\)</span></td>
+<td>Stefan-Boltzmann radiation; weaker than convection but non-negligible at high temperatures</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Note on <span class="arithmatex">\(R(T_c)\)</span>:</strong> Conductor resistance varies linearly with temperature:</p>
+<div class="arithmatex">\[R(T_c) = R_{25} \cdot [1 + \alpha_R \cdot (T_c - 25)]\]</div>
+<p>This is the nonlinearity that makes the system an EKF problem rather than a linear KF problem.
+<span class="arithmatex">\(R(T_c)\)</span> appears inside <span class="arithmatex">\(q_i = I^2 \cdot R(T_c)\)</span>, so the ODE is nonlinear in the state <span class="arithmatex">\(T_c\)</span>.</p>
+<h3 id="acsr-drake-conductor-parameters-worked-example-reference">ACSR Drake Conductor Parameters (Worked Example Reference)</h3>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Symbol</th>
+<th>Value</th>
+<th>Units</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Outer diameter</td>
+<td><span class="arithmatex">\(D\)</span></td>
+<td>28.1</td>
+<td>mm (= 0.0281 m)</td>
+</tr>
+<tr>
+<td>Thermal capacitance</td>
+<td><span class="arithmatex">\(mC_p\)</span></td>
+<td>534</td>
+<td>J/(m·°C)</td>
+</tr>
+<tr>
+<td>Resistance at 25°C</td>
+<td><span class="arithmatex">\(R_{25}\)</span></td>
+<td><span class="arithmatex">\(7.28 \times 10^{-5}\)</span></td>
+<td>Ω/m</td>
+</tr>
+<tr>
+<td>Resistance at 75°C</td>
+<td><span class="arithmatex">\(R_{75}\)</span></td>
+<td><span class="arithmatex">\(8.69 \times 10^{-5}\)</span></td>
+<td>Ω/m</td>
+</tr>
+<tr>
+<td>Temperature coefficient of resistance</td>
+<td><span class="arithmatex">\(\alpha_R\)</span></td>
+<td>0.00403</td>
+<td>/°C</td>
+</tr>
+<tr>
+<td>Solar absorptivity</td>
+<td><span class="arithmatex">\(\alpha_s\)</span></td>
+<td>0.5</td>
+<td>—</td>
+</tr>
+<tr>
+<td>Emissivity</td>
+<td><span class="arithmatex">\(\varepsilon\)</span></td>
+<td>0.5</td>
+<td>—</td>
+</tr>
+<tr>
+<td>Maximum safe temperature (typical)</td>
+<td><span class="arithmatex">\(T_\text{max}\)</span></td>
+<td>75–100</td>
+<td>°C</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Thermal time constant:</strong> <span class="arithmatex">\(\tau = mC_p / UA_\text{eff} \approx 10\)</span>–15 minutes for Drake ACSR in moderate wind.
+This is the same "RC time constant" as in a building thermal model — confirming the structural
+analogy (see Section 7).</p>
+<hr />
+<h2 id="2-state-space-mapping-to-the-ekf">2. State-Space Mapping to the EKF</h2>
+<h3 id="state-inputs-and-measurement">State, Inputs, and Measurement</h3>
+<p><strong>State vector (scalar):</strong></p>
+<div class="arithmatex">\[x = [T_c] \qquad \text{(conductor temperature in °C)}\]</div>
+<p><strong>Control inputs (measured from SCADA/PMU/weather sensors, not estimated):</strong></p>
+<div class="arithmatex">\[u = [I,\; T_a,\; v_\text{wind},\; q_s] \qquad \text{(current A, ambient temp °C, wind speed m/s, solar irradiance W/m}^2\text{)}\]</div>
+<p><strong>Measurement model — Architecture 3 (resistance proxy, used in this example):</strong></p>
+<p>If we measure voltage drop on a line segment and know the current <span class="arithmatex">\(I\)</span>, we can back-calculate
+the apparent resistance per unit length. Since <span class="arithmatex">\(R(T_c) = R_{25} \cdot [1 + \alpha_R \cdot (T_c - 25)]\)</span>, the
+measurement is a direct (noisy) function of the hidden state <span class="arithmatex">\(T_c\)</span>:</p>
+<div class="arithmatex">\[h(T_c) = R_{25} \cdot [1 + \alpha_R \cdot (T_c - 25)]\]</div>
+<p>This is architecture 3: current from PMU + voltage drop → apparent resistance → infer <span class="arithmatex">\(T_c\)</span>.</p>
+<h3 id="discretized-process-model-euler-delta-t-1-s">Discretized Process Model (Euler, <span class="arithmatex">\(\Delta t = 1\)</span> s)</h3>
+<p>The predict function <span class="arithmatex">\(f(T_c, u)\)</span> is the IEEE 738 ODE stepped forward by one second:</p>
+<div class="arithmatex">\[f(T_c, u) = T_c + \frac{\Delta t}{mC_p}\, \bigl[I^2 R(T_c) - q_c(T_c, T_a, v_\text{wind}) - q_r(T_c, T_a) + q_s\bigr]\]</div>
+<p>Breaking down each sub-calculation:</p>
+<div class="highlight"><pre><span></span><code>R(Tc) = R25 * (1 + alpha_R * (Tc - 25))       — resistance at current temperature
+qi = I² * R(Tc)                                — Joule heating
+qs = alpha_s * Q_se * D                        — solar (simplified: broadside, no angle correction)
+qc = 0.0205 * rho_f^0.5 * D^0.75 * (Tc-Ta)^1.25   — natural convection
+qr = 0.0178 * D * eps * [(Tc+273)⁴ - (Ta+273)⁴] / 1e8   — radiation
+</code></pre></div>
+
+<h3 id="ekf-jacobians">EKF Jacobians</h3>
+<p><strong>Process Jacobian <span class="arithmatex">\(A = \partial f/\partial T_c\)</span></strong> (needed to propagate covariance <span class="arithmatex">\(P\)</span> through predict step):</p>
+<div class="arithmatex">\[A = \frac{\partial f}{\partial T_c} = 1 + \frac{\Delta t}{mC_p}\left[I^2 \frac{dR}{dT_c} - \frac{dq_c}{dT_c} - \frac{dq_r}{dT_c}\right]\]</div>
+<p>where:</p>
+<div class="arithmatex">\[\begin{aligned}
+\frac{dR}{dT_c}  &amp;= R_{25} \cdot \alpha_R \approx 2.94 \times 10^{-7}\;\Omega/(\text{m}\cdot{}^\circ\text{C}) \\
+\frac{dq_c}{dT_c}&amp;= 0.0205 \cdot \rho_f^{0.5} \cdot D^{0.75} \cdot 1.25 \cdot (T_c - T_a)^{0.25} \approx 0.04 \text{ at } (T_c{-}T_a)=20°C \\
+\frac{dq_r}{dT_c}&amp;= 4 \cdot 0.0178 \cdot D \cdot \varepsilon \cdot (T_c+273)^3 / 10^8 \approx 0.01 \text{ at } 45°C
+\end{aligned}\]</div>
+<p>WHY we compute <span class="arithmatex">\(A\)</span>: In the EKF predict step, <span class="arithmatex">\(P_\text{pred} = A^2 \cdot P_\text{prior} + Q\)</span>. The Jacobian <span class="arithmatex">\(A\)</span>
+tells us how fast small temperature errors grow or shrink under the process dynamics. If <span class="arithmatex">\(A &gt; 1\)</span>,
+errors amplify (unstable open-loop); if <span class="arithmatex">\(A &lt; 1\)</span>, errors shrink (stable without measurement).</p>
+<p><strong>Measurement Jacobian <span class="arithmatex">\(H = \partial h/\partial T_c\)</span></strong> (needed to translate state uncertainty to measurement space):</p>
+<div class="arithmatex">\[H = \frac{d}{dT_c}\bigl[R_{25}(1 + \alpha_R(T_c - 25))\bigr] = R_{25} \cdot \alpha_R = 7.28\times10^{-5} \times 0.00403 \approx 2.934\times10^{-7}\;\Omega/(\text{m}\cdot{}^\circ\text{C})\]</div>
+<p><span class="arithmatex">\(H\)</span> is a constant scalar — the measurement model is linear in <span class="arithmatex">\(T_c\)</span> (even though the process model is
+nonlinear). This is convenient: the update step behaves like a linear KF update.</p>
+<hr />
+<h2 id="3-full-numeric-worked-example-one-predict-update-step">3. Full Numeric Worked Example — One Predict-Update Step</h2>
+<p><strong>Scenario:</strong> Drake ACSR on a 230 kV line. Load <span class="arithmatex">\(I = 500\)</span> A. Calm, sunny midday.</p>
+<p><strong>Initial conditions:</strong></p>
+<div class="highlight"><pre><span></span><code>Tc_0   = 45°C   (prior estimate — conductor has been running a while)
+Ta     = 25°C   (ambient)
+v_wind ≈ 0      (natural convection only)
+Q_solar = 900 W/m² (broadside sun)
+</code></pre></div>
+
+<p><strong>Prior covariance:</strong></p>
+<div class="arithmatex">\[P_\text{prior} = 4\;{}^\circ\text{C}^2 \qquad (\pm 2\,{}^\circ\text{C uncertainty in our prior estimate})\]</div>
+<hr />
+<h3 id="step-3a-heat-balance-at-t_c-45c-compute-net-heat-input">Step 3a: Heat Balance at <span class="arithmatex">\(T_c = 45\)</span>°C (compute net heat input)</h3>
+<p><strong>Resistive heating <span class="arithmatex">\(q_i\)</span>:</strong></p>
+<div class="highlight"><pre><span></span><code>R_45 = R25 * [1 + alpha_R * (45 - 25)]
+     = 7.28e-5 * [1 + 0.00403 * 20]
+     = 7.28e-5 * 1.0806
+     = 7.867e-5  Ω/m
+
+qi = I² * R_45 = (500)² * 7.867e-5 = 250000 * 7.867e-5 = 19.67 W/m
+</code></pre></div>
+
+<p>WHY: The current squared times resistance gives the power dissipated as heat. At 500 A, this
+is the dominant heat input — more than solar.</p>
+<p><strong>Solar heat gain <span class="arithmatex">\(q_s\)</span>:</strong></p>
+<div class="highlight"><pre><span></span><code>qs = alpha_s * Q_se * sin(90°) * D
+   = 0.5 * 900 * 1.0 * 0.0281
+   = 12.65 W/m
+</code></pre></div>
+
+<p>WHY: Broadside sun at 90° gives maximum solar heating. <span class="arithmatex">\(\alpha_s = 0.5\)</span> means the conductor
+absorbs half the incident radiation (the rest is reflected).</p>
+<p><strong>Convective cooling <span class="arithmatex">\(q_c\)</span> (natural convection, <span class="arithmatex">\(v_\text{wind} \approx 0\)</span>):</strong></p>
+<div class="highlight"><pre><span></span><code>qc = 0.0205 * rho_f^0.5 * D^0.75 * (Tc - Ta)^1.25
+
+rho_f ≈ 1.20 kg/m³ (air at ~50°C film temperature)
+D in mm for this formula: 28.1 mm
+
+qc = 0.0205 * (1.20)^0.5 * (28.1)^0.75 * (45 - 25)^1.25
+   = 0.0205 * 1.095 * 10.05 * 26.39
+   ≈ 5.96 W/m
+</code></pre></div>
+
+<p>WHY: Natural convection is driven by the temperature difference <span class="arithmatex">\((T_c - T_a)\)</span>. The exponent 1.25
+(not 1.0) reflects the nonlinear buoyancy effect — hotter surfaces create stronger convective
+plumes. This is the term that makes the Jacobian non-trivial.</p>
+<p><strong>Radiative cooling <span class="arithmatex">\(q_r\)</span>:</strong></p>
+<div class="highlight"><pre><span></span><code>qr = 0.0178 * D * eps * [(Tc+273)⁴ - (Ta+273)⁴] / (100)⁴
+
+   = 0.0178 * 0.0281 * 0.5 * [(318)⁴ - (298)⁴] / 1e8
+
+   (318)⁴ = 1.0243e10,  (298)⁴ = 7.900e9
+
+   = 0.0178 * 0.0281 * 0.5 * (1.0243e10 - 7.900e9) / 1e8
+   = 0.0178 * 0.0281 * 0.5 * 2343 / 1
+   ≈ 0.000250 * 2343 * 0.5 / 1
+   ≈ 2.93 W/m
+</code></pre></div>
+
+<p>WHY: Stefan-Boltzmann radiation depends on the 4th power of absolute temperature (Kelvin).
+At 45°C, radiation is weaker than convection but increases faster as <span class="arithmatex">\(T_c\)</span> rises (<span class="arithmatex">\(T^4\)</span> growth).</p>
+<p><strong>Net heat input and temperature derivative:</strong></p>
+<div class="arithmatex">\[\frac{dT_c}{dt} = \frac{q_i + q_s - q_c - q_r}{mC_p} = \frac{19.67 + 12.65 - 5.96 - 2.93}{534} = \frac{23.43}{534} \approx +0.044\,{}^\circ\text{C/s}\]</div>
+<p><strong>Interpretation:</strong> At 45°C with 500 A, the conductor is still heating up at 0.044°C/s.
+It has not reached thermal equilibrium yet. This positive derivative drives the predict step
+to push <span class="arithmatex">\(T_c\)</span> upward.</p>
+<hr />
+<h3 id="step-3b-steady-state-temperature-and-dlr">Step 3b: Steady-State Temperature and DLR</h3>
+<p><strong>What is the steady-state conductor temperature at 500 A?</strong></p>
+<p>Set <span class="arithmatex">\(dT_c/dt = 0\)</span> → solve <span class="arithmatex">\(q_i + q_s = q_c + q_r\)</span> numerically → <strong><span class="arithmatex">\(T_{c,ss} \approx 73\)</span>°C</strong></p>
+<p>This is close to the 75°C thermal limit — the conductor is operating near its ampacity
+boundary. The small 2°C margin explains why DLR is critical here.</p>
+<p><strong>Dynamic Line Rating (DLR) — what is the maximum current at this weather condition?</strong></p>
+<p>Solve <span class="arithmatex">\(I^2_\text{max} \cdot R(75°C) = q_c(75°C) + q_r(75°C) - q_s\)</span> for <span class="arithmatex">\(I_\text{max}\)</span>:</p>
+<div class="arithmatex">\[I_\text{max} \approx 531\text{ A}\]</div>
+<p>Compare to a typical static nameplate rating of ~900 A (computed under conservative worst-case
+weather: 0.6 m/s wind, 40°C ambient). On this hot, calm day, the real-time DLR is <strong>lower
+than 531 A</strong> for strict compliance at 75°C — which is far less than the 900 A static rating.</p>
+<p><strong>CRITICAL CAVEAT — DLR can DECREASE capacity:</strong></p>
+<p>The popular claim that "DLR gives 10–40% more capacity" applies on average across typical
+operating conditions. On a hot, calm day like this scenario (35°C ambient, no wind), DLR may
+give a rating LOWER than the static nameplate. The static nameplate was computed under
+conservative weather; when actual weather is worse than conservative, DLR is lower, not higher.</p>
+<p><strong>Interview answer:</strong> "DLR gives an accurate real-time rating that can be higher OR lower than
+the static rating. The capacity gain comes from cool, windy days. On a hot, calm afternoon,
+DLR will correctly reduce the safe operating current — something a static rating would miss,
+potentially allowing overloading and thermal damage."</p>
+<hr />
+<h3 id="step-3c-ekf-predict-step">Step 3c: EKF Predict Step</h3>
+<p><strong>Input:</strong> <span class="arithmatex">\(T_{c,\text{prior}} = 45\)</span>°C, <span class="arithmatex">\(P_\text{prior} = 4\,{}^\circ\text{C}^2\)</span></p>
+<p><strong>Predict <span class="arithmatex">\(T_c\)</span> forward by <span class="arithmatex">\(\Delta t = 1\)</span> s:</strong></p>
+<div class="arithmatex">\[T_{c,\text{pred}} = f(45, u) = 45 + \frac{1}{534} \times 23.43 = 45 + 0.04388 = 45.044\,{}^\circ\text{C}\]</div>
+<p><strong>Compute process Jacobian <span class="arithmatex">\(A\)</span> at <span class="arithmatex">\(T_c = 45\)</span>°C:</strong></p>
+<div class="highlight"><pre><span></span><code>A = 1 + (1/534) * [I²·dR/dTc - dqc/dTc - dqr/dTc]
+
+dR/dTc    = R25 * alpha_R = 7.28e-5 * 0.00403 = 2.934e-7 Ω/(m·°C)
+I²·dR/dTc = 250000 * 2.934e-7 = 0.07335 W/(m·°C)
+
+dqc/dTc = 0.0205 * (1.20)^0.5 * (28.1)^0.75 * 1.25 * (45-25)^0.25
+        ≈ 0.0205 * 1.095 * 10.05 * 1.25 * 2.115
+        ≈ 0.0394 W/(m·°C)   (approximate)
+
+dqr/dTc = 4 * 0.0178 * 0.0281 * 0.5 * (318)³ / 1e8
+        = 4 * 0.0178 * 0.0281 * 0.5 * 3.215e7 / 1e8
+        ≈ 0.0102 W/(m·°C)   (approximate)
+
+A = 1 + (1/534) * [0.07335 - 0.0394 - 0.0102]
+  = 1 + (1/534) * 0.02375
+  = 1 + 0.0000445
+  ≈ 1.0000445
+</code></pre></div>
+
+<p><span class="arithmatex">\(A\)</span> is very slightly greater than 1.0, indicating the thermal system is marginally unstable
+without convective/radiative cooling damping — which is physically correct (heating wins
+slightly at this operating point, driving <span class="arithmatex">\(T_c\)</span> upward toward steady state at 73°C).</p>
+<p><strong>Propagate covariance through predict step:</strong></p>
+<div class="arithmatex">\[P_\text{pred} = A^2 \cdot P_\text{prior} + Q = (1.0000445)^2 \times 4.0 + 0.01 \approx 4.026\,{}^\circ\text{C}^2\]</div>
+<p>where <span class="arithmatex">\(Q = 0.01\,{}^\circ\text{C}^2/\text{step}\)</span> (process noise: low, model is trusted).</p>
+<p>WHY <span class="arithmatex">\(P\)</span> grew slightly: The Jacobian <span class="arithmatex">\(A \approx 1.000\)</span> means covariance is nearly unchanged by the
+dynamics. The <span class="arithmatex">\(+Q = +0.01\)</span> term reflects residual model uncertainty (unmodeled wind gusts,
+conductor aging) that accumulates each step.</p>
+<hr />
+<h3 id="step-3d-ekf-update-step">Step 3d: EKF Update Step</h3>
+<p><strong>Measurement arrives:</strong> A resistance monitor (or voltage/current measurement on a line segment)
+reports the apparent resistance:</p>
+<div class="arithmatex">\[z_\text{meas} = 7.94 \times 10^{-5}\;\Omega/\text{m} \qquad \text{(measured — slightly higher than predicted, suggesting }T_c &gt; 45°C\text{)}\]</div>
+<p><strong>Predicted measurement from the model:</strong></p>
+<div class="arithmatex">\[z_\text{pred} = h(T_{c,\text{pred}}) = R_{25}[1 + \alpha_R(T_{c,\text{pred}} - 25)] = 7.28\times10^{-5} \times 1.08078 = 7.868\times10^{-5}\;\Omega/\text{m}\]</div>
+<p><strong>Innovation (the "surprise"):</strong></p>
+<div class="arithmatex">\[y = z_\text{meas} - z_\text{pred} = 7.94\times10^{-5} - 7.868\times10^{-5} = 7.2\times10^{-7}\;\Omega/\text{m}\]</div>
+<p>WHY the innovation matters: <span class="arithmatex">\(y &gt; 0\)</span> means the measured resistance is higher than our model
+predicted. Higher resistance → higher actual <span class="arithmatex">\(T_c\)</span> than our estimate. The EKF will use this
+positive innovation to push <span class="arithmatex">\(T_c\)</span> upward.</p>
+<p><strong>Measurement Jacobian (constant scalar):</strong></p>
+<div class="arithmatex">\[H = R_{25} \cdot \alpha_R = 7.28\times10^{-5} \times 0.00403 = 2.934\times10^{-7}\;\Omega/(\text{m}\cdot{}^\circ\text{C})\]</div>
+<p><strong>Innovation covariance <span class="arithmatex">\(S\)</span>:</strong></p>
+<div class="arithmatex">\[S = H^2 \cdot P_\text{pred} + R_\text{sensor} = (2.934\times10^{-7})^2 \times 4.026 + 10^{-14} = 3.466\times10^{-13} + 10^{-14} \approx 3.57\times10^{-13}\;\Omega^2/\text{m}^2\]</div>
+<p>where <span class="arithmatex">\(R_\text{sensor} = (10^{-7})^2 = 10^{-14}\;\Omega^2/\text{m}^2\)</span> (sensor noise: <span class="arithmatex">\(\approx 0.1\;\mu\Omega/\text{m}\)</span> standard deviation).</p>
+<p><span class="arithmatex">\(S\)</span> combines the state uncertainty (how unsure we are about <span class="arithmatex">\(T_c\)</span>, projected into measurement space
+via <span class="arithmatex">\(H^2 P\)</span>) with the measurement noise <span class="arithmatex">\(R\)</span>. Large <span class="arithmatex">\(S\)</span> → innovation <span class="arithmatex">\(y\)</span> is expected to be large even
+without model error; small <span class="arithmatex">\(S\)</span> → any non-zero <span class="arithmatex">\(y\)</span> is informative.</p>
+<p><strong>Kalman gain <span class="arithmatex">\(K\)</span>:</strong></p>
+<div class="arithmatex">\[K = \frac{H \cdot P_\text{pred}}{S} = \frac{2.934\times10^{-7} \times 4.026}{3.57\times10^{-13}} = \frac{1.181\times10^{-6}}{3.57\times10^{-13}} \approx 3.31\times10^{6}\;{}^\circ\text{C}/(\Omega/\text{m})\]</div>
+<p>WHY <span class="arithmatex">\(K\)</span> is large: <span class="arithmatex">\(P_\text{pred} \gg R\)</span> means we trust the measurement much more than the model at this
+step. <span class="arithmatex">\(K\)</span> converts a small resistance innovation (in <span class="arithmatex">\(\Omega\)</span>/m) to a large temperature correction
+(in °C). The unit analysis: <span class="arithmatex">\([{}^\circ\text{C}/(\Omega/\text{m})] \times [\Omega/\text{m}] = [{}^\circ\text{C}]\)</span> — correct.</p>
+<p><strong>Posterior state estimate:</strong></p>
+<div class="arithmatex">\[T_{c,\text{post}} = T_{c,\text{pred}} + K \cdot y = 45.044 + 3.31\times10^{6} \times 7.2\times10^{-7} = 45.044 + 2.383 \approx 47.5\,{}^\circ\text{C}\]</div>
+<p>The measurement (higher apparent resistance) told us <span class="arithmatex">\(T_c\)</span> is actually about 2.5°C warmer than
+the model predicted. The filter incorporates this information, updating its estimate upward.</p>
+<p><strong>Posterior covariance:</strong></p>
+<div class="arithmatex">\[P_\text{post} = (1 - K \cdot H) \cdot P_\text{pred} = (1 - 3.31\times10^{6} \times 2.934\times10^{-7}) \times 4.026 = 0.0288 \times 4.026 \approx 0.116\,{}^\circ\text{C}^2\]</div>
+<p>The uncertainty dropped from <span class="arithmatex">\(P_\text{prior} = 4\,{}^\circ\text{C}^2\)</span> (±2°C) to <span class="arithmatex">\(P_\text{post} \approx 0.09\)</span>–<span class="arithmatex">\(0.12\,{}^\circ\text{C}^2\)</span> (±0.3°C).
+<strong>One measurement update reduced uncertainty by ~97%.</strong> This dramatic reduction is the point
+of the update step: the measurement was highly informative because <span class="arithmatex">\(H^2 P \gg R\)</span>, so <span class="arithmatex">\(K \approx 1/H\)</span> and
+the filter relies almost entirely on the sensor this step.</p>
+<hr />
+<h3 id="step-3e-summary-of-one-full-predict-update-cycle">Step 3e: Summary of One Full Predict-Update Cycle</h3>
+<table>
+<thead>
+<tr>
+<th>Quantity</th>
+<th>Before Predict</th>
+<th>After Predict</th>
+<th>After Update</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><span class="arithmatex">\(T_c\)</span> estimate</td>
+<td>45.000°C</td>
+<td>45.044°C</td>
+<td>47.5°C</td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(P\)</span> (covariance)</td>
+<td>4.000°C²</td>
+<td>4.026°C²</td>
+<td>~0.09–0.12°C²</td>
+</tr>
+<tr>
+<td>Uncertainty (<span class="arithmatex">\(\pm 1\sigma\)</span>)</td>
+<td>±2.00°C</td>
+<td>±2.01°C</td>
+<td>±0.30°C</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Narrative for the interview:</strong> "The model predicted the conductor would warm by 0.044°C in
+one second. Our prior uncertainty stayed almost constant (4 → 4.026) because <span class="arithmatex">\(A \approx 1\)</span> and <span class="arithmatex">\(Q\)</span> is
+small. Then a resistance measurement came in showing the conductor was actually at <span class="arithmatex">\(7.94\times10^{-5}\;\Omega/\text{m}\)</span>
+— higher than our predicted <span class="arithmatex">\(7.87\times10^{-5}\;\Omega/\text{m}\)</span>. The innovation was positive. With a Kalman gain of
+<span class="arithmatex">\(3.3 \times 10^6\)</span> °C/(Ω/m), the filter updated its estimate from 45.04 to 47.5°C and collapsed its
+uncertainty from ±2°C down to ±0.3°C in a single step."</p>
+<hr />
+<h2 id="4-q-and-r-tuning">4. Q and R Tuning</h2>
+<p>The two noise covariance matrices are the EKF's "knobs." Getting them right determines whether
+the filter tracks reality or diverges.</p>
+<h3 id="physical-interpretation">Physical Interpretation</h3>
+<p><strong><span class="arithmatex">\(Q\)</span> — Process Noise Covariance (°C²/step):</strong></p>
+<p><span class="arithmatex">\(Q\)</span> represents your uncertainty about the <strong>process model</strong> — i.e., all the things the IEEE 738
+ODE does not capture:
+- Unmodeled wind gusts: anemometer measures average wind speed, but a 1-second gust hitting
+  the conductor provides extra convective cooling the model cannot predict.
+- Conductor non-uniformity along the span: different sag, ice accumulation, surface condition.
+- Parameter uncertainty: <span class="arithmatex">\(mC_p\)</span> and <span class="arithmatex">\(R_{25}\)</span> may have drifted from nominal (aging, corrosion).
+- Span-to-span variation: a lumped model uses a single <span class="arithmatex">\(T_c\)</span>, but the conductor temperature
+  varies spatially — the model represents an average.</p>
+<p>A physically motivated <span class="arithmatex">\(Q\)</span> initialization: wind speed uncertainty <span class="arithmatex">\(\pm 1\)</span> m/s → thermal impact
+<span class="arithmatex">\(\approx 0.2\)</span>°C/s → <span class="arithmatex">\(Q \approx 0.04\)</span>–<span class="arithmatex">\(0.1\,{}^\circ\text{C}^2/\text{step}\)</span>.</p>
+<p><strong><span class="arithmatex">\(R\)</span> — Measurement Noise Covariance (<span class="arithmatex">\(\Omega^2/\text{m}^2\)</span>):</strong></p>
+<p><span class="arithmatex">\(R\)</span> represents your uncertainty about the <strong>sensor</strong>:
+- Current transformer (CT) accuracy: Class 0.2 CT has ±0.2% error at rated current.
+  At 500 A rated, <span class="arithmatex">\(\sigma_I \approx 1\)</span> A → <span class="arithmatex">\(\sigma_{q_i} \approx 2 I R_{25} \sigma_I \approx 7.3\times10^{-8}\;\Omega/\text{m}\)</span> → <span class="arithmatex">\(R \approx (7.3\times10^{-8})^2\)</span>.
+- Resistance inference noise: voltage measurement uncertainty compounds with current measurement.
+- Typical <span class="arithmatex">\(R\)</span> starting value: <span class="arithmatex">\((10^{-7})^2 = 10^{-14}\;\Omega^2/\text{m}^2\)</span> (<span class="arithmatex">\(\pm 0.1\;\mu\Omega/\text{m}\)</span> standard deviation).</p>
+<h3 id="tuning-table">Tuning Table</h3>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Physical Meaning</th>
+<th>Recommended Start</th>
+<th>Too Large →</th>
+<th>Too Small →</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><span class="arithmatex">\(Q\)</span></td>
+<td>Model uncertainty: wind gusts, aging, non-uniformity</td>
+<td>0.01–0.1 °C²/step</td>
+<td>Filter chases noisy measurements; <span class="arithmatex">\(T_c\)</span> estimate is erratic</td>
+<td>Filter ignores sensors; sticks to model even as it drifts — <strong>divergence</strong></td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(R\)</span></td>
+<td>Sensor noise: CT accuracy + resistance inference error</td>
+<td><span class="arithmatex">\((10^{-7})^2\;\Omega^2/\text{m}^2 \approx 10^{-14}\)</span></td>
+<td>Filter is sluggish; slow to respond to real temperature changes</td>
+<td>Filter over-trusts noisy measurements; noisy <span class="arithmatex">\(T_c\)</span> estimate</td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(P_0\)</span></td>
+<td>Initial state uncertainty</td>
+<td>100°C² (±10°C)</td>
+<td>Filter quickly contracts toward measurement — fine</td>
+<td>Over-confident initialization may refuse to correct early errors</td>
+</tr>
+</tbody>
+</table>
+<h3 id="the-q-0-trap">The Q = 0 Trap</h3>
+<p>Setting <span class="arithmatex">\(Q = 0\)</span> means "I believe my model is perfect." The consequences:
+- <span class="arithmatex">\(P_\text{pred} = A^2 \cdot P_\text{post}\)</span> converges toward zero over time (no <span class="arithmatex">\(Q\)</span> injection to keep <span class="arithmatex">\(P\)</span> nonzero).
+- <span class="arithmatex">\(K \to 0\)</span> as <span class="arithmatex">\(P \to 0\)</span> (Kalman gain collapses).
+- The filter stops updating its estimate from measurements.
+- Eventually <span class="arithmatex">\(\hat{T}_c\)</span> drifts from reality with no way to self-correct.</p>
+<p><strong>Prevention:</strong> Always initialize <span class="arithmatex">\(Q &gt; 0\)</span> from physical reasoning. Even if the model is
+excellent, some unmodeled variability always exists. <span class="arithmatex">\(Q = 0.01\,{}^\circ\text{C}^2/\text{step}\)</span> is a reasonable lower
+bound for IEEE 738 in a controlled substation environment.</p>
+<h3 id="adaptive-tuning-sage-husa-awareness-level">Adaptive Tuning (Sage-Husa — Awareness Level)</h3>
+<p>For production systems, <span class="arithmatex">\(Q\)</span> and <span class="arithmatex">\(R\)</span> can be estimated online from the innovation sequence itself:</p>
+<div class="arithmatex">\[\hat{R}_k = (1 - d_k)\,\hat{R}_{k-1} + d_k\,\bigl[y_k y_k^\top - H_k\, P_{k|k-1}\, H_k^\top\bigr]\]</div>
+<p>where <span class="arithmatex">\(d_k\)</span> is a forgetting factor (typically 0.98–0.999). This lets the filter adapt to
+changing sensor quality (e.g., degrading CT, changing weather station accuracy) without
+manual re-tuning.</p>
+<hr />
+<h2 id="5-innovation-sequence-and-divergence-detection">5. Innovation Sequence and Divergence Detection</h2>
+<h3 id="the-innovation-sequence">The Innovation Sequence</h3>
+<p>The innovation at each time step is:</p>
+<div class="arithmatex">\[y_k = z_k - h(\hat{x}_{k|k-1}) \qquad \text{(measurement minus predicted measurement)}\]</div>
+<p>Under a correctly functioning, well-tuned filter, the innovation sequence <span class="arithmatex">\(\{y_k\}\)</span> must be:</p>
+<ol>
+<li><strong>Zero-mean:</strong> No systematic bias. If <span class="arithmatex">\(y_k\)</span> has a persistent positive or negative offset,
+   the model is wrong in a predictable direction (e.g., consistently underestimating <span class="arithmatex">\(T_c\)</span>).</li>
+<li><strong>White (uncorrelated):</strong> Consecutive innovations should be independent. Autocorrelated
+   innovations indicate the model is missing structure (e.g., a slow drift that the model
+   cannot represent).</li>
+<li><strong>Gaussian with covariance <span class="arithmatex">\(S_k\)</span>:</strong> The distribution should match the theoretical innovation
+   covariance <span class="arithmatex">\(S_k = H \cdot P_{k|k-1} \cdot H^\top + R\)</span>.</li>
+</ol>
+<p>If any of these three properties fail, the filter is diverging or misconfigured.</p>
+<h3 id="nis-normalized-innovation-squared">NIS — Normalized Innovation Squared</h3>
+<p>The formal divergence test uses the Normalized Innovation Squared (NIS):</p>
+<div class="arithmatex">\[\text{NIS}_k = y_k^\top S_k^{-1} y_k\]</div>
+<p>Under a correct filter, <span class="arithmatex">\(\text{NIS}_k\)</span> follows a chi-squared distribution with <span class="arithmatex">\(m\)</span> degrees of freedom,
+where <span class="arithmatex">\(m\)</span> is the dimension of the measurement vector:</p>
+<div class="arithmatex">\[\text{NIS}_k \sim \chi^2(m)\]</div>
+<p>For our scalar measurement case (<span class="arithmatex">\(m = 1\)</span>):</p>
+<div class="arithmatex">\[\text{threshold}_{95} = \chi^2_{0.95}(1) = 3.84\]</div>
+<p>If <span class="arithmatex">\(\text{NIS}_k &gt; 3.84\)</span>, there is only a 5% chance this happened by chance. A persistent NIS above
+the threshold signals a problem.</p>
+<p><strong>Python implementation:</strong></p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">scipy.stats</span> <span class="kn">import</span> <span class="n">chi2</span>
+
+<span class="k">def</span> <span class="nf">check_nis</span><span class="p">(</span><span class="n">innov</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">confidence</span><span class="o">=</span><span class="mf">0.95</span><span class="p">,</span> <span class="n">m</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Check Normalized Innovation Squared against chi-squared gate.&quot;&quot;&quot;</span>
+    <span class="n">NIS</span> <span class="o">=</span> <span class="p">(</span><span class="n">innov</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="n">S</span>      <span class="c1"># scalar case: NIS = y² / S</span>
+    <span class="n">threshold</span> <span class="o">=</span> <span class="n">chi2</span><span class="o">.</span><span class="n">ppf</span><span class="p">(</span><span class="n">confidence</span><span class="p">,</span> <span class="n">df</span><span class="o">=</span><span class="n">m</span><span class="p">)</span>  <span class="c1"># = 3.84 for m=1</span>
+    <span class="k">return</span> <span class="n">NIS</span><span class="p">,</span> <span class="n">NIS</span> <span class="o">&gt;</span> <span class="n">threshold</span>
+</code></pre></div>
+
+<h3 id="worked-nis-calculation-for-step-3">Worked NIS Calculation for Step 3</h3>
+<div class="arithmatex">\[\text{NIS} = \frac{y^2}{S} = \frac{(7.2\times10^{-7})^2}{3.57\times10^{-13}} = \frac{5.18\times10^{-13}}{3.57\times10^{-13}} \approx 1.45\]</div>
+<p><span class="arithmatex">\(\text{NIS} = 1.45 &lt; 3.84\)</span> (the 95th-percentile threshold for <span class="arithmatex">\(df=1\)</span>) → innovation is <strong>statistically
+consistent</strong>. The measurement update in this step is accepted. The filter is behaving correctly.</p>
+<h3 id="practical-response-to-divergence">Practical Response to Divergence</h3>
+<table>
+<thead>
+<tr>
+<th>NIS Pattern</th>
+<th>Diagnosis</th>
+<th>Response</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Single isolated spike (<span class="arithmatex">\(\text{NIS} \gg 3.84\)</span>, then returns)</td>
+<td>Bad measurement (CT fault, communication glitch)</td>
+<td>Gate the update: reject this measurement, continue predicting</td>
+</tr>
+<tr>
+<td>Sustained NIS &gt; threshold (&gt;5 consecutive)</td>
+<td>Model mismatch OR sensor failure</td>
+<td>(a) Check sensor health; (b) check for topology change (line reconfiguration); (c) increase <span class="arithmatex">\(Q\)</span> to make filter more responsive; (d) reinitialize <span class="arithmatex">\(P\)</span></td>
+</tr>
+<tr>
+<td>Innovation drifting away from zero mean</td>
+<td>Systematic model bias</td>
+<td>(a) Check conductor parameter table (aging); (b) check ambient weather input accuracy</td>
+</tr>
+<tr>
+<td>Innovation autocorrelated</td>
+<td>Missing model structure</td>
+<td>Add model terms or increase <span class="arithmatex">\(Q\)</span> to cover unmodeled dynamics</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Interview narrative:</strong> "I monitor the innovation sequence at each step. If the sequence drifts
+from zero mean or NIS consistently exceeds the chi-squared threshold, that's a divergence flag.
+My first question is whether the sensor failed or the model is wrong. In a grid context, a
+sudden jump in NIS might mean a line reconfiguration that changed the line section we're
+monitoring — the topology changed and my measurement model <span class="arithmatex">\(h(T_c)\)</span> now applies to a different
+physical section."</p>
+<hr />
+<h2 id="6-dlr-caveat-when-dlr-decreases-capacity">6. DLR Caveat — When DLR Decreases Capacity</h2>
+<p><strong>Critical interview point:</strong> Dynamic Line Rating does NOT universally increase capacity.</p>
+<p><strong>Why:</strong> Static ampacity ratings are computed under conservative worst-case weather:
+- Typical worst-case assumptions: 0.6 m/s perpendicular wind, 40°C ambient, full sun (900 W/m²)
+- These assumptions ensure the static rating is safe under nearly all field conditions</p>
+<p><strong>When DLR is LOWER than static:</strong>
+- Hot, calm day: <span class="arithmatex">\(T_{c,ss}\)</span> at nominal current is higher than the static model assumed
+- Low wind: Natural convection alone is much less effective than 0.6 m/s forced convection
+- High ambient temperature: Less temperature gradient <span class="arithmatex">\((T_c - T_a)\)</span>, weaker convective cooling</p>
+<p><strong>Quantitative from our worked example:</strong>
+- At <span class="arithmatex">\(I = 500\)</span> A, 25°C ambient, calm: <span class="arithmatex">\(T_{c,ss} \approx 73\)</span>°C (nearly at limit)
+- DLR <span class="arithmatex">\(I_\text{max}\)</span> at 75°C limit <span class="arithmatex">\(\approx 531\)</span> A
+- Static nameplate under worst-case assumptions: ~900 A
+- But on a 35°C ambient, calm day: DLR <span class="arithmatex">\(I_\text{max} &lt; 531\)</span> A — conductor might already be at limit
+  with far less than 900 A flowing</p>
+<p><strong>Where DLR adds value:</strong>
+- Cool nights: ambient 15°C instead of 40°C → dramatic capacity increase
+- Windy days: 5 m/s wind → convective cooling 3–5x higher than 0.6 m/s baseline
+- Coastal/elevated locations with persistent wind: average DLR significantly above static</p>
+<p><strong>One-liner for the interview:</strong> "DLR is a real-time thermal truth, not a capacity uplift tool.
+On bad weather days, it accurately reduces the safe rating — which static ratings would miss,
+potentially allowing overloading. The 10–40% average capacity gain is a fleet-level statistic
+across all weather conditions, not a guarantee for any given moment."</p>
+<hr />
+<h2 id="7-building-rc-conductor-ode-isomorphism">7. Building-RC &lt;-&gt; Conductor-ODE Isomorphism</h2>
+<p>This section makes the explicit connection between Juan's existing work (building thermal state
+estimation in OSED) and the IEEE 738 DLR problem. This is the structural analogy that
+differentiates this answer from any standard Kalman filter description.</p>
+<h3 id="side-by-side-ode-comparison">Side-by-Side ODE Comparison</h3>
+<p><strong>Building thermal RC model (Juan's OSED work):</strong></p>
+<div class="arithmatex">\[C \frac{dT_\text{building}}{dt} = Q_\text{HVAC} - UA \cdot (T_\text{building} - T_\text{ambient})\]</div>
+<p><strong>IEEE 738 conductor thermal model:</strong></p>
+<div class="arithmatex">\[mC_p \frac{dT_c}{dt} = I^2 R(T_c) - q_c(T_c, T_a, v_\text{wind}) - q_r(T_c, T_a) + q_s\]</div>
+<p>Both are <strong>first-order thermal systems</strong> (approximately linear in the state near steady state).
+Both have:
+- A thermal capacitance term on the left (energy storage)
+- A measurable/controllable heat source on the right (HVAC load vs. <span class="arithmatex">\(I^2 R\)</span>)
+- A temperature-dependent cooling term (<span class="arithmatex">\(UA\)</span> loss vs. convection + radiation)
+- A hidden temperature state we want to estimate</p>
+<h3 id="structural-mapping-table">Structural Mapping Table</h3>
+<table>
+<thead>
+<tr>
+<th>Building RC Parameter</th>
+<th>Conductor ODE Parameter</th>
+<th>Role in the EKF</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><span class="arithmatex">\(C\)</span> (thermal capacitance, J/°C)</td>
+<td><span class="arithmatex">\(mC_p\)</span> (heat capacity/m, J/(m·°C))</td>
+<td>Sets thermal time constant <span class="arithmatex">\(\tau = C/UA\)</span> or <span class="arithmatex">\(mC_p/UA_\text{eff}\)</span>; governs how fast the state changes</td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(Q_\text{HVAC}\)</span> (heat input, W)</td>
+<td><span class="arithmatex">\(I^2 R(T_c)\)</span> (resistive heating, W/m)</td>
+<td>Controllable/measurable heat source; the primary driver of state change</td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(UA \cdot (T - T_a)\)</span> (linear loss, W)</td>
+<td><span class="arithmatex">\(q_c + q_r\)</span> (convective + radiative loss, W/m)</td>
+<td>Heat loss to environment; nonlinear in <span class="arithmatex">\(T_c\)</span> (stronger nonlinearity than building)</td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(T_\text{building}\)</span> (hidden state, °C)</td>
+<td><span class="arithmatex">\(T_c\)</span> (conductor temp, °C)</td>
+<td>The state we cannot measure directly; what the EKF estimates</td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(T_\text{ambient}\)</span> (measured input, °C)</td>
+<td><span class="arithmatex">\(T_a\)</span> (ambient weather input, °C)</td>
+<td>External disturbance that drives the cooling term</td>
+</tr>
+<tr>
+<td>Sensor noise <span class="arithmatex">\(R\)</span> (°C²)</td>
+<td>PMU/CT resistance noise <span class="arithmatex">\(R\)</span> (<span class="arithmatex">\(\Omega^2/\text{m}^2\)</span>)</td>
+<td>Measurement uncertainty parameterized in the EKF update step</td>
+</tr>
+</tbody>
+</table>
+<h3 id="time-constants">Time Constants</h3>
+<table>
+<thead>
+<tr>
+<th>System</th>
+<th>Thermal Capacitance</th>
+<th>Effective Conductance</th>
+<th>Time Constant</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Office building zone (medium)</td>
+<td><span class="arithmatex">\(C \sim 5\times10^6\)</span> J/°C</td>
+<td><span class="arithmatex">\(UA \sim 1000\)</span> W/°C</td>
+<td><span class="arithmatex">\(\tau \sim 83\)</span> min</td>
+</tr>
+<tr>
+<td>Drake ACSR conductor</td>
+<td><span class="arithmatex">\(mC_p = 534\)</span> J/(m·°C)</td>
+<td><span class="arithmatex">\(UA_\text{eff} \sim 30\)</span> W/(m·°C) at moderate wind</td>
+<td><span class="arithmatex">\(\tau \sim 18\)</span> min</td>
+</tr>
+<tr>
+<td>Drake ACSR, high wind</td>
+<td><span class="arithmatex">\(mC_p = 534\)</span> J/(m·°C)</td>
+<td><span class="arithmatex">\(UA_\text{eff} \sim 80\)</span> W/(m·°C)</td>
+<td><span class="arithmatex">\(\tau \sim 7\)</span> min</td>
+</tr>
+</tbody>
+</table>
+<p>The conductor is faster than a building by 5–10x, but the EKF structure is identical.</p>
+<h3 id="the-key-bridge-sentence">The Key Bridge Sentence</h3>
+<p>"My building thermal state estimator and the IEEE 738 DLR model share identical ODE structure:
+a first-order thermal system where the hidden temperature state is driven by a measurable heat
+source (HVAC load or <span class="arithmatex">\(I^2 R\)</span>), cooled by an ambient-dependent loss term (<span class="arithmatex">\(UA\)</span> loss or convection +
+radiation), and corrupted by model uncertainty from unmodeled inputs. Swapping building RC
+parameters for ACSR conductor parameters is a <strong>parameter substitution, not a conceptual leap</strong>.
+The EKF predict-update cycle, the Q/R tuning logic, the innovation monitoring, and the
+divergence detection procedure are the same in both applications. The only new element is the
+specific physical interpretation of each parameter — <span class="arithmatex">\(mC_p\)</span> instead of <span class="arithmatex">\(C\)</span>, <span class="arithmatex">\(I^2 R(T_c)\)</span> instead of
+<span class="arithmatex">\(Q_\text{HVAC}\)</span>, and the four-term heat balance instead of the two-term RC equation."</p>
+<h3 id="interview-delivery">Interview Delivery</h3>
+<p>When the interviewer asks: "Have you worked with Kalman filters on power systems?"</p>
+<p><strong>Answer structure:</strong>
+1. "Not directly on power systems, but I've implemented a thermal state estimator for buildings
+   that shares identical mathematical structure with the IEEE 738 DLR problem."
+2. Walk through the mapping table above (<span class="arithmatex">\(C \leftrightarrow mC_p\)</span>, <span class="arithmatex">\(Q_\text{HVAC} \leftrightarrow I^2 R\)</span>, <span class="arithmatex">\(UA \leftrightarrow q_c+q_r\)</span>).
+3. "The EKF predict step discretizes the ODE in exactly the same way. The Q and R tuning
+   reflects model uncertainty from unmodeled disturbances and sensor accuracy — same logic
+   whether the disturbance is an occupancy spike or a wind gust."
+4. Offer to trace the specific numbers (Section 3 above) to show the mechanics.</p>
+<hr />
+<h2 id="8-quick-recall-card-recite-before-the-interview">8. Quick-Recall Card (Recite Before the Interview)</h2>
+<p><strong>The ODE:</strong> <span class="arithmatex">\(mC_p \, dT_c/dt = I^2 R(T_c) + q_s - q_c - q_r\)</span> (heating left → right = gain − loss)</p>
+<p><strong>EKF state:</strong> <span class="arithmatex">\(x = [T_c]\)</span>; inputs <span class="arithmatex">\(u = [I, T_a, v_\text{wind}, q_s]\)</span></p>
+<p><strong>Key formulas:</strong>
+- <span class="arithmatex">\(R(T_c) = R_{25} \cdot [1 + 0.00403 \cdot (T_c - 25)]\)</span>
+- Predict: <span class="arithmatex">\(T_{c,\text{pred}} = T_c + (1/534) \cdot q_\text{net}\)</span>
+- Process Jacobian: <span class="arithmatex">\(A = 1 + (1/534) \cdot [I^2 \, dR/dT_c - dq_c/dT_c - dq_r/dT_c]\)</span>
+- Measurement: <span class="arithmatex">\(h(T_c) = R_{25} \cdot [1 + \alpha_R \cdot (T_c - 25)]\)</span> → <span class="arithmatex">\(H = R_{25} \cdot \alpha_R = 2.934\times10^{-7}\;\Omega/(\text{m}\cdot{}^\circ\text{C})\)</span>
+- Innovation: <span class="arithmatex">\(y = z_\text{meas} - h(T_{c,\text{pred}})\)</span>
+- Gain: <span class="arithmatex">\(K = H \cdot P_\text{pred} / (H^2 \cdot P_\text{pred} + R)\)</span> (scalar form)
+- Update: <span class="arithmatex">\(T_{c,\text{post}} = T_{c,\text{pred}} + K \cdot y\)</span>; <span class="arithmatex">\(P_\text{post} = (1 - K \cdot H) \cdot P_\text{pred}\)</span></p>
+<p><strong><span class="arithmatex">\(Q\)</span>:</strong> process noise — model uncertainty (wind, aging). Never zero. Start at <span class="arithmatex">\(0.01\)</span>–<span class="arithmatex">\(0.1\,{}^\circ\text{C}^2/\text{step}\)</span>.
+<strong><span class="arithmatex">\(R\)</span>:</strong> sensor noise — CT accuracy + resistance inference. Start at <span class="arithmatex">\(\sim (10^{-7})^2\;\Omega^2/\text{m}^2\)</span>.</p>
+<p><strong>Innovation must be:</strong> zero-mean, white, Gaussian with covariance <span class="arithmatex">\(S\)</span>.</p>
+<p><strong><span class="arithmatex">\(\text{NIS} = y^2/S \sim \chi^2(1)\)</span>; flag divergence if <span class="arithmatex">\(\text{NIS} &gt; 3.84\)</span> (i.e., <code>chi2.ppf(0.95, df=1)</code>).</strong></p>
+<p><strong>DLR caveat:</strong> hot calm day → DLR LOWER than static nameplate. This is correct behavior.</p>
+<p><strong>Bridge sentence:</strong> "Swapping building RC parameters for ACSR conductor parameters is a
+parameter substitution, not a conceptual leap."</p>
+<p><strong>Positioning:</strong> This scalar example shows the mechanics cleanly. The distribution network
+centerpiece — where the state is <span class="arithmatex">\([P_1, P_2]\)</span> injections and Kirchhoff coupling observes dark
+nodes — is in KAL-03.</p>
+<hr />
+<p><em>Sources: IEEE Std 738-2006/2012 (paywalled; ODE structure from secondary sources);
+stevenblair/ieee738matlab GitHub — verified ODE implementation and ACSR Drake parameters;
+Welch &amp; Bishop, "An Introduction to the Kalman Filter" (Edinburgh CVonline) — EKF equations;
+arxiv.org/abs/2012.06069 — EKF for power system dynamic state estimation;
+arxiv.org/pdf/2106.10775 — covariance matching and chi-squared divergence detection;
+arxiv.org/pdf/1702.00884 — adaptive Q/R update (Sage-Husa);
+KAL-03-fase-augmented-load-feeder-walk.md (distribution network centerpiece, see for AGMS connection);
+01-RESEARCH.md sections "IEEE 738 Thermal Model", "EKF for Line Temperature", "Innovation Sequence
+and Divergence Detection", "Common Pitfalls".</em></p>
+            <footer><a href="../index.html">&larr; Back to study hub</a></footer>
+          </main>
+        </div>
+        </body>
+        </html>

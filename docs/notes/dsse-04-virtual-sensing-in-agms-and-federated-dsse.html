@@ -1,0 +1,305 @@
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noindex,nofollow">
+        <title>DSSE-04: Virtual Sensing inside AGMS &amp; Federated Multi-Area DSSE</title>
+        <link rel="stylesheet" href="../assets/site.css">
+        <link rel="stylesheet" href="../assets/pygments.css">
+        <script>
+window.MathJax = {
+  tex: { inlineMath: [["\\(","\\)"]], displayMath: [["\\[","\\]"]],
+         processEscapes: true, processEnvironments: true },
+  options: { ignoreHtmlClass: ".*", processHtmlClass: "arithmatex" }
+};
+</script>
+<script defer src="../vendor/mathjax/tex-chtml.js"></script>
+        </head>
+        <body>
+        <div class="wrap">
+          <header class="masthead"><h1>DSSE-04: Virtual Sensing inside AGMS &amp; Federated Multi-Area DSSE</h1></header>
+          <nav class="toc"><h2>Contents</h2><div class="toc">
+<ul>
+<li><a href="#3-min-say-aloud-version">&lt;3-min say-aloud version</a></li>
+<li><a href="#1-agms-architectural-placement">1. AGMS Architectural Placement</a><ul>
+<li><a href="#the-inspector-scout-s_i-on-the-field-agent-device-fad">The Inspector Scout (\(s_i\)) on the Field Agent Device (FAD)</a></li>
+</ul>
+</li>
+<li><a href="#2-the-oracs-observability-index-and-asset-portfolio-manager-1300">2. The ORACS Observability Index and Asset Portfolio Manager 1300</a></li>
+<li><a href="#3-the-cacsm-voltage-control-trigger-worked-example-2-in-the-patent">3. The CaCSM Voltage-Control Trigger (Worked Example 2 in the Patent)</a></li>
+<li><a href="#4-simulate-before-commit-patent-claim-3">4. Simulate-Before-Commit (Patent Claim 3)</a></li>
+<li><a href="#5-federated-multi-area-dsse">5. Federated Multi-Area DSSE</a></li>
+<li><a href="#6-asset-health-awareness-brief-cross-reference-kal-04">6. Asset-Health Awareness (Brief — Cross-Reference KAL-04)</a></li>
+<li><a href="#7-consolidated-bridges-to-juans-work">7. Consolidated Bridges to Juan's Work</a></li>
+<li><a href="#quick-recall-card-recite-before-the-interview">Quick-Recall Card (Recite Before the Interview)</a></li>
+</ul>
+</div>
+</nav>
+          <main>
+        <h1 id="dsse-04-virtual-sensing-inside-agms-federated-multi-area-dsse">DSSE-04: Virtual Sensing inside AGMS &amp; Federated Multi-Area DSSE</h1>
+<p><strong>For:</strong> Oral rehearsal — speak the AGMS architectural placement and the federated-DSSE pattern
+aloud; you must be able to draw the Inspector-scout → ORACS → Asset Portfolio Manager → CaCSM
+pipeline from memory.
+<strong>Purpose:</strong> Connect the DSSE mechanics to the AGMS patent architecture and to the JD's
+"federated, decentralized" framing. The virtual-sensing estimator is not a standalone algorithm —
+it is the sensing layer of a complete real-time control architecture, and understanding where it
+sits and what it feeds is what separates a systems-aware candidate from a signal-processing
+specialist.</p>
+<hr />
+<h2 id="3-min-say-aloud-version">&lt;3-min say-aloud version</h2>
+<blockquote>
+<p>"In AGMS, virtual sensing is the seeing capability of the entire architecture. The Director's
+patent describes a layered system: Field Agent Devices at the edge running Inspector scouts,
+ORACS cells coordinating a group of those FADs, and a GridWideMind / GridWideEye intelligence
+layer above. The virtual-sensing estimator — the DSSE / FASE filter we've been studying — runs
+as an <strong>Inspector scout</strong> on each FAD, locally, producing a posterior state estimate <span class="arithmatex">\((\hat x, P)\)</span>
+for that FAD's section of the feeder.</p>
+<p>The posterior covariance <span class="arithmatex">\(P\)</span> is what the Asset Portfolio Manager (module 1300) gates on. It
+computes the ORACS Observability index from <span class="arithmatex">\(P\)</span>: how well does the current measurement set
+observe the feeder? If observability is sufficient — covariance below a threshold — the
+continuous voltage-control <strong>CaCSM</strong> is armed. In Worked Example 2 of the patent, rooftop solar
+causes overvoltage at an unmetered node during midday. No fault alarm fires. No human sees
+anything. The virtual sensor, running recursively on the FAD, knows — because it maps the
+posterior injection estimate through LinDistFlow and propagates the covariance, landing above
+the 1.05 pu ceiling with a confidence interval that triggers the CaCSM reactive power response.</p>
+<p>The federated structure is how this scales. Each FAD / ORACS cell estimates its sub-feeder
+independently, using local telemetry and local topology. Where two cells share a boundary node,
+they exchange only the <strong>boundary-node posterior state</strong> <span class="arithmatex">\((\hat x_{boundary}, P_{boundary})\)</span> —
+not raw measurements, not full feeder models. This is federated DSSE: each cell estimates
+locally, shares posteriors at boundaries, and the full feeder state falls out of the composition.
+Raw measurements never cross the cell boundary. This satisfies both the JD's 'federated,
+no central coordination' requirement and the patent's 'self-forming federations' architecture."</p>
+</blockquote>
+<hr />
+<h2 id="1-agms-architectural-placement">1. AGMS Architectural Placement</h2>
+<h3 id="the-inspector-scout-s_i-on-the-field-agent-device-fad">The Inspector Scout (<span class="arithmatex">\(s_i\)</span>) on the Field Agent Device (FAD)</h3>
+<p>The DSSE / FASE filter runs as an <strong>Inspector scout</strong> <span class="arithmatex">\(s_i\)</span> on a <strong>Field Agent Device</strong> — a
+grid-edge compute platform (substation gateway, DER controller, RTU with edge compute) that
+hosts one or more scouts.</p>
+<p><strong>What the Inspector scout does:</strong>
+- Ingests local telemetry: head SCADA from the ORACS gateway, inverter self-reports via
+  IEEE 1547 / 2030.5, AMI from the utility AMI head-end, EV charger events via OCPP/MQTT
+- Maintains the recursive FASE state <span class="arithmatex">\((\hat x, P)\)</span> for its sub-feeder section
+- Produces posterior estimates at each update cycle (which may differ by measurement channel)
+- Publishes posterior state and covariance to the ORACS coordination layer</p>
+<p><strong>Why locally on the FAD:</strong>
+- Reduces WAN bandwidth (posteriors, not raw streams)
+- Keeps running in island mode when WAN connectivity drops
+- Enables edge-local control (volt/VAR response without round-trip to cloud)
+- Scales horizontally: add more FADs, not a bigger central server</p>
+<hr />
+<h2 id="2-the-oracs-observability-index-and-asset-portfolio-manager-1300">2. The ORACS Observability Index and Asset Portfolio Manager 1300</h2>
+<p><strong>ORACS (Operating Region and Asset Control Scheme)</strong> is the coordination cell in AGMS —
+a logical group of FADs covering a section of the distribution network. Each ORACS maintains
+a <strong>GridWideMind / GridWideEye</strong> view of its sub-network.</p>
+<p><strong>The Observability index</strong> is derived from the posterior covariance <span class="arithmatex">\(P\)</span> of the DSSE:</p>
+<ul>
+<li>High <span class="arithmatex">\(P\)</span> (large covariance) = poorly observed = low Observability index</li>
+<li>Low <span class="arithmatex">\(P\)</span> (tight posterior) = well observed = high Observability index</li>
+<li>The mapping is operationalized by the <strong>Asset Portfolio Manager</strong> (module 1300 in the patent)</li>
+</ul>
+<p><strong>How 1300 uses it:</strong></p>
+<ol>
+<li>Read current posterior covariance <span class="arithmatex">\(P\)</span> from each Inspector scout</li>
+<li>Compute Observability index for each sub-feeder section</li>
+<li>Gate downstream decisions:
+   - If Observability index sufficient: arm the voltage-control <strong>CaCSM</strong> (see below)
+   - If Observability index degraded (comms gap, sensor failure): AGMS enters a degraded-mode
+     response — widen control margins, issue a sensor-health check, log for Learning Engine</li>
+<li>Expose Observability index to GridWideMind for fleet-level situational awareness</li>
+</ol>
+<p><strong>Interview sentence:</strong> "The posterior covariance IS the ORACS Observability index — the filter's
+uncertainty quantification maps directly to the AGMS gate for every downstream control action."</p>
+<hr />
+<h2 id="3-the-cacsm-voltage-control-trigger-worked-example-2-in-the-patent">3. The CaCSM Voltage-Control Trigger (Worked Example 2 in the Patent)</h2>
+<p><strong>CaCSM</strong> = Continuous-action Control-Scheme Module (the patent's name for the real-time
+volt/VAR control loop triggered by virtual sensing). The scenario from Worked Example 2:</p>
+<p><strong>Setup:</strong> A residential distribution feeder with rooftop solar (PV) at several nodes. One node
+with heavy PV is unmetered — no AMI, no inverter self-report (legacy system). At midday, cloud
+cover lifts and PV output surges.</p>
+<p><strong>Without virtual sensing:</strong> No sensor at the unmetered node. No fault alarm fires (the
+overvoltage is not extreme enough to trip protection relays). The voltage at that node rises
+above 1.05 pu — a violation — but the SCADA operator sees only the feeder-head reading,
+which looks normal. The violation persists, stressing grid equipment and potentially causing
+customer-side issues.</p>
+<p><strong>With virtual sensing (FASE on the FAD):</strong>
+1. Inspector scout <span class="arithmatex">\(s_i\)</span> maintains the FASE state <span class="arithmatex">\(\hat x = [\hat P_1, \hat P_2, \ldots]\)</span>.
+2. The inverter at bus 1 self-reports its output surge; the head SCADA shows load dropping
+   (net flow toward substation reversing). The FASE filter attributes the excess generation
+   to the unmetered PV node via Kirchhoff coupling.
+3. Posterior injection <span class="arithmatex">\(\hat P_{PV}\)</span> goes strongly negative (generation); posterior voltage via
+   LinDistFlow: <span class="arithmatex">\(V_{PV} \approx 1.000 + |\hat P_{PV}| \times\)</span> (sensitivity coefficient) → above 1.05 pu.
+4. Propagated covariance: <span class="arithmatex">\(\sigma_{V_{PV}}\)</span> small enough that the upper <span class="arithmatex">\(2\sigma\)</span> bound is
+   above 1.05 pu.
+5. The Asset Portfolio Manager 1300 checks Observability index → sufficient → arms CaCSM.
+6. CaCSM dispatches a reactive power absorption command to a nearby smart inverter with available
+   capacity — via IEEE 1547 / 2030.5 interface.
+7. Voltage restored without the operator ever knowing there was an issue.</p>
+<p><strong>What this demonstrates:</strong>
+- Virtual sensing provides visibility where sensors do not exist
+- The covariance is the gate — CaCSM only fires when observability is sufficient to act confidently
+- The action is the <strong>simulate-before-commit</strong> step (patent claim 3): before dispatching, the
+  ORACS runs a power-flow simulation from the posterior state and confirms the reactive injection
+  will fix the overvoltage without creating violations elsewhere</p>
+<p><strong>Interview sentence:</strong> "Worked Example 2 is the money scenario — rooftop solar overvoltage at an
+unmetered node, no alarm, only virtual sensing knows. The covariance gates the CaCSM. The simulate-
+before-commit confirms the fix won't create new violations. This is the complete virtual-sensing
+pipeline in action."</p>
+<hr />
+<h2 id="4-simulate-before-commit-patent-claim-3">4. Simulate-Before-Commit (Patent Claim 3)</h2>
+<p>Before dispatching any control command (reactive power, load curtailment, DER setpoint change),
+the AGMS architecture requires a <strong>simulate-before-commit</strong> step:</p>
+<ol>
+<li>Take the current posterior <span class="arithmatex">\((\hat x, P)\)</span> from the DSSE</li>
+<li>Apply the proposed control action in a fast power-flow simulation</li>
+<li>Check: does the simulated result satisfy all voltage, current, and thermal constraints, with
+   probability exceeding a threshold (accounting for the state uncertainty <span class="arithmatex">\(P\)</span>)?</li>
+<li>If yes: dispatch the control command</li>
+<li>If no: revise the control action, re-simulate, or escalate to the operator</li>
+</ol>
+<p><strong>Connection to Juan's CVXPY MPC:</strong> The CVXPY model-predictive control in OSED/HEMS is
+structurally identical — take the current state estimate, propagate through the model (simulate),
+find the optimal control action subject to constraints, dispatch. The grid version adds the
+probabilistic safety check using <span class="arithmatex">\(P\)</span>, which is exactly what MPC does with chance constraints.</p>
+<p><strong>Interview sentence:</strong> "Simulate-before-commit is model-predictive control with a probabilistic
+safety gate derived from the posterior covariance. I've built that pipeline in CVXPY for building
+control; the distribution grid version replaces the RC thermal model with LinDistFlow."</p>
+<hr />
+<h2 id="5-federated-multi-area-dsse">5. Federated Multi-Area DSSE</h2>
+<!-- greppable tag: federated multi-area DSSE -->
+
+<p><strong>The problem:</strong> A distribution feeder can span many kilometers and hundreds of nodes. Running
+a single DSSE for the entire feeder would require all measurements to flow to one point, a large
+<span class="arithmatex">\(H\)</span> matrix, and centralized processing — defeating island-mode safety and limiting scalability.</p>
+<p><strong>The federated solution:</strong> Partition the feeder into <strong>operating cells</strong>, each corresponding to
+one ORACS. Each cell's Inspector scout estimates its local sub-feeder independently.</p>
+<p><strong>Where cells meet: boundary-node state exchange</strong></p>
+<p>At the boundary between two ORACS cells, there is a <strong>shared boundary node</strong> (typically a
+substation bus or a switching node). The two adjacent cells' scouts publish their <strong>posterior state
+and covariance</strong> at that boundary node:</p>
+<div class="arithmatex">\[(\hat x_{boundary}, P_{boundary})_A \quad\text{and}\quad (\hat x_{boundary}, P_{boundary})_B\]</div>
+<p>These two posteriors are then fused (information-form KF combination, or Dempster-Shafer, or a
+simple weighted combination) to produce a consistent boundary estimate. Each cell then updates
+its internal state to be consistent with the agreed boundary condition.</p>
+<p><strong>What does NOT cross the boundary:</strong>
+- Raw measurements from either cell's interior
+- Full internal state of either cell
+- The cell's <span class="arithmatex">\(H\)</span> matrix or topology model</p>
+<p>Only the boundary posterior — a compressed, privacy-preserving summary. This is the
+"decentralized, no central coordination" requirement in the JD, and the "self-forming federations"
+pattern from the AGMS patent.</p>
+<p><strong>Properties of federated DSSE:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Why it matters</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>No central data aggregation</td>
+<td>WAN bandwidth: raw streams from hundreds of nodes not needed centrally</td>
+</tr>
+<tr>
+<td>Island-mode safety preserved</td>
+<td>Each cell keeps running if inter-cell comms drop; only boundary posteriors are affected</td>
+</tr>
+<tr>
+<td>Horizontal scalability</td>
+<td>Add ORACS cells; no central compute scaling</td>
+</tr>
+<tr>
+<td>Privacy / cybersecurity</td>
+<td>Raw telemetry does not cross cell boundaries — reduced attack surface</td>
+</tr>
+<tr>
+<td>Consistency at boundaries</td>
+<td>Shared posterior fusion ensures the two cells agree on the boundary-node state</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Interview sentence:</strong> "Federated DSSE means each ORACS cell estimates its sub-feeder locally and
+only shares boundary-node posteriors with neighbors — raw measurements never cross the cell
+boundary. It satisfies 'federated, no central coordination' and it's what makes island-mode safety
+scale across a large distribution territory."</p>
+<hr />
+<h2 id="6-asset-health-awareness-brief-cross-reference-kal-04">6. Asset-Health Awareness (Brief — Cross-Reference KAL-04)</h2>
+<p>Distribution transformer hot-spot (IEEE C57.91) and line temperature (IEEE 738, KAL-04) are the
+<strong>asset-health virtual sensors</strong> — distinct from the network state-estimation problem above but
+architecturally parallel: an unmeasured quantity (winding hot-spot, conductor temperature) is
+inferred from telemetry (load current, ambient) via a physics ODE in a scalar EKF.</p>
+<p>In the AGMS context:
+- The scalar asset-health EKF runs as a separate Inspector scout (or a sub-module of the DSSE scout)
+- Its posterior temperature estimate and covariance feed the Asset Portfolio Manager 1300
+- 1300 computes Remaining Useful Life (RUL) and schedules maintenance / derating decisions</p>
+<p>For the worked mechanics, see KAL-04 (IEEE 738 EKF) and the asset-health section of TVS-04.
+<strong>Do not re-derive here</strong> — one paragraph reference is the correct depth.</p>
+<hr />
+<h2 id="7-consolidated-bridges-to-juans-work">7. Consolidated Bridges to Juan's Work</h2>
+<!-- greppable tag: Bridge to your work -->
+
+<table>
+<thead>
+<tr>
+<th>AGMS / DSSE-04 concept</th>
+<th>Juan's work</th>
+<th>How to say it</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Inspector scout on FAD (edge runtime)</td>
+<td>OSED edge runtime</td>
+<td>"OSED is the FAD substrate — edge compute, local state, runs in island mode. I've shipped edge-runtime inference at the building level; the distribution FAD is the same class of system."</td>
+</tr>
+<tr>
+<td>Temporal prior / FASE <code>Bu</code> term</td>
+<td>HEMS edge-ML load/PV forecasting</td>
+<td>"My HEMS forecasting produces the calibrated probabilistic load/PV forecasts that would populate <span class="arithmatex">\(v\)</span> and calibrate time-indexed <span class="arithmatex">\(Q\)</span>."</td>
+</tr>
+<tr>
+<td>Simulate-before-commit (patent claim 3)</td>
+<td>CVXPY MPC in OSED/HEMS</td>
+<td>"CVXPY MPC is simulate-before-commit — propagate state, find optimal control action, dispatch only if constraints satisfied. The grid version adds LinDistFlow instead of RC thermal and a probabilistic safety gate from <span class="arithmatex">\(P\)</span>."</td>
+</tr>
+<tr>
+<td>Federated, no central coordination</td>
+<td>SI-MAPPER distributed ontology inference</td>
+<td>"SI-MAPPER infers structured state from distributed, heterogeneous signals without a central data pool — the same federated inference pattern."</td>
+</tr>
+<tr>
+<td>Learning Engine calibration</td>
+<td>Baseline-consumption error analysis (CV)</td>
+<td>"My production analysis of baseline-estimation errors across billions of data points from multiple substations is the Learning Engine loop — detect residual patterns, recalibrate the prior model."</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="quick-recall-card-recite-before-the-interview">Quick-Recall Card (Recite Before the Interview)</h2>
+<ol>
+<li><strong>Inspector scout <span class="arithmatex">\(s_i\)</span>:</strong> DSSE/FASE filter running locally on the FAD; ingests local telemetry; produces <span class="arithmatex">\((\hat x, P)\)</span> for its sub-feeder section.</li>
+<li><strong>ORACS Observability index:</strong> derived from posterior <span class="arithmatex">\(P\)</span>; computed by Asset Portfolio Manager 1300; gates all downstream control.</li>
+<li><strong>CaCSM trigger:</strong> Observability sufficient AND <span class="arithmatex">\((\hat x, P)\)</span> shows constraint near/past limit → dispatch reactive power, DER setpoint, etc.</li>
+<li><strong>Worked Example 2:</strong> unmetered rooftop-solar overvoltage; no alarm; only virtual sensing knows; CaCSM fixes it via reactive absorption at a neighboring inverter.</li>
+<li><strong>Simulate-before-commit (claim 3):</strong> take posterior <span class="arithmatex">\((\hat x, P)\)</span>, simulate proposed control action via LinDistFlow, check probabilistic constraint satisfaction before dispatching.</li>
+<li><strong>Federated DSSE:</strong> each ORACS cell estimates locally; only boundary-node posteriors exchanged; raw measurements never cross cell boundary.</li>
+<li><strong>Federated properties:</strong> no central aggregation; island-mode safe; horizontally scalable; reduced attack surface; boundary consistency from posterior fusion.</li>
+<li><strong>Asset health (brief):</strong> IEEE 738 (KAL-04) and C57.91 — scalar EKFs on the same FAD; posteriors feed 1300 for RUL/maintenance decisions. See KAL-04.</li>
+<li><strong>Island-mode safety:</strong> recursive structure keeps <span class="arithmatex">\((\hat x, P)\)</span> flowing during WAN outage; <span class="arithmatex">\(P\)</span> inflates honestly; AGMS responds to degraded observability rather than data absence.</li>
+<li><strong>My bridges:</strong> OSED = FAD substrate; HEMS forecasting = temporal prior; CVXPY MPC = simulate-before-commit; SI-MAPPER = federated structural prior; baseline-error analysis = Learning Engine.</li>
+</ol>
+<hr />
+<p><em>Sources: AGMS patent (Director; Inspector scout s_i, Field Agent Device, ORACS, GridWideMind /
+GridWideEye, Asset Portfolio Manager 1300, CaCSM, Worked Example 2 overvoltage, simulate-before-
+commit claim 3, Learning Engine, self-forming federations); GE Vernova JD R5043890 (virtual
+sensing, federated, decentralized, distribution, phase angles); KAL-03 (FASE feeder walk — the
+worked example that feeds AGMS); KAL-04 (IEEE 738 asset-health EKF — the scalar companion);
+IEEE 1547-2018 / IEEE 2030.5 (smart inverter control interfaces for CaCSM dispatch); LinDistFlow
+(Baran &amp; Wu 1989); 01-RESEARCH.md / 02-RESEARCH.md verified architecture notes.</em></p>
+            <footer><a href="../index.html">&larr; Back to study hub</a></footer>
+          </main>
+        </div>
+        </body>
+        </html>

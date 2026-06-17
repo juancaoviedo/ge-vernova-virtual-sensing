@@ -1,18 +1,19 @@
 {
   "agms-patent-rehearsal-deck": "notes/agms-patent-rehearsal-deck.html",
+  "dsse-01-under-observability-and-information-sourcing": "notes/dsse-01-under-observability-and-information-sourcing.html",
+  "dsse-02-side-information-taxonomy": "notes/dsse-02-side-information-taxonomy.html",
+  "dsse-03-distribution-modeling-and-pseudo-measurement-honesty": "notes/dsse-03-distribution-modeling-and-pseudo-measurement-honesty.html",
+  "dsse-04-virtual-sensing-in-agms-and-federated-dsse": "notes/dsse-04-virtual-sensing-in-agms-and-federated-dsse.html",
   "fed-01-federated-vs-distributed": "notes/fed-01-federated-vs-distributed.html",
   "fed-02-byzantine-robustness": "notes/fed-02-byzantine-robustness.html",
   "fed-03-edge-security": "notes/fed-03-edge-security.html",
-  "kal-01-wls-state-estimation": "notes/kal-01-wls-state-estimation.html",
+  "kal-01-virtual-sensing-fusion-engine": "notes/kal-01-virtual-sensing-fusion-engine.html",
   "kal-02-kalman-family-kf-ekf-ukf": "notes/kal-02-kalman-family-kf-ekf-ukf.html",
-  "kal-03-ieee738-ekf-worked-example": "notes/kal-03-ieee738-ekf-worked-example.html",
+  "kal-03-fase-augmented-load-feeder-walk": "notes/kal-03-fase-augmented-load-feeder-walk.html",
+  "kal-04-ieee738-asset-health-ekf": "notes/kal-04-ieee738-asset-health-ekf.html",
   "stk-01-protocol-stack": "notes/stk-01-protocol-stack.html",
   "stk-02-iec-61850": "notes/stk-02-iec-61850.html",
   "stk-03-messaging-orchestration": "notes/stk-03-messaging-orchestration.html",
   "stk-04-observability": "notes/stk-04-observability.html",
-  "stk-05-reference-architecture": "notes/stk-05-reference-architecture.html",
-  "tvs-01-voltage-stability": "notes/tvs-01-voltage-stability.html",
-  "tvs-02-dc-powerflow-angle-wls": "notes/tvs-02-dc-powerflow-angle-wls.html",
-  "tvs-03-observability-bad-data": "notes/tvs-03-observability-bad-data.html",
-  "tvs-04-asset-health": "notes/tvs-04-asset-health.html"
+  "stk-05-reference-architecture": "notes/stk-05-reference-architecture.html"
 }
