@@ -176,7 +176,7 @@ def main() -> None:
     svg_inline = svg_text[svg_text.index("<svg"):]
     arch = f"""<section class="card" id="architecture">
 <h2 class="sec">The Whole System, One Diagram</h2>
-<p>The complete AGMS architecture, reconstructed from the six-patent family: perception (<strong>GridWideMind</strong>) &rarr; reasoning (<strong>GridArtificer</strong>) &rarr; orchestration and execution (<strong>GridWideCommandHub</strong>), the five-stage formation pipeline, scouts at the edge, and the cross-cutting POV / security / learning threads. The diagram is the live vector: <strong>drag to pan, scroll to zoom</strong>, and <strong>click it for full-screen</strong> — the study annotations stay crisp at any zoom.</p>
+<p>The complete AGMS architecture, reconstructed from the six-patent family: perception (<strong>GridWideMind</strong>) &rarr; reasoning (<strong>GridArtificer</strong>) &rarr; orchestration and execution (<strong>GridWideCommandHub</strong>), the five-stage formation pipeline, scouts at the edge, and the cross-cutting POV / security / learning threads. The diagram is the live vector: <strong>drag to pan, scroll to zoom</strong>, and <strong>click it for full-screen</strong>.</p>
 <figure class="diagram-figure">
 <div class="svgv" id="svgv">
 <div class="svgv-controls">

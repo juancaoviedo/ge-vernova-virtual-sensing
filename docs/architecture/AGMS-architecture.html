@@ -74,7 +74,7 @@
   <main>
 <section class="card" id="diagram">
 <h2 class="sec">AGMS reference architecture</h2>
-<p>The whole system on one page — the self-organizing grid-management platform: perceive (GWM) &rarr; reason (CaCSM) &rarr; orchestrate (Logistician/GWCH) &rarr; deploy autonomous scouts. The diagram below is the live vector: <strong>drag to pan, scroll to zoom</strong>, and <strong>click it for full-screen</strong> — the study annotations stay crisp at any zoom.</p>
+<p>The whole system on one page — the self-organizing grid-management platform: perceive (GWM) &rarr; reason (CaCSM) &rarr; orchestrate (Logistician/GWCH) &rarr; deploy autonomous scouts. The diagram below is the live vector: <strong>drag to pan, scroll to zoom</strong>, and <strong>click it for full-screen</strong>.</p>
 <figure class="diagram-figure">
 <div class="svgv" id="svgv">
 <div class="svgv-controls">
@@ -203,9 +203,7 @@
 <div class="callout"><p><strong>ORACS = Observability, Reachability, Adaptability, Controllability, Security</strong> (the five core indexes; extended to <strong>seven</strong> for verification with <strong>sustainability</strong> and <strong>stability</strong>).</p></div>
 <ul><li><strong>Observability</strong> — can we actually see this asset's state?</li><li><strong>Reachability</strong> — can we communicate with / command it?</li><li><strong>Adaptability</strong> — can it reconfigure to the task we need?</li><li><strong>Controllability</strong> — can we actually drive its behavior?</li><li><strong>Security</strong> — is it trustworthy and defensible?</li><li>(+ <strong>Sustainability</strong>, <strong>Stability</strong> for the full seven-index check.)</li></ul>
 <p>Any asset failing a threshold is excluded. The manager also runs an <strong>ORACS operation simulation</strong> against the operation objectives, and routes assets through health/risk analytics (asset health monitor 1310, performance analytics 1315). <strong>Failed assets trigger a replacement request back to the Logistician</strong> — closing the loop between ① and ②.</p>
-<p>Output: a <strong>verified logistics file</strong> (<code>ORACS(id).lf</code>) — assets cleared and fit for the loop.</p>
-<div class="callout"><p>⚠️ <strong>Note on "ORACS":</strong> an earlier note in this directory glossed ORACS as "Operation+Role+Asset+Context+Scouts." That backronym appears in <strong>no patent</strong> and was a mistake (now corrected). The patents' own abbreviation key (para [0209]) defines it as the operational-index set above.</p></div>
-<h3 class="sub">③ Operation Loop Formation — <em>wire them into an ORACS loop</em> (<code>operation-loop.md</code>) ★ GRANTED</h3>
+<p>Output: a <strong>verified logistics file</strong> (<code>ORACS(id).lf</code>) — assets cleared and fit for the loop.</p><h3 class="sub">③ Operation Loop Formation — <em>wire them into an ORACS loop</em> (<code>operation-loop.md</code>) ★ GRANTED</h3>
 <p>This is the <strong>granted</strong> patent (US 12,596,341 B2, assigned to <strong>GE Vernova itself</strong>). Its job is the <em>assembly</em> step: take the verified assets and physically construct the <strong>operation loop</strong> — an ORACS — that the CaCSM wants. The core module is the <strong>formation construct module (1400)</strong>:</p>
 <ol><li><strong>Retrieve a matching schema (DNA).</strong> It compares the loop's tasks + logistics list against a <em>historical meta-object database</em> and pulls the best-matched <strong>schema</strong> — and the patent explicitly says <strong>DNA = schema</strong>: the unique organized structure that defines a loop's (or a scout's) cognitive processing and behavior. DNA encodes formation type, internal composition (asset classes, attributes, functions), interdependency/correlation indexes, the observability index, the DNA map, the scouts roster, and the launch plan.</li><li><strong>Build per-asset meta objects.</strong> From the matched DNA + the formation plan, it constructs a <strong>meta object</strong> for each asset — the object that will actually <em>cause that asset to execute its task</em>. (A meta object is essentially a behavioral deployment descriptor for a field agent.)</li><li><strong>Analyze interdependency.</strong> It maps how assets depend on each other (1-to-n, n-to-1, n-to-n), defines cascading requirements, and identifies the <em>critical asset</em> in each cascade — the one whose failure propagates.</li><li><strong>Simulate the loop before committing.</strong> A learning/simulation engine runs the <em>provisional operation loop in simulation mode</em> to validate operability and correlation against history — <strong>and this simulate-before-commit step is in the granted claims (claim 3).</strong></li><li><strong>Handle multi-cell loops.</strong> For loops spanning operating cells, an inter-ORACS module computes coloration/interdependency and emits <strong>logistic gap files</strong> (<code>iO-DNA.Mf.g</code>) for missing pieces — which go back to the Logistician (①).</li></ol>
 <p>Output: the <strong>OC-meta-object</strong> — the constructed loop with per-asset meta objects, DNA map, roster, and (after ④) the launch plan.</p>
@@ -281,7 +279,7 @@
           <tr><td>GWCH</td><td>GridWideCommandHub — the orchestration and execution layer</td></tr>
           <tr><td>CaCSM</td><td>Contextual and Cognitive State Machine — the core grid reasoning engine</td></tr>
           <tr><td>CAP</td><td>Contextual Abstraction Panel — a ranked contextual grouping that feeds CaCSM construction</td></tr>
-          <tr><td>ORACS</td><td>Operation loop / operating-cell unit. Patents (para [0209]) define it as <strong>Observability, Reachability, Adaptability, Controllability, Security</strong> — the 5 operational indexes (extended to 7 for verification with sustainability + stability). ("Operation+Role+Asset+Context+Scouts" was a Phase-1 note error, now corrected — not in any patent.)</td></tr>
+          <tr><td>ORACS</td><td>Operation loop / operating-cell unit. Patents (para [0209]) define it as <strong>Observability, Reachability, Adaptability, Controllability, Security</strong> — the 5 operational indexes (extended to 7 for verification with sustainability + stability).</td></tr>
           <tr><td>Operation loop (ol)</td><td>The ORACS as executed; <code>oft</code> = operation formation type (e.g. <code>ioc.cc</code>, <code>ioc.sc</code>, <code>ioc.coc</code>, <code>ioc.fm</code>)</td></tr>
           <tr><td>Logistician Module (1023A)</td><td>Logistics orchestrator; builds + procures + audits the provisional logistics list; owns inter-ORACS gap files</td></tr>
           <tr><td>gWFCll / gWFClf</td><td>gridWideFederationCommand Logistics <strong>List</strong> / <strong>File</strong>; <code>.p</code> suffix = provisional</td></tr>
@@ -306,7 +304,6 @@
         </tbody>
       </table>
     </section>
-    <footer>Rendered from the Markdown source — content unchanged.</footer>
   </main>
 </div>
 <script>

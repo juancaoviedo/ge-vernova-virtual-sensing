@@ -365,11 +365,6 @@ request back to the Logistician** — closing the loop between ① and ②.
 
 Output: a **verified logistics file** (`ORACS(id).lf`) — assets cleared and fit for the loop.
 
-> ⚠️ **Note on "ORACS":** an earlier note in this directory glossed ORACS as
-> "Operation+Role+Asset+Context+Scouts." That backronym appears in **no patent** and was a
-> mistake (now corrected). The patents' own abbreviation key (para [0209]) defines it as the
-> operational-index set above.
-
 ### ③ Operation Loop Formation — *wire them into an ORACS loop* (`operation-loop.md`) ★ GRANTED
 
 This is the **granted** patent (US 12,596,341 B2, assigned to **GE Vernova itself**). Its job
@@ -645,7 +640,7 @@ things to *say* in the interview, because they show you grasped the philosophy:
 | GWCH | GridWideCommandHub — the orchestration and execution layer |
 | CaCSM | Contextual and Cognitive State Machine — the core grid reasoning engine |
 | CAP | Contextual Abstraction Panel — a ranked contextual grouping that feeds CaCSM construction |
-| ORACS | Operation loop / operating-cell unit. Patents (para [0209]) define it as **Observability, Reachability, Adaptability, Controllability, Security** — the 5 operational indexes (extended to 7 for verification with sustainability + stability). ("Operation+Role+Asset+Context+Scouts" was a Phase-1 note error, now corrected — not in any patent.) |
+| ORACS | Operation loop / operating-cell unit. Patents (para [0209]) define it as **Observability, Reachability, Adaptability, Controllability, Security** — the 5 operational indexes (extended to 7 for verification with sustainability + stability). |
 | Operation loop (ol) | The ORACS as executed; `oft` = operation formation type (e.g. `ioc.cc`, `ioc.sc`, `ioc.coc`, `ioc.fm`) |
 | Logistician Module (1023A) | Logistics orchestrator; builds + procures + audits the provisional logistics list; owns inter-ORACS gap files |
 | gWFCll / gWFClf | gridWideFederationCommand Logistics **List** / **File**; `.p` suffix = provisional |
