@@ -315,11 +315,26 @@ def build_architecture() -> None:
     # offline file:// rendering (fetch() is CORS-blocked on file://). The SVG is
     # self-contained (data-URI images, no network refs); strip the XML prolog so
     # it embeds as valid inline HTML5 SVG.
+    # Normalize the SVG so it renders as crisp VECTOR everywhere. draw.io gates its
+    # foreignObject (vector) text behind requiredFeatures and ships a raster <image>
+    # fallback; Chromium fails that gate and paints the blurry raster instead. Drop
+    # the gate + the dead raster fallbacks so the vector text always renders. Written
+    # back to the source so the copied raw-SVG link and every build stay consistent;
+    # idempotent (a no-op once clean).
+    svg_src = _ASSET_SRCS["AGMS-architecture.svg"]
+    if svg_src.exists():
+        svg_text = svg_src.read_text(encoding="utf-8")
+        cleaned = re.sub(r'\s*requiredFeatures="[^"]*"', "", svg_text)
+        cleaned = re.sub(r"<image\b[^>]*?/>", "", cleaned)
+        if cleaned != svg_text:
+            svg_src.write_text(cleaned, encoding="utf-8")
+            print("  normalized SVG   dropped requiredFeatures gate + raster text fallbacks (crisp vector)")
+
     agms_html = arch_dir / "AGMS-architecture.html"
     if agms_html.exists():
         html = agms_html.read_text(encoding="utf-8")
         if "<!--AGMS_INLINE_SVG-->" in html:
-            svg_text = _ASSET_SRCS["AGMS-architecture.svg"].read_text(encoding="utf-8")
+            svg_text = svg_src.read_text(encoding="utf-8")
             svg_inline = svg_text[svg_text.index("<svg"):]
             html = html.replace("<!--AGMS_INLINE_SVG-->", svg_inline)
             agms_html.write_text(html, encoding="utf-8")
