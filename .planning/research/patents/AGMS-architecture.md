@@ -1,20 +1,14 @@
 # The AGMS Architecture — A Full, Conceptual Walkthrough
 
-*The Adaptive (Power) Grid Management System invented by Jamshid Sharif-Askary
-(the hiring lab director), as described across the six-patent family in this directory.*
+## AGMS reference architecture
 
-> **How to read this document.** This is the "understand it deeply" companion to the
-> per-patent summaries. It explains *what AGMS is, why it exists, how it works, and how
-> the pieces connect* — at a conceptual level, in plain language, end to end. Reference
-> numbers (e.g. `1400`) and object names (e.g. `gWFCll(id)`) appear in parentheses so you
-> can cross-walk to the detailed files (`adaptive-power.md`, `asset-portfolio.md`,
-> `logistician-module.md`, `operation-loop.md`, `scout-command.md`, `data-management.md`)
-> — but you can read this top to bottom and ignore them and still get the whole picture.
-> Where your own experience maps in, you'll see a **▶ Juan** note.
->
-> **Companion note:** the grid-operations background, industry structure, device glossary, and
-> role-fit analysis (former Appendices A–F) now live in a separate study note —
-> [grid-operations-and-role.html](../grid-operations-and-role.html).
+The whole system on one page — the self-organizing grid-management platform: perceive
+(GWM) → reason (CaCSM) → orchestrate (Logistician/GWCH) → deploy autonomous scouts.
+Open the PNG full-size (4885×4265 px) to read the study annotations.
+
+[![AGMS architecture diagram (with annotations)](AGMS-architecture.drawio.png)](AGMS-architecture.drawio.png)
+
+Also available: [vector SVG](AGMS-architecture.svg).
 
 ---
 
@@ -718,14 +712,3 @@ semantics, SI-MAPPER is the typed DNA-map asset model, CVXPY MPC is the simulate
 that the granted Operation Loop patent — GE Vernova's own IP — puts in its claims, and my analytics
 stack is the GWM data foundation. Coming to GE Vernova means integrating those into a T&D-scale
 version of precisely this architecture."*
-
----
-
-## Quick links
-
-- Map of the family + pipeline diagram + glossary → `INDEX.md`
-- Parent architecture in patent detail → `adaptive-power.md`
-- Per-stage detail → `logistician-module.md`, `asset-portfolio.md`, `operation-loop.md`,
-  `scout-command.md`, `data-management.md`
-- Extra OCR-only detail (gAVA, relevancy tiers, CSM validation stages) → `ocr.md`
-- Companion study note: grid operations, industry, devices, role → [grid-operations-and-role.html](../grid-operations-and-role.html)

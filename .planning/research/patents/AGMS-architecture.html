@@ -32,6 +32,9 @@
   .callout p{margin:0;}
   .juan{background:var(--juan-bg);border-left:4px solid var(--juan-line);border-radius:0 8px 8px 0;padding:11px 18px;margin:14px 0;font-size:14.5px;}
   footer{grid-column:1/-1;text-align:center;color:var(--muted);font-size:12.5px;margin-top:24px;}
+  figure.diagram-figure{margin:8px 0 0;}
+  figure.diagram-figure img{display:block;max-width:100%;height:auto;border:1px solid var(--line);border-radius:10px;background:#fff;cursor:zoom-in;}
+  figure.diagram-figure figcaption{margin-top:8px;font-size:12.5px;color:var(--muted);text-align:center;}
 </style>
 </head>
 <body>
@@ -39,6 +42,7 @@
   <header class="masthead"><h1>The AGMS Architecture — A Full, Conceptual Walkthrough</h1></header>
   <nav class="toc">
     <h2>Contents</h2>
+    <a href="#diagram">AGMS reference architecture</a>
     <a href="#p1">Part 0 — What Is This Actually For?</a>
     <a href="#p2">Part 1 — The Big Idea</a>
     <a href="#p3">Part 2 — The Three Brains (the layered architecture)</a>
@@ -51,12 +55,15 @@
     <a href="#p10">Part 9 — End-to-End Walkthrough (one concrete story)</a>
     <a href="#p11">Part 10 — The Recurring Design Principles (what to actually take away)</a>
     <a href="#p12">Part 11 — Where Juan&#x27;s Work Maps (the consolidated bridge map)</a>
-    <a href="#p13">Quick links</a>
   </nav>
   <main>
-<section class="card">
-<p><em>The Adaptive (Power) Grid Management System invented by Jamshid Sharif-Askary (the hiring lab director), as described across the six-patent family in this directory.</em></p>
-<div class="callout"><p><strong>How to read this document.</strong> This is the "understand it deeply" companion to the per-patent summaries. It explains <em>what AGMS is, why it exists, how it works, and how the pieces connect</em> — at a conceptual level, in plain language, end to end. Reference numbers (e.g. <code>1400</code>) and object names (e.g. <code>gWFCll(id)</code>) appear in parentheses so you can cross-walk to the detailed files (<code>adaptive-power.md</code>, <code>asset-portfolio.md</code>, <code>logistician-module.md</code>, <code>operation-loop.md</code>, <code>scout-command.md</code>, <code>data-management.md</code>) — but you can read this top to bottom and ignore them and still get the whole picture. Where your own experience maps in, you'll see a <strong>▶ Juan</strong> note.  <strong>Companion note:</strong> the grid-operations background, industry structure, device glossary, and role-fit analysis (former Appendices A–F) now live in a separate study note — <a href="../grid-operations-and-role.html" target="_blank" rel="noopener">grid-operations-and-role.html</a>.</p></div>
+<section class="card" id="diagram">
+<h2 class="sec">AGMS reference architecture</h2>
+<p>The whole system on one page — the self-organizing grid-management platform: perceive (GWM) &rarr; reason (CaCSM) &rarr; orchestrate (Logistician/GWCH) &rarr; deploy autonomous scouts. Click the image to open it full-size (4885&times;4265 px) in a new tab; the study annotations are legible at full zoom.</p>
+<figure class="diagram-figure">
+<a href="AGMS-architecture.drawio.png" target="_blank" rel="noopener"><img src="AGMS-architecture.drawio.png" alt="AGMS architecture diagram (with annotations)"></a>
+<figcaption>AGMS architecture — reconstructed from the director's six-patent family, with hand-added study annotations. PNG exported from draw.io (faithful colors). Also available: <a href="AGMS-architecture.svg">vector SVG</a>.</figcaption>
+</figure>
 </section>
 <section class="card">
 <h2 class="sec" id="p1">Part 0 — What Is This Actually For?</h2>
@@ -255,10 +262,6 @@
 <h2 class="sec" id="p12">Part 11 — Where Juan's Work Maps (the consolidated bridge map)</h2>
 <table><thead><tr><th>AGMS layer / concept</th><th>What it does</th><th>Juan's analog</th><th>The one-liner</th></tr></thead><tbody><tr><td><strong>GWM</strong> alert correlation + decision support</td><td>Turn alert storms into a clean situation + recommendation</td><td>Databricks/PySpark substation analytics; HEMS edge ML</td><td>"I built the streaming-analytics + ML layer that feeds correlation."</td></tr><tr><td><strong>CaCSM</strong> simulate→promote</td><td>Reason a response, validate before going live</td><td><strong>CVXPY MPC solve-before-commit</strong></td><td>"I've shipped the validate-before-execute gate, just as one optimization."</td></tr><tr><td><strong>GWCH / Logistician</strong> orchestration</td><td>Turn abstract intent into placed, monitored resources</td><td><strong>OSED FastAPI control plane → K3s</strong></td><td>"That's my orchestration control plane, with grid semantics."</td></tr><tr><td><strong>ORACS index verification</strong></td><td>Gate assets on observability/reachability/controllability</td><td>OSED health/reachability gating; <strong>virtual sensing</strong></td><td>"I gate dispatch on node health — and ML-estimate state where observability is missing."</td></tr><tr><td><strong>Operation Loop Formation</strong> (granted)</td><td>Match DNA, build meta objects, <strong>simulate the loop</strong></td><td><strong>CVXPY MPC</strong> (literal match) + K3s manifests</td><td>"Their granted claim 3 is my solve-before-commit. The meta objects are my deployment descriptors."</td></tr><tr><td><strong>Scout Incubator</strong></td><td>Reconcile role-typed agents onto field devices</td><td><strong>K3s/K8s scheduler</strong></td><td>"The Incubator <em>is</em> a Kubernetes scheduler for the grid."</td></tr><tr><td><strong>DNA map</strong></td><td>Typed, relationship-aware asset fingerprint</td><td><strong>SI-MAPPER</strong> (CV→ontology knowledge graph)</td><td>"SI-MAPPER is the DNA map for building assets."</td></tr><tr><td><strong>Data Management / POV</strong></td><td>Role-filtered, access-controlled data views</td><td><strong>FastAPI service layer + Grafana</strong> over InfluxDB/TimescaleDB</td><td>"POV files are my API-mediated, role-scoped data layer."</td></tr><tr><td><strong>ga-authenticationkey / gAVA</strong></td><td>Authenticated, schema-enforced inter-module messaging</td><td><strong>gRPC auth + MQTT schema; MCP tool-call auth</strong></td><td>"Authenticated structured messaging — I've built it at gRPC and MCP layers."</td></tr><tr><td><strong>Island mode / federation</strong></td><td>Autonomous edge operation through WAN loss</td><td><strong>OSED edge autonomy + local buffering</strong></td><td>"My platform was designed to keep the control loop alive when the cloud drops."</td></tr></tbody></table>
 <p><strong>The master narrative:</strong> <em>"The patent family describes one self-organizing platform — perceive, reason, then run an assembly line (Logistician → verify → assemble+simulate → deploy) that pushes autonomous scouts onto field cells that survive losing the center. I've built the components of exactly this, independently, in buildings and DER: OSED is the edge runtime and orchestration control plane the scouts would land on, my K3s scheduler is the Scout Incubator with grid semantics, SI-MAPPER is the typed DNA-map asset model, CVXPY MPC is the simulate-before-commit gate that the granted Operation Loop patent — GE Vernova's own IP — puts in its claims, and my analytics stack is the GWM data foundation. Coming to GE Vernova means integrating those into a T&amp;D-scale version of precisely this architecture."</em></p>
-</section>
-<section class="card">
-<h2 class="sec" id="p13">Quick links</h2>
-<ul><li>Map of the family + pipeline diagram + glossary → <a href="INDEX.html"><code>INDEX.md</code></a></li><li>Parent architecture in patent detail → <code>adaptive-power.md</code></li><li>Per-stage detail → <code>logistician-module.md</code>, <code>asset-portfolio.md</code>, <code>operation-loop.md</code>, <code>scout-command.md</code>, <code>data-management.md</code></li><li>Extra OCR-only detail (gAVA, relevancy tiers, CSM validation stages) → <code>ocr.md</code></li><li>Companion study note: grid operations, industry, devices, role → <a href="../grid-operations-and-role.html" target="_blank" rel="noopener">grid-operations-and-role.html</a></li></ul>
 </section>
     <footer>Rendered from the Markdown source — content unchanged.</footer>
   </main>
