@@ -57,6 +57,8 @@
   main pre code{background:none;border:0;color:inherit;padding:0;font-size:inherit;}
   blockquote{background:var(--callout);border-left:4px solid var(--callout-line);border-radius:0 8px 8px 0;padding:12px 18px;margin:16px 0;color:#4a3d12;}
   blockquote p{margin:6px 0;}
+  a.imglink{text-decoration:none;font-size:13px;margin-left:5px;opacity:.55;white-space:nowrap;}
+  a.imglink:hover{opacity:1;}
 </style>
 </head>
 <body>
@@ -146,57 +148,57 @@ and the natural reference (slack) node for state estimation.</p>
 </thead>
 <tbody>
 <tr>
-<td>RTUs (Remote Terminal Units)</td>
+<td>RTUs (Remote Terminal Units) <a class="imglink" href="https://www.google.com/search?tbm=isch&amp;q=RTUs+substation" target="_blank" rel="noopener" title="See real-world photos — Google Images: RTUs substation">&#128247;</a></td>
 <td>Aggregated analog/digital points at the substation</td>
 <td>DNP3, IEC 60870-5-101/104</td>
 </tr>
 <tr>
-<td>IEDs / protective relays (SEL, ABB, GE Multilin)</td>
+<td>IEDs / protective relays (SEL, ABB, GE Multilin) <a class="imglink" href="https://www.google.com/search?tbm=isch&amp;q=IEDs+protective+relays+substation" target="_blank" rel="noopener" title="See real-world photos — Google Images: IEDs protective relays substation">&#128247;</a></td>
 <td>V, I, P, Q, frequency, breaker status, fault current, oscillography</td>
 <td>IEC 61850 (MMS/GOOSE), DNP3, Modbus</td>
 </tr>
 <tr>
-<td>Bay / feeder controllers</td>
+<td>Bay / feeder controllers <a class="imglink" href="https://www.google.com/search?tbm=isch&amp;q=Bay+feeder+controllers+substation" target="_blank" rel="noopener" title="See real-world photos — Google Images: Bay feeder controllers substation">&#128247;</a></td>
 <td>Per-feeder V, I, P, Q, power factor</td>
 <td>IEC 61850, DNP3</td>
 </tr>
 <tr>
-<td>Substation SCADA / automation system</td>
+<td>Substation SCADA / automation system <a class="imglink" href="https://www.google.com/search?tbm=isch&amp;q=Substation+SCADA+automation+system+substation" target="_blank" rel="noopener" title="See real-world photos — Google Images: Substation SCADA automation system substation">&#128247;</a></td>
 <td>All station analogs + status, consolidated</td>
 <td>DNP3, IEC 61850, OPC-UA</td>
 </tr>
 <tr>
-<td>Bus voltage &amp; frequency measurement</td>
+<td>Bus voltage &amp; frequency measurement <a class="imglink" href="https://www.google.com/search?tbm=isch&amp;q=Bus+voltage+frequency+measurement+substation" target="_blank" rel="noopener" title="See real-world photos — Google Images: Bus voltage frequency measurement substation">&#128247;</a></td>
 <td>Substation bus &#124;V&#124;, f (reference node)</td>
 <td>IEC 61850, DNP3</td>
 </tr>
 <tr>
-<td>Power-transformer monitors</td>
+<td>Power-transformer monitors <a class="imglink" href="https://www.google.com/search?tbm=isch&amp;q=Power-transformer+monitors+substation" target="_blank" rel="noopener" title="See real-world photos — Google Images: Power-transformer monitors substation">&#128247;</a></td>
 <td>LTC tap position, oil/winding temp, DGA, loading</td>
 <td>IEC 61850, Modbus, OPC-UA</td>
 </tr>
 <tr>
-<td>Breaker / recloser status &amp; counters</td>
+<td>Breaker / recloser status &amp; counters <a class="imglink" href="https://www.google.com/search?tbm=isch&amp;q=Breaker+recloser+status+counters+substation" target="_blank" rel="noopener" title="See real-world photos — Google Images: Breaker recloser status counters substation">&#128247;</a></td>
 <td>Open/closed, trip counts, wear</td>
 <td>DNP3, IEC 61850 GOOSE</td>
 </tr>
 <tr>
-<td>Digital Fault Recorders (DFR)</td>
+<td>Digital Fault Recorders (DFR) <a class="imglink" href="https://www.google.com/search?tbm=isch&amp;q=Digital+Fault+Recorders+substation" target="_blank" rel="noopener" title="See real-world photos — Google Images: Digital Fault Recorders substation">&#128247;</a></td>
 <td>High-res fault waveforms</td>
 <td>COMTRADE files, FTP</td>
 </tr>
 <tr>
-<td>Sequence-of-Events Recorders (SER)</td>
+<td>Sequence-of-Events Recorders (SER) <a class="imglink" href="https://www.google.com/search?tbm=isch&amp;q=Sequence-of-Events+Recorders+substation" target="_blank" rel="noopener" title="See real-world photos — Google Images: Sequence-of-Events Recorders substation">&#128247;</a></td>
 <td>Time-tagged event ordering</td>
 <td>DNP3, file pull</td>
 </tr>
 <tr>
-<td>Merging units (IEC 61850 process bus)</td>
+<td>Merging units (IEC 61850 process bus) <a class="imglink" href="https://www.google.com/search?tbm=isch&amp;q=Merging+units+substation" target="_blank" rel="noopener" title="See real-world photos — Google Images: Merging units substation">&#128247;</a></td>
 <td>Digitized Sampled Values (SV) of I/V</td>
 <td>IEC 61850-9-2 SV</td>
 </tr>
 <tr>
-<td>Station DC / battery monitors</td>
+<td>Station DC / battery monitors <a class="imglink" href="https://www.google.com/search?tbm=isch&amp;q=Station+DC+battery+monitors+substation" target="_blank" rel="noopener" title="See real-world photos — Google Images: Station DC battery monitors substation">&#128247;</a></td>
 <td>DC-bus health (sustainability input)</td>
 <td>Modbus, DNP3</td>
 </tr>
@@ -216,52 +218,52 @@ and the natural reference (slack) node for state estimation.</p>
 </thead>
 <tbody>
 <tr>
-<td>Line-post / line-mounted sensors (Sentient, Lindsey, Sensus)</td>
+<td>Line-post / line-mounted sensors (Sentient, Lindsey, Sensus) <a class="imglink" href="https://www.google.com/search?tbm=isch&amp;q=Line-post+line-mounted+sensors+distribution+feeder" target="_blank" rel="noopener" title="See real-world photos — Google Images: Line-post line-mounted sensors distribution feeder">&#128247;</a></td>
 <td>Line current, voltage, conductor temp, sometimes phase angle</td>
 <td>RF mesh, cellular, DNP3</td>
 </tr>
 <tr>
-<td>Faulted Circuit Indicators (FCIs) / fault-passage indicators</td>
+<td>Faulted Circuit Indicators (FCIs) / fault-passage indicators <a class="imglink" href="https://www.google.com/search?tbm=isch&amp;q=Faulted+Circuit+Indicators+fault-passage+indicators+distribution+feeder" target="_blank" rel="noopener" title="See real-world photos — Google Images: Faulted Circuit Indicators fault-passage indicators distribution feeder">&#128247;</a></td>
 <td>Fault passed / didn't (fault-location narrowing)</td>
 <td>RF, cellular, LoRa</td>
 </tr>
 <tr>
-<td>Reclosers + recloser controls (SEL-651, G&amp;W, S&amp;C)</td>
+<td>Reclosers + recloser controls (SEL-651, G&amp;W, S&amp;C) <a class="imglink" href="https://www.google.com/search?tbm=isch&amp;q=Reclosers+recloser+controls+distribution+feeder" target="_blank" rel="noopener" title="See real-world photos — Google Images: Reclosers recloser controls distribution feeder">&#128247;</a></td>
 <td>V, I, P, Q, status, trip/lockout</td>
 <td>DNP3, IEC 61850</td>
 </tr>
 <tr>
-<td>Automated switches / tie switches</td>
+<td>Automated switches / tie switches <a class="imglink" href="https://www.google.com/search?tbm=isch&amp;q=Automated+switches+tie+switches+distribution+feeder" target="_blank" rel="noopener" title="See real-world photos — Google Images: Automated switches tie switches distribution feeder">&#128247;</a></td>
 <td>Open/closed (real-time topology), sometimes metering</td>
 <td>DNP3, IEC 61850 GOOSE</td>
 </tr>
 <tr>
-<td>Sectionalizers</td>
+<td>Sectionalizers <a class="imglink" href="https://www.google.com/search?tbm=isch&amp;q=Sectionalizers+distribution+feeder" target="_blank" rel="noopener" title="See real-world photos — Google Images: Sectionalizers distribution feeder">&#128247;</a></td>
 <td>Count/operate state</td>
 <td>DNP3</td>
 </tr>
 <tr>
-<td>Capacitor-bank controllers</td>
+<td>Capacitor-bank controllers <a class="imglink" href="https://www.google.com/search?tbm=isch&amp;q=Capacitor-bank+controllers+distribution+feeder" target="_blank" rel="noopener" title="See real-world photos — Google Images: Capacitor-bank controllers distribution feeder">&#128247;</a></td>
 <td>In/out status, local V/VAR, neutral current</td>
 <td>DNP3, IEEE 2030.5</td>
 </tr>
 <tr>
-<td>Voltage-regulator controllers (step regulators)</td>
+<td>Voltage-regulator controllers (step regulators) <a class="imglink" href="https://www.google.com/search?tbm=isch&amp;q=Voltage-regulator+controllers+distribution+feeder" target="_blank" rel="noopener" title="See real-world photos — Google Images: Voltage-regulator controllers distribution feeder">&#128247;</a></td>
 <td>Tap position, regulated voltage, load current</td>
 <td>DNP3, Modbus</td>
 </tr>
 <tr>
-<td>Pad-mount switchgear / sensored elbows</td>
+<td>Pad-mount switchgear / sensored elbows <a class="imglink" href="https://www.google.com/search?tbm=isch&amp;q=Pad-mount+switchgear+sensored+elbows+distribution+feeder" target="_blank" rel="noopener" title="See real-world photos — Google Images: Pad-mount switchgear sensored elbows distribution feeder">&#128247;</a></td>
 <td>Cable-section V/I, status</td>
 <td>DNP3, RF</td>
 </tr>
 <tr>
-<td>Distribution line monitors / PQ line sensors</td>
+<td>Distribution line monitors / PQ line sensors <a class="imglink" href="https://www.google.com/search?tbm=isch&amp;q=Distribution+line+monitors+PQ+line+sensors+distribution+feeder" target="_blank" rel="noopener" title="See real-world photos — Google Images: Distribution line monitors PQ line sensors distribution feeder">&#128247;</a></td>
 <td>Waveform, sag/swell, harmonics mid-feeder</td>
 <td>cellular, MQTT</td>
 </tr>
 <tr>
-<td>Dynamic Line Rating (DLR) / conductor-temp sensors</td>
+<td>Dynamic Line Rating (DLR) / conductor-temp sensors <a class="imglink" href="https://www.google.com/search?tbm=isch&amp;q=Dynamic+Line+Rating+conductor-temp+sensors+distribution+feeder" target="_blank" rel="noopener" title="See real-world photos — Google Images: Dynamic Line Rating conductor-temp sensors distribution feeder">&#128247;</a></td>
 <td>Conductor temp, sag, ampacity headroom</td>
 <td>RF, cellular</td>
 </tr>
@@ -282,27 +284,27 @@ and the natural reference (slack) node for state estimation.</p>
 </thead>
 <tbody>
 <tr>
-<td>PMUs (transmission-grade)</td>
+<td>PMUs (transmission-grade) <a class="imglink" href="https://www.google.com/search?tbm=isch&amp;q=PMUs+power+grid" target="_blank" rel="noopener" title="See real-world photos — Google Images: PMUs power grid">&#128247;</a></td>
 <td>Synchrophasors: &#124;V&#124;∠θ, &#124;I&#124;∠θ, f, ROCOF (GPS-timed)</td>
 <td>IEEE C37.118.2</td>
 </tr>
 <tr>
-<td><strong>Micro-PMUs / D-PMUs</strong> (distribution)</td>
+<td><strong>Micro-PMUs / D-PMUs</strong> (distribution) <a class="imglink" href="https://www.google.com/search?tbm=isch&amp;q=Micro-PMUs+D-PMUs+power+grid" target="_blank" rel="noopener" title="See real-world photos — Google Images: Micro-PMUs D-PMUs power grid">&#128247;</a></td>
 <td>High-precision <em>small</em> voltage-angle differences across feeders</td>
 <td>C37.118, IEEE 2664</td>
 </tr>
 <tr>
-<td>PDCs (Phasor Data Concentrators)</td>
+<td>PDCs (Phasor Data Concentrators) <a class="imglink" href="https://www.google.com/search?tbm=isch&amp;q=PDCs+power+grid" target="_blank" rel="noopener" title="See real-world photos — Google Images: PDCs power grid">&#128247;</a></td>
 <td>Time-aligned multi-PMU streams</td>
 <td>C37.118, IEEE 1344</td>
 </tr>
 <tr>
-<td>Point-on-wave / continuous waveform sensors</td>
+<td>Point-on-wave / continuous waveform sensors <a class="imglink" href="https://www.google.com/search?tbm=isch&amp;q=Point-on-wave+continuous+waveform+sensors+power+grid" target="_blank" rel="noopener" title="See real-world photos — Google Images: Point-on-wave continuous waveform sensors power grid">&#128247;</a></td>
 <td>Full waveform capture (sub-cycle events)</td>
 <td>proprietary, MQTT</td>
 </tr>
 <tr>
-<td>Power-quality meters (ION, SEL, Fluke)</td>
+<td>Power-quality meters (ION, SEL, Fluke) <a class="imglink" href="https://www.google.com/search?tbm=isch&amp;q=Power-quality+meters+power+grid" target="_blank" rel="noopener" title="See real-world photos — Google Images: Power-quality meters power grid">&#128247;</a></td>
 <td>Harmonics, flicker, sag/swell, unbalance</td>
 <td>Modbus, DNP3, OPC-UA</td>
 </tr>
@@ -323,37 +325,37 @@ voltage and energy points, one per service transformer / customer.</p>
 </thead>
 <tbody>
 <tr>
-<td>AMI smart meters (Itron, L&amp;G, Sensus)</td>
+<td>AMI smart meters (Itron, L&amp;G, Sensus) <a class="imglink" href="https://www.google.com/search?tbm=isch&amp;q=AMI+smart+meters" target="_blank" rel="noopener" title="See real-world photos — Google Images: AMI smart meters">&#128247;</a></td>
 <td>Interval kWh, kW, <strong>service voltage</strong>, sometimes Q/PF</td>
 <td>RF mesh / cellular FAN → head-end</td>
 </tr>
 <tr>
-<td>Meter voltage telemetry</td>
+<td>Meter voltage telemetry <a class="imglink" href="https://www.google.com/search?tbm=isch&amp;q=Meter+voltage+telemetry" target="_blank" rel="noopener" title="See real-world photos — Google Images: Meter voltage telemetry">&#128247;</a></td>
 <td>Nodal &#124;V&#124; at the customer (dense voltage observability)</td>
 <td>AMI head-end → MDMS</td>
 </tr>
 <tr>
-<td>Last-gasp / power-down notifications</td>
+<td>Last-gasp / power-down notifications <a class="imglink" href="https://www.google.com/search?tbm=isch&amp;q=Last-gasp+power-down+notifications" target="_blank" rel="noopener" title="See real-world photos — Google Images: Last-gasp power-down notifications">&#128247;</a></td>
 <td>Outage detection / topology truth</td>
 <td>AMI FAN</td>
 </tr>
 <tr>
-<td>AMI head-end system</td>
+<td>AMI head-end system <a class="imglink" href="https://www.google.com/search?tbm=isch&amp;q=AMI+head-end+system" target="_blank" rel="noopener" title="See real-world photos — Google Images: AMI head-end system">&#128247;</a></td>
 <td>Consolidated meter reads</td>
 <td>vendor API, MultiSpeak</td>
 </tr>
 <tr>
-<td>Meter Data Management System (MDMS)</td>
+<td>Meter Data Management System (MDMS) <a class="imglink" href="https://www.google.com/search?tbm=isch&amp;q=Meter+Data+Management+System" target="_blank" rel="noopener" title="See real-world photos — Google Images: Meter Data Management System">&#128247;</a></td>
 <td>Validated, time-aligned interval data</td>
 <td>MultiSpeak, CIM, SQL/API</td>
 </tr>
 <tr>
-<td>C&amp;I interval / revenue meters</td>
+<td>C&amp;I interval / revenue meters <a class="imglink" href="https://www.google.com/search?tbm=isch&amp;q=C+I+interval+revenue+meters" target="_blank" rel="noopener" title="See real-world photos — Google Images: C I interval revenue meters">&#128247;</a></td>
 <td>High-accuracy P, Q at large loads</td>
 <td>DNP3, Modbus, OPC-UA</td>
 </tr>
 <tr>
-<td>Submeters / net meters</td>
+<td>Submeters / net meters <a class="imglink" href="https://www.google.com/search?tbm=isch&amp;q=Submeters+net+meters" target="_blank" rel="noopener" title="See real-world photos — Google Images: Submeters net meters">&#128247;</a></td>
 <td>Behind-meter generation &amp; sub-load split</td>
 <td>Modbus, IEEE 2030.5</td>
 </tr>
@@ -374,42 +376,42 @@ voltage and energy points, one per service transformer / customer.</p>
 </thead>
 <tbody>
 <tr>
-<td>Smart inverters (IEEE 1547-2018)</td>
+<td>Smart inverters (IEEE 1547-2018) <a class="imglink" href="https://www.google.com/search?tbm=isch&amp;q=Smart+inverters" target="_blank" rel="noopener" title="See real-world photos — Google Images: Smart inverters">&#128247;</a></td>
 <td>P, Q, V, status, ride-through state</td>
 <td><strong>IEEE 2030.5</strong>, SunSpec Modbus</td>
 </tr>
 <tr>
-<td>PV-plant telemetry</td>
+<td>PV-plant telemetry <a class="imglink" href="https://www.google.com/search?tbm=isch&amp;q=PV-plant+telemetry" target="_blank" rel="noopener" title="See real-world photos — Google Images: PV-plant telemetry">&#128247;</a></td>
 <td>DC/AC output, irradiance, availability</td>
 <td>Modbus, 2030.5, SunSpec</td>
 </tr>
 <tr>
-<td>Battery storage (BESS)</td>
+<td>Battery storage (BESS) <a class="imglink" href="https://www.google.com/search?tbm=isch&amp;q=Battery+storage" target="_blank" rel="noopener" title="See real-world photos — Google Images: Battery storage">&#128247;</a></td>
 <td>SoC, P, Q, thermal, cycle state</td>
 <td>Modbus, 2030.5, DNP3</td>
 </tr>
 <tr>
-<td>EV chargers / EVSE</td>
+<td>EV chargers / EVSE <a class="imglink" href="https://www.google.com/search?tbm=isch&amp;q=EV+chargers+EVSE" target="_blank" rel="noopener" title="See real-world photos — Google Images: EV chargers EVSE">&#128247;</a></td>
 <td>Charging load, session, V2G capability</td>
 <td>OCPP, 2030.5, OpenADR</td>
 </tr>
 <tr>
-<td>Microgrid controllers</td>
+<td>Microgrid controllers <a class="imglink" href="https://www.google.com/search?tbm=isch&amp;q=Microgrid+controllers" target="_blank" rel="noopener" title="See real-world photos — Google Images: Microgrid controllers">&#128247;</a></td>
 <td>Island status, net interchange, local dispatch</td>
 <td>DNP3, 2030.5</td>
 </tr>
 <tr>
-<td>DERMS</td>
+<td>DERMS <a class="imglink" href="https://www.google.com/search?tbm=isch&amp;q=DERMS" target="_blank" rel="noopener" title="See real-world photos — Google Images: DERMS">&#128247;</a></td>
 <td>Aggregated DER state + control headroom</td>
 <td>CIM, 2030.5, vendor API</td>
 </tr>
 <tr>
-<td>VPP / aggregator platforms</td>
+<td>VPP / aggregator platforms <a class="imglink" href="https://www.google.com/search?tbm=isch&amp;q=VPP+aggregator+platforms" target="_blank" rel="noopener" title="See real-world photos — Google Images: VPP aggregator platforms">&#128247;</a></td>
 <td>Third-party fleet DER visibility</td>
 <td>OpenADR, REST API</td>
 </tr>
 <tr>
-<td>Building EMS / HEMS</td>
+<td>Building EMS / HEMS <a class="imglink" href="https://www.google.com/search?tbm=isch&amp;q=Building+EMS+HEMS" target="_blank" rel="noopener" title="See real-world photos — Google Images: Building EMS HEMS">&#128247;</a></td>
 <td>Behind-meter load &amp; flexibility</td>
 <td>BACnet, MQTT, 2030.5</td>
 </tr>
@@ -675,37 +677,37 @@ pseudo-measurement priors.</p>
 </thead>
 <tbody>
 <tr>
-<td>Transformer monitors</td>
+<td>Transformer monitors <a class="imglink" href="https://www.google.com/search?tbm=isch&amp;q=Transformer+monitors" target="_blank" rel="noopener" title="See real-world photos — Google Images: Transformer monitors">&#128247;</a></td>
 <td>DGA, oil/winding temp, acoustic, partial discharge</td>
 <td>IEC 61850, Modbus</td>
 </tr>
 <tr>
-<td>Cable / switchgear PD monitors</td>
+<td>Cable / switchgear PD monitors <a class="imglink" href="https://www.google.com/search?tbm=isch&amp;q=Cable+switchgear+PD+monitors" target="_blank" rel="noopener" title="See real-world photos — Google Images: Cable switchgear PD monitors">&#128247;</a></td>
 <td>Partial-discharge / incipient insulation failure</td>
 <td>proprietary, Modbus</td>
 </tr>
 <tr>
-<td>Thermal imaging (fixed + drone)</td>
+<td>Thermal imaging (fixed + drone) <a class="imglink" href="https://www.google.com/search?tbm=isch&amp;q=Thermal+imaging" target="_blank" rel="noopener" title="See real-world photos — Google Images: Thermal imaging">&#128247;</a></td>
 <td>Hot-spot detection</td>
 <td>image pipeline</td>
 </tr>
 <tr>
-<td>Acoustic / vibration sensors</td>
+<td>Acoustic / vibration sensors <a class="imglink" href="https://www.google.com/search?tbm=isch&amp;q=Acoustic+vibration+sensors" target="_blank" rel="noopener" title="See real-world photos — Google Images: Acoustic vibration sensors">&#128247;</a></td>
 <td>Mechanical degradation</td>
 <td>IoT, MQTT</td>
 </tr>
 <tr>
-<td>Conductor tilt / sag / galloping sensors</td>
+<td>Conductor tilt / sag / galloping sensors <a class="imglink" href="https://www.google.com/search?tbm=isch&amp;q=Conductor+tilt+sag+galloping+sensors" target="_blank" rel="noopener" title="See real-world photos — Google Images: Conductor tilt sag galloping sensors">&#128247;</a></td>
 <td>Mechanical line state</td>
 <td>RF, cellular</td>
 </tr>
 <tr>
-<td>Pole-tilt / structural sensors</td>
+<td>Pole-tilt / structural sensors <a class="imglink" href="https://www.google.com/search?tbm=isch&amp;q=Pole-tilt+structural+sensors" target="_blank" rel="noopener" title="See real-world photos — Google Images: Pole-tilt structural sensors">&#128247;</a></td>
 <td>Structural integrity</td>
 <td>LoRa, cellular</td>
 </tr>
 <tr>
-<td>LiDAR &amp; aerial/satellite imagery</td>
+<td>LiDAR &amp; aerial/satellite imagery <a class="imglink" href="https://www.google.com/search?tbm=isch&amp;q=LiDAR+aerial+satellite+imagery" target="_blank" rel="noopener" title="See real-world photos — Google Images: LiDAR aerial satellite imagery">&#128247;</a></td>
 <td>Vegetation, sag, encroachment</td>
 <td>batch / file</td>
 </tr>
@@ -725,31 +727,31 @@ and it <em>is</em> the ORACS reachability layer made physical.</p>
 </thead>
 <tbody>
 <tr>
-<td>Field Area Network: RF mesh (Itron / L&amp;G / Sensus)</td>
+<td>Field Area Network: RF mesh (Itron / L&amp;G / Sensus) <a class="imglink" href="https://www.google.com/search?tbm=isch&amp;q=Field+Area+Network+RF+mesh+utility+field" target="_blank" rel="noopener" title="See real-world photos — Google Images: Field Area Network RF mesh utility field">&#128247;</a></td>
 <td>AMI + DA backhaul</td>
 </tr>
 <tr>
-<td>Private LTE / public LTE / 5G</td>
+<td>Private LTE / public LTE / 5G <a class="imglink" href="https://www.google.com/search?tbm=isch&amp;q=Private+LTE+public+LTE+5G+utility+field" target="_blank" rel="noopener" title="See real-world photos — Google Images: Private LTE public LTE 5G utility field">&#128247;</a></td>
 <td>DA device + DER backhaul</td>
 </tr>
 <tr>
-<td>Fiber</td>
+<td>Fiber <a class="imglink" href="https://www.google.com/search?tbm=isch&amp;q=Fiber+utility+field" target="_blank" rel="noopener" title="See real-world photos — Google Images: Fiber utility field">&#128247;</a></td>
 <td>Substation + critical-asset backhaul (lowest latency)</td>
 </tr>
 <tr>
-<td>Power-line carrier (PLC) / BPL</td>
+<td>Power-line carrier (PLC) / BPL <a class="imglink" href="https://www.google.com/search?tbm=isch&amp;q=Power-line+carrier+BPL+utility+field" target="_blank" rel="noopener" title="See real-world photos — Google Images: Power-line carrier BPL utility field">&#128247;</a></td>
 <td>Legacy line communications</td>
 </tr>
 <tr>
-<td>LoRaWAN</td>
+<td>LoRaWAN <a class="imglink" href="https://www.google.com/search?tbm=isch&amp;q=LoRaWAN+utility+field" target="_blank" rel="noopener" title="See real-world photos — Google Images: LoRaWAN utility field">&#128247;</a></td>
 <td>Long-range, low-power field sensors</td>
 </tr>
 <tr>
-<td>Cellular IoT (NB-IoT, LTE-M)</td>
+<td>Cellular IoT (NB-IoT, LTE-M) <a class="imglink" href="https://www.google.com/search?tbm=isch&amp;q=Cellular+IoT+utility+field" target="_blank" rel="noopener" title="See real-world photos — Google Images: Cellular IoT utility field">&#128247;</a></td>
 <td>Battery field sensors</td>
 </tr>
 <tr>
-<td>DA gateways / field routers / <strong>edge compute nodes</strong></td>
+<td>DA gateways / field routers / <strong>edge compute nodes</strong> <a class="imglink" href="https://www.google.com/search?tbm=isch&amp;q=DA+gateways+field+routers+edge+compute+nodes+utility+field" target="_blank" rel="noopener" title="See real-world photos — Google Images: DA gateways field routers edge compute nodes utility field">&#128247;</a></td>
 <td>The FAD / "operating cell" host where a virtual-sensing scout actually runs</td>
 </tr>
 </tbody>

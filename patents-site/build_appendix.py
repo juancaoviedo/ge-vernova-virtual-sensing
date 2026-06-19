@@ -21,8 +21,10 @@ docs/build_site.py then copies the output into docs/architecture/ during the sit
 Run from anywhere:  python3 patents-site/build_appendix.py
 """
 
+import html as html_lib
 import re
 import sys
+import urllib.parse
 from pathlib import Path
 
 import markdown
@@ -46,7 +48,17 @@ EXTRA_CSS = """
   main pre{background:#0f1722;color:#d6e3ee;border-radius:10px;padding:16px 20px;overflow-x:auto;font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;line-height:1.6;border:1px solid #1c2a3a;}
   main pre code{background:none;border:0;color:inherit;padding:0;font-size:inherit;}
   blockquote{background:var(--callout);border-left:4px solid var(--callout-line);border-radius:0 8px 8px 0;padding:12px 18px;margin:16px 0;color:#4a3d12;}
-  blockquote p{margin:6px 0;}"""
+  blockquote p{margin:6px 0;}
+  a.imglink{text-decoration:none;font-size:13px;margin-left:5px;opacity:.55;white-space:nowrap;}
+  a.imglink:hover{opacity:1;}"""
+
+# Physical-hardware tiers get a per-row "see real-world photos" Google Images link.
+# Abstract tiers (6 topology, 7 pseudo-measurements, 8 control-center systems,
+# 9 environmental data, 10 event records, 13 protocols, 14 non-utility) are skipped —
+# a device photo is meaningless for a model, a forecast, or a protocol.
+_DEVICE_TIERS = {1, 2, 3, 4, 5, 11, 12}
+# Light per-tier query qualifier to sharpen image results where device names are generic.
+_TIER_SUFFIX = {1: "substation", 2: "distribution feeder", 3: "power grid", 12: "utility field"}
 
 
 def fail(msg: str) -> None:
@@ -58,6 +70,44 @@ def slugify(text: str) -> str:
     """Heading text -> stable anchor id (lowercase alnum joined by hyphens)."""
     s = re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-")
     return s or "section"
+
+
+def _device_query(cell_html: str, suffix: str) -> str | None:
+    """Derive a clean Google Images search query from a table's device-name cell.
+
+    Drops parentheticals (vendor lists, standard refs, acronym expansions), normalizes
+    separators, and appends an optional tier qualifier. Returns None if nothing usable.
+    """
+    t = re.sub(r"<[^>]+>", "", cell_html)        # strip inline tags (<code> etc.)
+    t = html_lib.unescape(t)                      # &amp; -> &, &#124; -> |
+    t = re.sub(r"\([^)]*\)", " ", t)              # drop parentheticals
+    t = t.replace("/", " ").replace("&", " ")
+    t = re.sub(r"[^\w\s-]", " ", t)               # keep word chars, spaces, hyphens
+    t = re.sub(r"\s+", " ", t).strip()
+    if not t:
+        return None
+    return f"{t} {suffix}".strip() if suffix else t
+
+
+def _image_link(query: str) -> str:
+    """Build a 'see real-world photos' Google Images link for a device query."""
+    url = "https://www.google.com/search?tbm=isch&q=" + urllib.parse.quote_plus(query)
+    url = url.replace("&", "&amp;")               # valid HTML attribute
+    title = html_lib.escape(f"See real-world photos — Google Images: {query}")
+    return f'<a class="imglink" href="{url}" target="_blank" rel="noopener" title="{title}">&#128247;</a>'
+
+
+def _add_image_links(section_html: str, suffix: str) -> str:
+    """Append an image-search link to the first cell of every body row in the section's table."""
+    def repl(m: "re.Match[str]") -> str:
+        opening, cell = m.group(1), m.group(2)
+        query = _device_query(cell, suffix)
+        if not query:
+            return m.group(0)
+        return f"{opening}<td>{cell} {_image_link(query)}</td>"
+
+    # First <td> of each row only (headers use <th>, so they are never matched).
+    return re.sub(r"(<tr>\s*)<td>(.*?)</td>", repl, section_html, flags=re.S)
 
 
 def main() -> None:
@@ -105,6 +155,10 @@ def main() -> None:
         body_html = md.convert(body_md)
         # Style sub-headings like the rest of the family (h3.sub / h4.sub).
         body_html = body_html.replace("<h3>", '<h3 class="sub">').replace("<h4>", '<h4 class="sub">')
+        # Add per-device "see real-world photos" image-search links on the hardware tiers.
+        tier_m = re.match(r"tier-(\d+)-", sid)
+        if tier_m and int(tier_m.group(1)) in _DEVICE_TIERS:
+            body_html = _add_image_links(body_html, _TIER_SUFFIX.get(int(tier_m.group(1)), ""))
         cards.append(
             f'<section class="card" id="{sid}">\n'
             f'<h2 class="sec" id="{sid}">{heading}</h2>\n{body_html}\n</section>'
@@ -146,8 +200,10 @@ def main() -> None:
 
     OUT.write_text(out, encoding="utf-8")
 
-    # Fail loud if any external href/src slipped in (this page must be self-contained).
-    leaks = re.findall(r'(?:href|src)="(?!#)(?!data:)[^"]*"', out)
+    # Fail loud if any external href/src slipped in (this page must be self-contained),
+    # EXCEPT the deliberate Google Images "see the real device" links on hardware rows.
+    ext = re.findall(r'(?:href|src)="((?!#)(?!data:)[^"]*)"', out)
+    leaks = [u for u in ext if not u.startswith("https://www.google.com/search")]
     if leaks:
         fail("external reference(s) leaked into output: " + ", ".join(sorted(set(leaks))))
 
