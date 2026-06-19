@@ -29,6 +29,12 @@ Family: All files belong to the same **Adaptive Grid Management System (AGMS)** 
 Both are WO 2024/211800 A1. `ocr.md` is a supplement, not a seventh patent. See `ocr.md`
 for additional detail from the searchable text layer.
 
+**Companion appendix:** [`appendix-distribution-observability-sources.md`](appendix-distribution-observability-sources.md)
+— an exhaustive, ORACS-framed inventory of the distribution-level state-information sources
+(devices, sensors, systems, protocols) a virtual-sensing module can use to reconstruct
+distribution-system state, classified four ways (observability priority, DSSE measurement
+class, deployment placement, feeder archetype).
+
 ---
 
 ## Authoritative Application Numbers (continuation cohort, all filed 2023-04-06)

@@ -1,0 +1,1191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Appendix — Distribution-Level State-Information Sources for Virtual Sensing</title>
+<style>
+
+  :root{--panel:#fff;--ink:#1a2230;--muted:#5c6b7a;--line:#e3e8ee;--accent:#0b6e4f;--accent-soft:#e7f4ee;--gold:#b8860b;--code-bg:#f4f6f8;--callout:#fff8e6;--callout-line:#e0b84c;--juan-bg:#eef7f1;--juan-line:#0b6e4f;}
+  *{box-sizing:border-box;} html{scroll-behavior:smooth;}
+  body{margin:0;background:#eef1f5;color:var(--ink);font:16px/1.7 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 20px 80px;display:grid;grid-template-columns:250px 1fr;gap:36px;}
+  @media (max-width:900px){.wrap{grid-template-columns:1fr;}nav.toc{position:static!important;max-height:none!important;}}
+  header.masthead{grid-column:1/-1;background:linear-gradient(135deg,#0f1f2e 0%,#11342a 100%);color:#fff;border-radius:14px;padding:30px 36px;margin:28px 0 6px;box-shadow:0 8px 30px rgba(15,31,46,.25);}
+  header.masthead h1{margin:0;font-size:28px;letter-spacing:.2px;line-height:1.25;}
+  nav.toc{position:sticky;top:18px;align-self:start;max-height:calc(100vh - 36px);overflow:auto;font-size:13.5px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 14px;}
+  nav.toc h2{font-size:11px;text-transform:uppercase;letter-spacing:1.4px;color:var(--muted);margin:0 0 10px;}
+  nav.toc a{display:block;color:var(--muted);text-decoration:none;padding:5px 8px;border-radius:6px;border-left:2px solid transparent;}
+  nav.toc a:hover{color:var(--accent);background:var(--accent-soft);border-left-color:var(--accent);}
+  main{min-width:0;}
+  section.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 30px 26px;margin:18px 0;box-shadow:0 1px 3px rgba(20,30,45,.04);}
+  main>section.card:first-child{margin-top:0;}
+  h2.sec{font-size:22px;margin:10px 0 6px;padding-bottom:10px;border-bottom:2px solid var(--accent-soft);color:#0c2a20;scroll-margin-top:16px;}
+  h3.sub{font-size:17px;margin:22px 0 4px;color:#13433a;}
+  p{margin:12px 0;} strong{color:#0c2233;} em{color:#33324a;} a{color:var(--accent);}
+  code{background:var(--code-bg);border:1px solid var(--line);border-radius:5px;padding:1px 5px;font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace;font-size:13px;color:#33424f;}
+  pre.diagram{background:#0f1722;color:#d6e3ee;border-radius:10px;padding:18px 20px;overflow-x:auto;font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;line-height:1.5;border:1px solid #1c2a3a;}
+  table{width:100%;border-collapse:collapse;margin:14px 0;font-size:14.5px;}
+  th,td{text-align:left;vertical-align:top;padding:9px 12px;border-bottom:1px solid var(--line);}
+  thead th{background:var(--accent-soft);color:#0c2a20;border-bottom:2px solid #cfe7dc;font-size:13px;}
+  tbody tr:nth-child(even){background:#fafbfc;} td code{font-size:12.5px;}
+  ul,ol{margin:12px 0;padding-left:24px;} li{margin:7px 0;}
+  .callout{background:var(--callout);border-left:4px solid var(--callout-line);border-radius:0 8px 8px 0;padding:12px 18px;margin:16px 0;}
+  .callout p{margin:0;}
+  .juan{background:var(--juan-bg);border-left:4px solid var(--juan-line);border-radius:0 8px 8px 0;padding:11px 18px;margin:14px 0;font-size:14.5px;}
+  footer{grid-column:1/-1;text-align:center;color:var(--muted);font-size:12.5px;margin-top:24px;}
+  figure.diagram-figure{margin:8px 0 0;}
+  figure.diagram-figure figcaption{margin-top:8px;font-size:12.5px;color:var(--muted);text-align:center;}
+  .svgv{position:relative;border:1px solid var(--line);border-radius:10px;background:#fff;overflow:hidden;}
+  .svgv-stage{position:relative;width:100%;height:70vh;max-height:780px;overflow:hidden;cursor:grab;touch-action:none;background:#fff;user-select:none;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;}
+  .svgv-stage.grabbing{cursor:grabbing;}
+  .svgv-pan{position:absolute;inset:0;}
+  .svgv-pan svg{display:block;width:100%;height:100%;}
+  .svgv-pan a{color:inherit;text-decoration:none;}
+  .svgv-controls{position:absolute;top:10px;right:10px;z-index:3;display:flex;gap:6px;}
+  .svgv-controls button{width:34px;height:34px;padding:0;border:1px solid var(--line);background:rgba(255,255,255,.94);border-radius:8px;font:600 17px/1 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;color:var(--ink);cursor:pointer;box-shadow:0 1px 3px rgba(20,30,45,.12);}
+  .svgv-controls button:hover{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);}
+  .svgv-hint{position:absolute;left:10px;bottom:10px;z-index:3;font-size:11.5px;color:var(--muted);background:rgba(255,255,255,.86);border:1px solid var(--line);border-radius:6px;padding:3px 8px;pointer-events:none;}
+  .svgv:fullscreen{width:100vw;height:100vh;border:0;border-radius:0;}
+  .svgv:fullscreen .svgv-stage{height:100vh;max-height:none;}
+  .svgv:-webkit-full-screen{width:100vw;height:100vh;}
+  .svgv:-webkit-full-screen .svgv-stage{height:100vh;max-height:none;}
+
+  header.masthead p.sub{margin:10px 0 0;font-size:14px;color:#cfe0d8;font-weight:400;}
+  main pre{background:#0f1722;color:#d6e3ee;border-radius:10px;padding:16px 20px;overflow-x:auto;font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;line-height:1.6;border:1px solid #1c2a3a;}
+  main pre code{background:none;border:0;color:inherit;padding:0;font-size:inherit;}
+  blockquote{background:var(--callout);border-left:4px solid var(--callout-line);border-radius:0 8px 8px 0;padding:12px 18px;margin:16px 0;color:#4a3d12;}
+  blockquote p{margin:6px 0;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="masthead">
+    <h1>Appendix — Distribution-Level State-Information Sources for Virtual Sensing</h1>
+    <p class="sub">The universe of distribution-level state-information sources, framed by the ORACS observability &amp; reachability indexes &middot; Juan Carlos Oviedo Cepeda</p>
+  </header>
+  <nav class="toc">
+    <h2>Contents</h2>
+    <a href="#purpose-oracs-framing">Purpose & ORACS Framing</a>
+    <a href="#how-to-read-this-inventory">How to Read This Inventory</a>
+    <a href="#tier-1-substation-measurement-automation">Tier 1 — Substation Measurement & Automation</a>
+    <a href="#tier-2-feeder-distribution-line-field-devices">Tier 2 — Feeder & Distribution-Line Field Devices</a>
+    <a href="#tier-3-high-resolution-phasor-measurement">Tier 3 — High-Resolution / Phasor Measurement</a>
+    <a href="#tier-4-advanced-metering-infrastructure-ami">Tier 4 — Advanced Metering Infrastructure (AMI)</a>
+    <a href="#tier-5-distributed-energy-resources-der-telemetry">Tier 5 — Distributed Energy Resources (DER) Telemetry</a>
+    <a href="#tier-6-topology-network-model-data">Tier 6 — Topology & Network-Model Data</a>
+    <a href="#tier-7-pseudo-measurements-derived-statistical-inputs">Tier 7 — Pseudo-Measurements & Derived / Statistical Inputs</a>
+    <a href="#tier-8-control-center-enterprise-data-systems">Tier 8 — Control-Center & Enterprise Data Systems</a>
+    <a href="#tier-9-environmental-exogenous-data">Tier 9 — Environmental / Exogenous Data</a>
+    <a href="#tier-10-protection-event-fault-data">Tier 10 — Protection & Event / Fault Data</a>
+    <a href="#tier-11-asset-condition-non-electrical-sensing">Tier 11 — Asset-Condition / Non-Electrical Sensing</a>
+    <a href="#tier-12-field-communications-iot-substrate">Tier 12 — Field Communications / IoT Substrate</a>
+    <a href="#tier-13-protocols-the-contact-vocabulary">Tier 13 — Protocols (the Contact Vocabulary)</a>
+    <a href="#tier-14-non-utility-proxy-crowdsourced-data">Tier 14 — Non-Utility / Proxy / Crowdsourced Data</a>
+    <a href="#classification-1-observability-tier-prioritization">Classification 1 — Observability-Tier Prioritization</a>
+    <a href="#classification-2-mapping-to-dsse-measurement-classes">Classification 2 — Mapping to DSSE Measurement Classes</a>
+    <a href="#classification-3-deployment-placement-by-oracs-reachability">Classification 3 — Deployment Placement by ORACS Reachability</a>
+    <a href="#classification-4-feeder-archetypes">Classification 4 — Feeder Archetypes</a>
+    <a href="#synthesis-from-inventory-to-deployment-proposal">Synthesis — From Inventory to Deployment Proposal</a>
+  </nav>
+  <main>
+<section class="card" id="purpose-oracs-framing">
+<h2 class="sec" id="purpose-oracs-framing">Purpose & ORACS Framing</h2>
+<p>This appendix is the source-side companion to the AGMS patent walkthrough. The AGMS
+formation pipeline can only form an operation loop out of assets it can actually
+<strong>see</strong> and <strong>reach</strong> — the first two of the five ORACS operational indexes the
+Asset Portfolio Manager verifies (WO 2024/211758, para [0209]):</p>
+<ul>
+<li><strong>Observability</strong> — <em>can we see this asset's / node's state?</em> → what it measures, and what part of the system state it reveals.</li>
+<li><strong>Reachability</strong> — <em>can we communicate with / command it?</em> → the protocol and comms path that contacts it.</li>
+</ul>
+<p>The virtual-sensing module exists precisely because, on a real distribution feeder,
+<strong>observability is sparse</strong>: the number of direct measurements is far smaller than the
+number of states (complex nodal voltages on every node, flows on every branch). The
+module's job is to <strong>reconstruct the full state</strong> from whatever heterogeneous subset of
+sources a given feeder happens to expose — exactly the under-observability gap named in
+the parent patent's worked example ("<em>one sensor is offline (fails observability) … or
+AGMS leans on virtual sensing to estimate the missing state</em>").</p>
+<p>So the right way to scope a deployment is <strong>not</strong> "which sensors do I install" but
+<strong>"given the sources this feeder already has, where do I place the module and what does
+it fuse?"</strong> This appendix first enumerates <em>every</em> state-information source that exists
+at the distribution level — exhaustively, across 14 tiers — then classifies that universe
+four ways to drive the deployment proposal.</p>
+<blockquote>
+<p><strong>Scope note.</strong> Not every feeder has every source. The inventory is the <em>universe of
+possibility</em>; the classifications (especially the feeder archetypes) are where the
+realism lives. Each source is tagged by what it <strong>observes</strong> and how you <strong>reach</strong> it —
+the ORACS observability/reachability pair.</p>
+</blockquote>
+</section>
+<section class="card" id="how-to-read-this-inventory">
+<h2 class="sec" id="how-to-read-this-inventory">How to Read This Inventory</h2>
+<p>Each tier is a table with three columns:</p>
+<ul>
+<li><strong>Source</strong> — the device, system, or data feed.</li>
+<li><strong>Observes (state)</strong> — the physical quantity / network state it contributes to reconstruction.</li>
+<li><strong>Reach (protocol)</strong> — how the module contacts it (the ORACS reachability answer).</li>
+</ul>
+<p>Tiers run top-down through the grid: substation head → feeder/line → high-resolution
+phasor → metering edge → DER → then the model, statistical, enterprise, environmental,
+event, condition, comms, protocol, and non-utility layers that surround the electrical
+measurements.</p>
+</section>
+<section class="card" id="tier-1-substation-measurement-automation">
+<h2 class="sec" id="tier-1-substation-measurement-automation">Tier 1 — Substation Measurement & Automation</h2>
+<p>The richest, most reliable observability point; the electrical <strong>head</strong> of every feeder
+and the natural reference (slack) node for state estimation.</p>
+<table>
+<thead>
+<tr>
+<th>Source</th>
+<th>Observes (state)</th>
+<th>Reach (protocol)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>RTUs (Remote Terminal Units)</td>
+<td>Aggregated analog/digital points at the substation</td>
+<td>DNP3, IEC 60870-5-101/104</td>
+</tr>
+<tr>
+<td>IEDs / protective relays (SEL, ABB, GE Multilin)</td>
+<td>V, I, P, Q, frequency, breaker status, fault current, oscillography</td>
+<td>IEC 61850 (MMS/GOOSE), DNP3, Modbus</td>
+</tr>
+<tr>
+<td>Bay / feeder controllers</td>
+<td>Per-feeder V, I, P, Q, power factor</td>
+<td>IEC 61850, DNP3</td>
+</tr>
+<tr>
+<td>Substation SCADA / automation system</td>
+<td>All station analogs + status, consolidated</td>
+<td>DNP3, IEC 61850, OPC-UA</td>
+</tr>
+<tr>
+<td>Bus voltage &amp; frequency measurement</td>
+<td>Substation bus &#124;V&#124;, f (reference node)</td>
+<td>IEC 61850, DNP3</td>
+</tr>
+<tr>
+<td>Power-transformer monitors</td>
+<td>LTC tap position, oil/winding temp, DGA, loading</td>
+<td>IEC 61850, Modbus, OPC-UA</td>
+</tr>
+<tr>
+<td>Breaker / recloser status &amp; counters</td>
+<td>Open/closed, trip counts, wear</td>
+<td>DNP3, IEC 61850 GOOSE</td>
+</tr>
+<tr>
+<td>Digital Fault Recorders (DFR)</td>
+<td>High-res fault waveforms</td>
+<td>COMTRADE files, FTP</td>
+</tr>
+<tr>
+<td>Sequence-of-Events Recorders (SER)</td>
+<td>Time-tagged event ordering</td>
+<td>DNP3, file pull</td>
+</tr>
+<tr>
+<td>Merging units (IEC 61850 process bus)</td>
+<td>Digitized Sampled Values (SV) of I/V</td>
+<td>IEC 61850-9-2 SV</td>
+</tr>
+<tr>
+<td>Station DC / battery monitors</td>
+<td>DC-bus health (sustainability input)</td>
+<td>Modbus, DNP3</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section class="card" id="tier-2-feeder-distribution-line-field-devices">
+<h2 class="sec" id="tier-2-feeder-distribution-line-field-devices">Tier 2 — Feeder & Distribution-Line Field Devices</h2>
+<p>The mid-feeder layer — sparse today, and the biggest growth area for observability.</p>
+<table>
+<thead>
+<tr>
+<th>Source</th>
+<th>Observes (state)</th>
+<th>Reach (protocol)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Line-post / line-mounted sensors (Sentient, Lindsey, Sensus)</td>
+<td>Line current, voltage, conductor temp, sometimes phase angle</td>
+<td>RF mesh, cellular, DNP3</td>
+</tr>
+<tr>
+<td>Faulted Circuit Indicators (FCIs) / fault-passage indicators</td>
+<td>Fault passed / didn't (fault-location narrowing)</td>
+<td>RF, cellular, LoRa</td>
+</tr>
+<tr>
+<td>Reclosers + recloser controls (SEL-651, G&amp;W, S&amp;C)</td>
+<td>V, I, P, Q, status, trip/lockout</td>
+<td>DNP3, IEC 61850</td>
+</tr>
+<tr>
+<td>Automated switches / tie switches</td>
+<td>Open/closed (real-time topology), sometimes metering</td>
+<td>DNP3, IEC 61850 GOOSE</td>
+</tr>
+<tr>
+<td>Sectionalizers</td>
+<td>Count/operate state</td>
+<td>DNP3</td>
+</tr>
+<tr>
+<td>Capacitor-bank controllers</td>
+<td>In/out status, local V/VAR, neutral current</td>
+<td>DNP3, IEEE 2030.5</td>
+</tr>
+<tr>
+<td>Voltage-regulator controllers (step regulators)</td>
+<td>Tap position, regulated voltage, load current</td>
+<td>DNP3, Modbus</td>
+</tr>
+<tr>
+<td>Pad-mount switchgear / sensored elbows</td>
+<td>Cable-section V/I, status</td>
+<td>DNP3, RF</td>
+</tr>
+<tr>
+<td>Distribution line monitors / PQ line sensors</td>
+<td>Waveform, sag/swell, harmonics mid-feeder</td>
+<td>cellular, MQTT</td>
+</tr>
+<tr>
+<td>Dynamic Line Rating (DLR) / conductor-temp sensors</td>
+<td>Conductor temp, sag, ampacity headroom</td>
+<td>RF, cellular</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section class="card" id="tier-3-high-resolution-phasor-measurement">
+<h2 class="sec" id="tier-3-high-resolution-phasor-measurement">Tier 3 — High-Resolution / Phasor Measurement</h2>
+<p>Where <strong>angle</strong> observability comes from — enables Kalman/observer-based estimation
+(Phase 01) and turns a feeder from barely-observable to well-conditioned.</p>
+<table>
+<thead>
+<tr>
+<th>Source</th>
+<th>Observes (state)</th>
+<th>Reach (protocol)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PMUs (transmission-grade)</td>
+<td>Synchrophasors: &#124;V&#124;∠θ, &#124;I&#124;∠θ, f, ROCOF (GPS-timed)</td>
+<td>IEEE C37.118.2</td>
+</tr>
+<tr>
+<td><strong>Micro-PMUs / D-PMUs</strong> (distribution)</td>
+<td>High-precision <em>small</em> voltage-angle differences across feeders</td>
+<td>C37.118, IEEE 2664</td>
+</tr>
+<tr>
+<td>PDCs (Phasor Data Concentrators)</td>
+<td>Time-aligned multi-PMU streams</td>
+<td>C37.118, IEEE 1344</td>
+</tr>
+<tr>
+<td>Point-on-wave / continuous waveform sensors</td>
+<td>Full waveform capture (sub-cycle events)</td>
+<td>proprietary, MQTT</td>
+</tr>
+<tr>
+<td>Power-quality meters (ION, SEL, Fluke)</td>
+<td>Harmonics, flicker, sag/swell, unbalance</td>
+<td>Modbus, DNP3, OPC-UA</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section class="card" id="tier-4-advanced-metering-infrastructure-ami">
+<h2 class="sec" id="tier-4-advanced-metering-infrastructure-ami">Tier 4 — Advanced Metering Infrastructure (AMI)</h2>
+<p>The single largest observability multiplier at the grid edge — millions of nodal
+voltage and energy points, one per service transformer / customer.</p>
+<table>
+<thead>
+<tr>
+<th>Source</th>
+<th>Observes (state)</th>
+<th>Reach (protocol)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>AMI smart meters (Itron, L&amp;G, Sensus)</td>
+<td>Interval kWh, kW, <strong>service voltage</strong>, sometimes Q/PF</td>
+<td>RF mesh / cellular FAN → head-end</td>
+</tr>
+<tr>
+<td>Meter voltage telemetry</td>
+<td>Nodal &#124;V&#124; at the customer (dense voltage observability)</td>
+<td>AMI head-end → MDMS</td>
+</tr>
+<tr>
+<td>Last-gasp / power-down notifications</td>
+<td>Outage detection / topology truth</td>
+<td>AMI FAN</td>
+</tr>
+<tr>
+<td>AMI head-end system</td>
+<td>Consolidated meter reads</td>
+<td>vendor API, MultiSpeak</td>
+</tr>
+<tr>
+<td>Meter Data Management System (MDMS)</td>
+<td>Validated, time-aligned interval data</td>
+<td>MultiSpeak, CIM, SQL/API</td>
+</tr>
+<tr>
+<td>C&amp;I interval / revenue meters</td>
+<td>High-accuracy P, Q at large loads</td>
+<td>DNP3, Modbus, OPC-UA</td>
+</tr>
+<tr>
+<td>Submeters / net meters</td>
+<td>Behind-meter generation &amp; sub-load split</td>
+<td>Modbus, IEEE 2030.5</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section class="card" id="tier-5-distributed-energy-resources-der-telemetry">
+<h2 class="sec" id="tier-5-distributed-energy-resources-der-telemetry">Tier 5 — Distributed Energy Resources (DER) Telemetry</h2>
+<p>Two-way-flow sources — simultaneously <strong>observation points</strong> and <strong>controllable assets</strong>
+(they score on all five ORACS indexes, not just observability).</p>
+<table>
+<thead>
+<tr>
+<th>Source</th>
+<th>Observes (state)</th>
+<th>Reach (protocol)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Smart inverters (IEEE 1547-2018)</td>
+<td>P, Q, V, status, ride-through state</td>
+<td><strong>IEEE 2030.5</strong>, SunSpec Modbus</td>
+</tr>
+<tr>
+<td>PV-plant telemetry</td>
+<td>DC/AC output, irradiance, availability</td>
+<td>Modbus, 2030.5, SunSpec</td>
+</tr>
+<tr>
+<td>Battery storage (BESS)</td>
+<td>SoC, P, Q, thermal, cycle state</td>
+<td>Modbus, 2030.5, DNP3</td>
+</tr>
+<tr>
+<td>EV chargers / EVSE</td>
+<td>Charging load, session, V2G capability</td>
+<td>OCPP, 2030.5, OpenADR</td>
+</tr>
+<tr>
+<td>Microgrid controllers</td>
+<td>Island status, net interchange, local dispatch</td>
+<td>DNP3, 2030.5</td>
+</tr>
+<tr>
+<td>DERMS</td>
+<td>Aggregated DER state + control headroom</td>
+<td>CIM, 2030.5, vendor API</td>
+</tr>
+<tr>
+<td>VPP / aggregator platforms</td>
+<td>Third-party fleet DER visibility</td>
+<td>OpenADR, REST API</td>
+</tr>
+<tr>
+<td>Building EMS / HEMS</td>
+<td>Behind-meter load &amp; flexibility</td>
+<td>BACnet, MQTT, 2030.5</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section class="card" id="tier-6-topology-network-model-data">
+<h2 class="sec" id="tier-6-topology-network-model-data">Tier 6 — Topology & Network-Model Data</h2>
+<p>Not a sensor, but <strong>mandatory</strong> for state reconstruction: DSSE is undefined without the
+connectivity model — this is the skeleton the measurements hang on, and it is itself an
+observability artifact (you must <em>know the graph</em> before you can estimate states on it).</p>
+<table>
+<thead>
+<tr>
+<th>Source</th>
+<th>Provides</th>
+<th>Reach (protocol)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GIS (Geographic Information System)</td>
+<td>As-built connectivity, asset locations, phasing</td>
+<td>CIM (IEC 61968/61970), Esri API</td>
+</tr>
+<tr>
+<td>CIM network model</td>
+<td>Nodes, branches, impedances, ratings</td>
+<td>IEC 61970/61968 CIM/XML</td>
+</tr>
+<tr>
+<td>Real-time switch/recloser/tie status</td>
+<td>Live topology (radial config of the moment)</td>
+<td>DNP3, SCADA</td>
+</tr>
+<tr>
+<td>Phase-identification data</td>
+<td>Which phase each segment/customer is on</td>
+<td>analytics + GIS</td>
+</tr>
+<tr>
+<td>Line/cable impedance &amp; length parameters</td>
+<td>Z for the power-flow equations</td>
+<td>GIS, planning model</td>
+</tr>
+<tr>
+<td>Transformer ratings / impedances / connections</td>
+<td>Branch parameters, Δ/Y</td>
+<td>EAM, GIS</td>
+</tr>
+<tr>
+<td>Customer↔transformer↔phase mapping</td>
+<td>Load aggregation to nodes</td>
+<td>CIS + GIS + analytics</td>
+</tr>
+<tr>
+<td>Planning models (OpenDSS, CYME, Synergi, Milsoft)</td>
+<td>Validated offline network + base loads</td>
+<td>file export, API</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section class="card" id="tier-7-pseudo-measurements-derived-statistical-inputs">
+<h2 class="sec" id="tier-7-pseudo-measurements-derived-statistical-inputs">Tier 7 — Pseudo-Measurements & Derived / Statistical Inputs</h2>
+<p>What fills the <strong>unobservable</strong> nodes — low-weight inputs central to DSSE math. This is
+the gap the virtual-sensing module is built to close.</p>
+<table>
+<thead>
+<tr>
+<th>Source</th>
+<th>Provides</th>
+<th>Reach (protocol)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Historical load profiles per customer class</td>
+<td>Estimated nodal load shapes (residential/commercial/industrial)</td>
+<td>data warehouse</td>
+</tr>
+<tr>
+<td>Billing / CIS energy allocation</td>
+<td>Energy → estimated nodal load</td>
+<td>CIS, SQL</td>
+</tr>
+<tr>
+<td>Load-research statistical estimates</td>
+<td>Class-average demand with variance</td>
+<td>analytics</td>
+</tr>
+<tr>
+<td>Transformer-level load from aggregated AMI</td>
+<td>Estimated load behind each service transformer</td>
+<td>MDMS rollup</td>
+</tr>
+<tr>
+<td>Weather-driven load &amp; solar forecasts</td>
+<td>Nodal demand / PV nowcast</td>
+<td>forecast API</td>
+</tr>
+<tr>
+<td>Zero-injection / virtual measurements</td>
+<td>Known-zero injection at no-load/no-gen nodes (near-exact constraint)</td>
+<td>derived from model</td>
+</tr>
+<tr>
+<td>Prior state estimate / forecast</td>
+<td>The predict step of a Kalman filter (Phase 01)</td>
+<td>internal</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section class="card" id="tier-8-control-center-enterprise-data-systems">
+<h2 class="sec" id="tier-8-control-center-enterprise-data-systems">Tier 8 — Control-Center & Enterprise Data Systems</h2>
+<p>The integration layer — where field data is fused, stored, and served. In AGMS terms,
+this is the <strong>asset database + POV-file plane</strong> (Data Management patent, WO 2024/211800).</p>
+<table>
+<thead>
+<tr>
+<th>System</th>
+<th>Role in state reconstruction</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ADMS (Advanced Distribution Management System)</td>
+<td>Hosts DSSE; integrates SCADA + OMS + DMS</td>
+</tr>
+<tr>
+<td>OMS (Outage Management System)</td>
+<td>Outage extent → topology / load truth</td>
+</tr>
+<tr>
+<td>Distribution SCADA master</td>
+<td>Real-time analog/status acquisition</td>
+</tr>
+<tr>
+<td>Historian (AVEVA / OSIsoft PI)</td>
+<td>Time-series archive of all telemetry</td>
+</tr>
+<tr>
+<td>GIS / CIM model server</td>
+<td>Connectivity &amp; parameters (Tier 6)</td>
+</tr>
+<tr>
+<td>MDMS / AMI head-end</td>
+<td>Meter data (Tier 4)</td>
+</tr>
+<tr>
+<td>DERMS / forecasting engines</td>
+<td>DER state + forecasts (Tiers 5, 7)</td>
+</tr>
+<tr>
+<td>EAM / asset management</td>
+<td>Ratings, condition, maintenance state</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section class="card" id="tier-9-environmental-exogenous-data">
+<h2 class="sec" id="tier-9-environmental-exogenous-data">Tier 9 — Environmental / Exogenous Data</h2>
+<p>Drives load, generation, and thermal limits — improves both observability and the
+pseudo-measurement priors.</p>
+<table>
+<thead>
+<tr>
+<th>Source</th>
+<th>Observes (state)</th>
+<th>Reach (protocol)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Weather stations</td>
+<td>Temp, wind, humidity, irradiance → load, solar, DLR</td>
+<td>API, MQTT</td>
+</tr>
+<tr>
+<td>Weather forecast services</td>
+<td>Forward load / solar drivers</td>
+<td>NWS + commercial API</td>
+</tr>
+<tr>
+<td>Satellite / sky-imager irradiance</td>
+<td>Solar nowcasting</td>
+<td>commercial API</td>
+</tr>
+<tr>
+<td>Lightning detection networks</td>
+<td>Fault correlation / cause</td>
+<td>API</td>
+</tr>
+<tr>
+<td>Wildfire / vegetation / fuel-moisture data</td>
+<td>Risk &amp; de-rating context</td>
+<td>API</td>
+</tr>
+<tr>
+<td>GNSS / GPS time</td>
+<td>Synchrophasor &amp; Sampled-Values time-sync</td>
+<td>1-PPS, IRIG-B, PTP</td>
+</tr>
+<tr>
+<td>Geomagnetic data</td>
+<td>GIC on transformers</td>
+<td>API</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section class="card" id="tier-10-protection-event-fault-data">
+<h2 class="sec" id="tier-10-protection-event-fault-data">Tier 10 — Protection & Event / Fault Data</h2>
+<p>Event-triggered observability — sparse in time, very high information when it fires.</p>
+<table>
+<thead>
+<tr>
+<th>Source</th>
+<th>Observes (state)</th>
+<th>Reach (protocol)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Relay event records / oscillography</td>
+<td>Fault waveforms, pickup/trip</td>
+<td>COMTRADE, file pull</td>
+</tr>
+<tr>
+<td>Fault current magnitude &amp; direction</td>
+<td>Directional fault detection</td>
+<td>DNP3, IEC 61850</td>
+</tr>
+<tr>
+<td>Travelling-wave fault locators</td>
+<td>Precise fault distance</td>
+<td>proprietary, file</td>
+</tr>
+<tr>
+<td>Arc-flash / incipient-fault detectors</td>
+<td>Pre-failure signatures</td>
+<td>proprietary</td>
+</tr>
+<tr>
+<td>Sequence-of-events (SER)</td>
+<td>Precise event ordering</td>
+<td>DNP3, file</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section class="card" id="tier-11-asset-condition-non-electrical-sensing">
+<h2 class="sec" id="tier-11-asset-condition-non-electrical-sensing">Tier 11 — Asset-Condition / Non-Electrical Sensing</h2>
+<p>Feeds the <em>sustainability</em> and <em>stability</em> ORACS indexes — health, not just electrical state.</p>
+<table>
+<thead>
+<tr>
+<th>Source</th>
+<th>Observes (state)</th>
+<th>Reach (protocol)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Transformer monitors</td>
+<td>DGA, oil/winding temp, acoustic, partial discharge</td>
+<td>IEC 61850, Modbus</td>
+</tr>
+<tr>
+<td>Cable / switchgear PD monitors</td>
+<td>Partial-discharge / incipient insulation failure</td>
+<td>proprietary, Modbus</td>
+</tr>
+<tr>
+<td>Thermal imaging (fixed + drone)</td>
+<td>Hot-spot detection</td>
+<td>image pipeline</td>
+</tr>
+<tr>
+<td>Acoustic / vibration sensors</td>
+<td>Mechanical degradation</td>
+<td>IoT, MQTT</td>
+</tr>
+<tr>
+<td>Conductor tilt / sag / galloping sensors</td>
+<td>Mechanical line state</td>
+<td>RF, cellular</td>
+</tr>
+<tr>
+<td>Pole-tilt / structural sensors</td>
+<td>Structural integrity</td>
+<td>LoRa, cellular</td>
+</tr>
+<tr>
+<td>LiDAR &amp; aerial/satellite imagery</td>
+<td>Vegetation, sag, encroachment</td>
+<td>batch / file</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section class="card" id="tier-12-field-communications-iot-substrate">
+<h2 class="sec" id="tier-12-field-communications-iot-substrate">Tier 12 — Field Communications / IoT Substrate</h2>
+<p>You cannot observe what you cannot reach — this is <strong>how</strong> every tier above is contacted,
+and it <em>is</em> the ORACS reachability layer made physical.</p>
+<table>
+<thead>
+<tr>
+<th>Source</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Field Area Network: RF mesh (Itron / L&amp;G / Sensus)</td>
+<td>AMI + DA backhaul</td>
+</tr>
+<tr>
+<td>Private LTE / public LTE / 5G</td>
+<td>DA device + DER backhaul</td>
+</tr>
+<tr>
+<td>Fiber</td>
+<td>Substation + critical-asset backhaul (lowest latency)</td>
+</tr>
+<tr>
+<td>Power-line carrier (PLC) / BPL</td>
+<td>Legacy line communications</td>
+</tr>
+<tr>
+<td>LoRaWAN</td>
+<td>Long-range, low-power field sensors</td>
+</tr>
+<tr>
+<td>Cellular IoT (NB-IoT, LTE-M)</td>
+<td>Battery field sensors</td>
+</tr>
+<tr>
+<td>DA gateways / field routers / <strong>edge compute nodes</strong></td>
+<td>The FAD / "operating cell" host where a virtual-sensing scout actually runs</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section class="card" id="tier-13-protocols-the-contact-vocabulary">
+<h2 class="sec" id="tier-13-protocols-the-contact-vocabulary">Tier 13 — Protocols (the Contact Vocabulary)</h2>
+<p>The ORACS reachability answer ultimately reduces to <em>"which of these does the asset speak,
+and can the module talk it?"</em></p>
+<pre><code>DNP3                       SCADA / DA field telemetry
+IEC 61850 (MMS/GOOSE/SV)   substation automation + process bus
+IEC 60870-5-101/104        European SCADA telemetry
+IEEE C37.118               synchrophasor streaming (PMU/µPMU)
+IEEE 2030.5 / SEP2         DER monitoring &amp; control
+SunSpec Modbus             inverter register model
+Modbus RTU/TCP             generic industrial devices
+OpenADR                    demand response
+OCPP                       EV charging
+OPC-UA                     historian / SCADA integration
+MQTT                       IoT / edge messaging
+MultiSpeak                 utility application integration
+ICCP / TASE.2              control-center to control-center
+CIM (IEC 61968/61970)      network-model &amp; data exchange
+BACnet                     building systems (behind-meter)
+</code></pre>
+</section>
+<section class="card" id="tier-14-non-utility-proxy-crowdsourced-data">
+<h2 class="sec" id="tier-14-non-utility-proxy-crowdsourced-data">Tier 14 — Non-Utility / Proxy / Crowdsourced Data</h2>
+<p>Low-trust, high-coverage observability of last resort — useful when the electrical
+sources are dark.</p>
+<table>
+<thead>
+<tr>
+<th>Source</th>
+<th>Observes (state)</th>
+<th>Reach (protocol)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Customer outage reports (IVR, app, call center)</td>
+<td>Outage extent / location</td>
+<td>CRM, OMS</td>
+</tr>
+<tr>
+<td>Smart-home / IoT device status</td>
+<td>Indirect outage signal</td>
+<td>vendor API</td>
+</tr>
+<tr>
+<td>EV telematics</td>
+<td>Third-party charging behavior</td>
+<td>aggregator API</td>
+</tr>
+<tr>
+<td>Social media / crowdsourced outage maps</td>
+<td>Coarse event location</td>
+<td>scraping, API</td>
+</tr>
+<tr>
+<td>Traffic / occupancy proxies</td>
+<td>Load-pattern inference</td>
+<td>API</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section class="card" id="classification-1-observability-tier-prioritization">
+<h2 class="sec" id="classification-1-observability-tier-prioritization">Classification 1 — Observability-Tier Prioritization</h2>
+<p>Rank the source <em>classes</em> by <strong>state-reconstruction leverage per unit of cost/effort</strong> —
+the question a deployment must answer first. The lever is not "install more sensors"; it
+is "harvest the observability you already have before buying hardware."</p>
+<table>
+<thead>
+<tr>
+<th>Source class</th>
+<th>Reconstruction leverage</th>
+<th>Typical availability today</th>
+<th>Marginal cost to add</th>
+<th>Priority</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Substation head (Tier 1)</td>
+<td><strong>Anchor</strong> — pins the reference node + feeder-head injection</td>
+<td>Present on virtually every feeder</td>
+<td>— (already there)</td>
+<td><strong>A — assume present</strong></td>
+</tr>
+<tr>
+<td>Topology / CIM model (Tier 6)</td>
+<td><strong>Prerequisite</strong> — no estimation without the graph</td>
+<td>Present (GIS), quality varies</td>
+<td>low (data quality work)</td>
+<td><strong>A — must-have</strong></td>
+</tr>
+<tr>
+<td>AMI voltage (Tier 4)</td>
+<td>Very high — dense nodal &#124;V&#124; across the feeder</td>
+<td>Widespread &amp; growing</td>
+<td>low (data already collected)</td>
+<td><strong>A — harvest first</strong></td>
+</tr>
+<tr>
+<td>DER smart-inverter telemetry (Tier 5)</td>
+<td>High &amp; growing — observes the volatile injections</td>
+<td>Medium (rising fast with 1547/2030.5)</td>
+<td>low–medium (integration)</td>
+<td><strong>B — high-yield</strong></td>
+</tr>
+<tr>
+<td>Pseudo-measurements (Tier 7)</td>
+<td>Low per-point but <strong>free</strong> and fills every unobservable node</td>
+<td>Always derivable</td>
+<td>~zero</td>
+<td><strong>A — always include</strong></td>
+</tr>
+<tr>
+<td>Feeder line sensors / reclosers (Tier 2)</td>
+<td>Medium-high — mid-feeder flow/voltage</td>
+<td>Sparse</td>
+<td>medium–high (hardware)</td>
+<td><strong>B — selective</strong></td>
+</tr>
+<tr>
+<td>µPMU / D-PMU (Tier 3)</td>
+<td><strong>Highest per sensor</strong> — direct angle observability</td>
+<td>Rare</td>
+<td>high (hardware + comms)</td>
+<td><strong>C — targeted</strong></td>
+</tr>
+<tr>
+<td>Environmental (Tier 9)</td>
+<td>Improves priors (load/solar/thermal)</td>
+<td>Available</td>
+<td>low</td>
+<td><strong>B — cheap uplift</strong></td>
+</tr>
+<tr>
+<td>Asset-condition (Tier 11)</td>
+<td>Feeds sustainability/stability, not nodal state</td>
+<td>Variable</td>
+<td>medium</td>
+<td><strong>C — health, not state</strong></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Rule of thumb for the proposal:</strong> the cheapest observability gains come from <em>data you
+already own</em> — AMI voltage, DER inverter telemetry, and a clean topology model — fused
+with free pseudo-measurements. New hardware (line sensors, µPMUs) is a <strong>targeted</strong>
+investment to fix specific ill-conditioned pockets the data-harvest can't reach.</p>
+</section>
+<section class="card" id="classification-2-mapping-to-dsse-measurement-classes">
+<h2 class="sec" id="classification-2-mapping-to-dsse-measurement-classes">Classification 2 — Mapping to DSSE Measurement Classes</h2>
+<p>A state estimator does not care <em>what</em> a source is, only <em>which measurement class</em> it
+contributes. Every source above collapses into one of six classes, each with a distinct
+treatment in the estimator (measurement function <code>h(x)</code>, weight <code>1/σ²</code> in <code>R</code>).</p>
+<table>
+<thead>
+<tr>
+<th>DSSE class</th>
+<th>Form in the estimator</th>
+<th>Weight / covariance</th>
+<th>Latency</th>
+<th>Fed by tiers</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Real (direct) measurements</strong></td>
+<td>P, Q, &#124;V&#124;, &#124;I&#124; → nonlinear <code>h(x)</code>, WLS/EKF</td>
+<td>High (small σ)</td>
+<td>sub-second</td>
+<td>1, 2</td>
+</tr>
+<tr>
+<td><strong>Synchrophasor measurements</strong></td>
+<td>&#124;V&#124;∠θ, &#124;I&#124;∠θ — <em>linear</em> in rectangular coords</td>
+<td>Highest (smallest σ); gives angle observability</td>
+<td>ms (C37.118)</td>
+<td>3</td>
+</tr>
+<tr>
+<td><strong>AMI measurements</strong></td>
+<td>Nodal &#124;V&#124;, interval kWh → energy/voltage pseudo-real</td>
+<td>Medium-high but <strong>latent</strong> (time-aligned)</td>
+<td>minutes–hours</td>
+<td>4</td>
+</tr>
+<tr>
+<td><strong>Virtual measurements</strong></td>
+<td>Zero-injection at no-load/no-gen nodes</td>
+<td>Near-exact (σ→0; treated as equality constraint)</td>
+<td>static</td>
+<td>6, 7</td>
+</tr>
+<tr>
+<td><strong>Pseudo-measurements</strong></td>
+<td>Forecast/billing load injections</td>
+<td><strong>Low (large σ)</strong> — fills unobservable nodes so the system is solvable</td>
+<td>static/forecast</td>
+<td>5, 7, 9</td>
+</tr>
+<tr>
+<td><strong>Topology &amp; parameters</strong></td>
+<td>Connectivity, Z, switch status, phasing</td>
+<td>Structural — defines <code>h(x)</code> itself, not a measurement</td>
+<td>event/static</td>
+<td>6</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Why this matters for virtual sensing:</strong> a feeder is <em>unobservable</em> by the classical
+criterion (measurements ≪ states). DSSE becomes solvable only by adding <strong>pseudo-measurements</strong>
+(large σ) to reach redundancy ≥ 1, then letting the <strong>real / PMU / AMI</strong> measurements pull
+the estimate toward truth and the <strong>virtual zero-injection</strong> constraints tighten it. The
+virtual-sensing module <em>is</em> the engine that fuses these classes (Phase 01 EKF/UKF, Phase 02
+FASE/WLS) — this classification is the contract between the source inventory and that engine.</p>
+</section>
+<section class="card" id="classification-3-deployment-placement-by-oracs-reachability">
+<h2 class="sec" id="classification-3-deployment-placement-by-oracs-reachability">Classification 3 — Deployment Placement by ORACS Reachability</h2>
+<p>Where the virtual-sensing module physically <strong>runs</strong> is dictated by <em>which sources it can
+reach in time</em> — the ORACS reachability index applied to the module itself. Three
+candidate placements, mapped to what each can actually contact:</p>
+<table>
+<thead>
+<tr>
+<th>Placement</th>
+<th>Reaches in real time</th>
+<th>Runs</th>
+<th>ORACS property</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Substation-edge compute</strong> (FAD at the substation, RTU/IED-adjacent)</td>
+<td>Tiers 1–3 over substation LAN (IEC 61850, DNP3, C37.118); local Tier 2 over FAN</td>
+<td>Per-feeder DSSE at SCADA cadence</td>
+<td><strong>Island-capable</strong> — survives WAN loss; default placement</td>
+</tr>
+<tr>
+<td><strong>Feeder / field FAD</strong> (pole-top, DA gateway, operating cell)</td>
+<td>Local Tier 2 + nearby Tier 5 DER over FAN/cellular</td>
+<td>Localized sub-state estimation for a feeder section</td>
+<td><strong>Most survivable</strong> — runs cut off from substation; deep-feeder observability</td>
+</tr>
+<tr>
+<td><strong>ADMS / cloud tier</strong></td>
+<td>Tiers 4 (AMI/MDMS, latent), 6/8 (model, historian), aggregated 5</td>
+<td>System-wide DSSE across feeders</td>
+<td><strong>Not survivable, not real-time</strong> — coordination &amp; backfill, not control-loop</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Source → placement reachability matrix:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Source tier</th>
+<th>Substation edge</th>
+<th>Field FAD</th>
+<th>ADMS / cloud</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1 Substation</td>
+<td>✓ real-time</td>
+<td>partial</td>
+<td>✓ (latent)</td>
+</tr>
+<tr>
+<td>2 Feeder/line</td>
+<td>✓ (FAN)</td>
+<td>✓ local</td>
+<td>✓ (latent)</td>
+</tr>
+<tr>
+<td>3 Phasor/µPMU</td>
+<td>✓ (C37.118)</td>
+<td>partial</td>
+<td>✓ (PDC)</td>
+</tr>
+<tr>
+<td>4 AMI</td>
+<td>✗ (head-end only)</td>
+<td>✗</td>
+<td>✓</td>
+</tr>
+<tr>
+<td>5 DER</td>
+<td>partial (FAN)</td>
+<td>✓ local</td>
+<td>✓ (DERMS)</td>
+</tr>
+<tr>
+<td>6 Topology/model</td>
+<td>cached</td>
+<td>cached</td>
+<td>✓ source</td>
+</tr>
+<tr>
+<td>7 Pseudo</td>
+<td>computed locally</td>
+<td>computed locally</td>
+<td>✓ source</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Proposal takeaway:</strong> put the <strong>real-time DSSE at the substation edge</strong> (it reaches the
+high-value Tiers 1–3 and stays alive in island mode — the AGMS resilience property),
+optionally push <strong>localized estimation to field FADs</strong> for deep-feeder/DER-dense
+sections, and use the <strong>ADMS/cloud tier for cross-feeder coordination and AMI backfill</strong>
+(the slow, latent sources). This mirrors the AGMS operating-cell hierarchy directly:
+edge decides and acts; cloud coordinates and remembers.</p>
+</section>
+<section class="card" id="classification-4-feeder-archetypes">
+<h2 class="sec" id="classification-4-feeder-archetypes">Classification 4 — Feeder Archetypes</h2>
+<p>Which sources a feeder <em>actually</em> has depends on its type. Three representative archetypes
+bound the realistic deployment space.</p>
+<table>
+<thead>
+<tr>
+<th>Dimension</th>
+<th><strong>Rural / long radial</strong></th>
+<th><strong>Suburban / DER-heavy</strong></th>
+<th><strong>Urban / networked</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Substation head (Tier 1)</td>
+<td>✓</td>
+<td>✓</td>
+<td>✓</td>
+</tr>
+<tr>
+<td>Line sensors / reclosers (Tier 2)</td>
+<td>few / none</td>
+<td>some reclosers + caps/regs</td>
+<td>reclosers, automated switches</td>
+</tr>
+<tr>
+<td>Phasor (Tier 3)</td>
+<td>none</td>
+<td>rare</td>
+<td>occasional µPMU + PQ meters</td>
+</tr>
+<tr>
+<td>AMI (Tier 4)</td>
+<td>sparse</td>
+<td><strong>dense</strong></td>
+<td><strong>dense</strong></td>
+</tr>
+<tr>
+<td>DER (Tier 5)</td>
+<td>minimal</td>
+<td><strong>heavy</strong> (rooftop PV, EV, BESS)</td>
+<td>moderate (commercial PV, storage)</td>
+</tr>
+<tr>
+<td>Comms (Tier 12)</td>
+<td>weak (cellular/RF)</td>
+<td>good (RF mesh + cellular)</td>
+<td>strong (fiber)</td>
+</tr>
+<tr>
+<td>Topology (Tier 6)</td>
+<td>simple radial, long</td>
+<td>radial, branching</td>
+<td><strong>meshed / secondary network</strong></td>
+</tr>
+<tr>
+<td><strong>Observability level</strong></td>
+<td>very poor</td>
+<td>medium but <strong>volatile</strong></td>
+<td>better but <strong>topology-complex</strong></td>
+</tr>
+<tr>
+<td><strong>Dominant gap</strong></td>
+<td>almost no field data → blind</td>
+<td>bidirectional, fast-changing injections</td>
+<td>non-radial estimation, cable visibility</td>
+</tr>
+<tr>
+<td><strong>Virtual-sensing role</strong></td>
+<td>heavy reliance on pseudo-measurements + a few anchors</td>
+<td>fuse AMI + DER telemetry to track voltage rise</td>
+<td>handle meshed topology + dense data</td>
+</tr>
+<tr>
+<td><strong>Where it runs</strong></td>
+<td>substation edge only (no field compute)</td>
+<td>substation edge + selective field FADs</td>
+<td>substation edge with strong compute</td>
+</tr>
+<tr>
+<td><strong>Flagship use case</strong></td>
+<td>estimate the unmeasured middle of a long feeder</td>
+<td>hold voltage in band under rooftop-solar reverse flow</td>
+<td>observe a networked secondary grid</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Reading the archetypes:</strong> the rural feeder is the <em>hardest observability problem and the
+clearest virtual-sensing win</em> — there is almost nothing to measure, so the estimator leans
+on pseudo-measurements anchored by the substation head. The suburban DER-heavy feeder is
+the <em>highest-value control problem</em> (the patent's voltage-control worked example) — the
+sources exist (dense AMI + smart-inverter telemetry) but the state is volatile, so fusion
+quality dominates. The urban networked feeder has the <em>best data but the hardest model</em>
+(non-radial topology), shifting the difficulty from observability to estimator formulation.</p>
+</section>
+<section class="card" id="synthesis-from-inventory-to-deployment-proposal">
+<h2 class="sec" id="synthesis-from-inventory-to-deployment-proposal">Synthesis — From Inventory to Deployment Proposal</h2>
+<p>Putting the four classifications together gives the spine of the deployment proposal:</p>
+<ol>
+<li><strong>Harvest before installing</strong> (Classification 1) — start from AMI voltage, DER
+   telemetry, topology, and free pseudo-measurements; reserve new hardware (line sensors,
+   µPMUs) for ill-conditioned pockets.</li>
+<li><strong>Fuse by measurement class, not by device</strong> (Classification 2) — the module's
+   contract is the six DSSE classes; any new source plugs in by declaring its class,
+   <code>h(x)</code>, and σ.</li>
+<li><strong>Place the module where reachability holds</strong> (Classification 3) — real-time DSSE at
+   the substation edge (island-capable), localized estimation on field FADs, coordination
+   in the ADMS/cloud tier — the AGMS operating-cell hierarchy.</li>
+<li><strong>Size to the feeder archetype</strong> (Classification 4) — rural leans on pseudo-measurements,
+   suburban on AMI+DER fusion, urban on topology-aware estimation.</li>
+</ol>
+<p>This is the same "verify observability → place the asset → simulate → run" discipline the
+Asset Portfolio Manager and the granted Operation Loop Formation patent encode — applied to
+the <strong>virtual-sensing module itself</strong> as the asset whose observability and reachability
+determine where and how it deploys.</p>
+</section>
+    <footer>Appendix to the AGMS patent study notes &middot; Juan Carlos Oviedo Cepeda</footer>
+  </main>
+</div>
+</body>
+</html>

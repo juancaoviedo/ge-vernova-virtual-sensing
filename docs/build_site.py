@@ -183,6 +183,8 @@ _TRIO_SRCS = {
     "AGMS-architecture.html":     RESEARCH / "patents"  / "AGMS-architecture.html",
     "grid-operations-and-role.html": RESEARCH / "grid-operations-and-role.html",
     "INDEX.html":                 RESEARCH / "patents"  / "INDEX.html",
+    "appendix-distribution-observability-sources.html":
+        RESEARCH / "patents" / "appendix-distribution-observability-sources.html",
 }
 _SOURCES_SRCS = {
     "flisr-distributed-fsm-2014.html": RESEARCH / "sources" / "flisr-distributed-fsm-2014.html",
@@ -752,6 +754,9 @@ _ARCH_CARDS = [
     ("Patent Family Index",
      "Browse the patent index — six patents covering AGMS, Logistician Module, Scout Command, and more.",
      "architecture/INDEX.html"),
+    ("Appendix: Distribution Observability Sources",
+     "Exhaustive inventory of distribution-level state-information sources (devices, sensors, protocols) for virtual sensing, classified four ways.",
+     "architecture/appendix-distribution-observability-sources.html"),
     ("AGMS Architecture Diagram",
      "View the full AGMS reference-architecture diagram (annotated PNG, click to zoom).",
      "architecture/diagram.html"),
