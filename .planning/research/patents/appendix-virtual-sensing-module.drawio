@@ -107,8 +107,16 @@
           <mxGeometry x="20" y="140" width="620" height="40" as="geometry" />
         </mxCell>
 
-        <mxCell id="ed1" value="real measurements&#xa;PMU ms · SCADA s · AMI 15 min · DER" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#37474f;fontColor=#263238;labelBackgroundColor=#ffffff;strokeWidth=1.5;fontSize=10;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="ga" target="c2">
-          <mxGeometry relative="1" as="geometry" />
+        <mxCell id="ed1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#37474f;fontColor=#263238;labelBackgroundColor=#ffffff;strokeWidth=1.5;fontSize=10;exitX=1;exitY=0.7;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="ga" target="c2">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="710" y="442" />
+              <mxPoint x="710" y="225" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="tmeas" value="real measurements · PMU ms · SCADA s · AMI 15 min · DER" style="text;html=1;align=center;verticalAlign=middle;fontSize=10;fontStyle=2;fontColor=#37474f;" vertex="1" parent="1">
+          <mxGeometry x="378" y="408" width="322" height="24" as="geometry" />
         </mxCell>
         <mxCell id="ed2" value="network model → h(x)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#37474f;fontColor=#263238;labelBackgroundColor=#ffffff;strokeWidth=1.5;fontSize=10;exitX=1;exitY=0.85;exitDx=0;exitDy=0;entryX=0;entryY=0.85;entryDx=0;entryDy=0;" edge="1" parent="1" source="a6" target="c3">
           <mxGeometry relative="1" as="geometry">
@@ -124,7 +132,7 @@
         <mxCell id="ed4" value="history → trains" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#37474f;fontColor=#263238;labelBackgroundColor=#ffffff;strokeWidth=1.5;dashed=1;fontSize=10;exitX=1;exitY=0.12;exitDx=0;exitDy=0;entryX=0;entryY=0.25;entryDx=0;entryDy=0;" edge="1" parent="1" source="ga" target="gb">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="ed5" value="predict prior +&#xa;pseudo-measurements (low weight)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#37474f;fontColor=#263238;labelBackgroundColor=#ffffff;strokeWidth=1.5;fontSize=10;exitX=1;exitY=0.3;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="gb" target="c1">
+        <mxCell id="ed5" value="predict prior +&#xa;pseudo-measurements" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#37474f;fontColor=#263238;labelBackgroundColor=#ffffff;strokeWidth=1.5;fontSize=10;exitX=1;exitY=0.25;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="gb" target="c1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="ed6" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#37474f;fontColor=#263238;labelBackgroundColor=#ffffff;strokeWidth=1.5;exitX=0.15;exitY=1;exitDx=0;exitDy=0;entryX=0.15;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="gc" source="c1" target="c3">
