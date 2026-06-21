@@ -219,6 +219,41 @@ def _add_image_links(section_html: str, suffix: str) -> str:
     return re.sub(r"(<tr>\s*)<td>(.*?)</td>", repl, section_html, flags=re.S)
 
 
+def _force_light(svg: str) -> str:
+    """Pin a draw.io SVG to light rendering.
+
+    draw.io exports theme colors as CSS `light-dark(<light>, <dark>)` and tags the root with
+    `color-scheme: light dark`. On an OS in dark mode the browser then picks the *dark* side —
+    so text goes white and label backgrounds go near-black on our light page. Collapse every
+    `light-dark(a, b)` to its light value `a` (respecting nested parens, e.g. rgb()/var()), and
+    force `color-scheme: only light`.
+    """
+    svg = svg.replace("color-scheme: light dark", "color-scheme: only light")
+    key = "light-dark("
+    out, i = [], 0
+    while True:
+        j = svg.find(key, i)
+        if j == -1:
+            out.append(svg[i:])
+            break
+        out.append(svg[i:j])
+        p, depth, comma = j + len(key), 1, None
+        while p < len(svg) and depth > 0:
+            c = svg[p]
+            if c == "(":
+                depth += 1
+            elif c == ")":
+                depth -= 1
+                if depth == 0:
+                    break
+            elif c == "," and depth == 1 and comma is None:
+                comma = p
+            p += 1
+        out.append(svg[j + len(key):(comma if comma is not None else p)].strip())  # light value
+        i = p + 1
+    return "".join(out)
+
+
 def _inline_svg_viewer(diagram: dict) -> str:
     """Build the pan/zoom/full-screen viewer card with the diagram SVG inlined as crisp vector.
 
@@ -233,6 +268,7 @@ def _inline_svg_viewer(diagram: dict) -> str:
     cleaned = re.sub(r'\s*requiredFeatures="[^"]*"', "", svg_text)
     cleaned = re.sub(r"<image\b[^>]*?/>", "", cleaned, flags=re.S)     # drop raster fallback
     cleaned = re.sub(r"<a\b[^>]*drawio\.com/doc/faq[^>]*>.*?</a>", "", cleaned, flags=re.S)
+    cleaned = _force_light(cleaned)                                   # pin to light rendering
     if cleaned != svg_text:
         svg_path.write_text(cleaned, encoding="utf-8")
     svg_inline = cleaned[cleaned.index("<svg"):]                       # strip XML prolog/doctype

@@ -107,10 +107,10 @@
           <mxGeometry x="20" y="140" width="620" height="40" as="geometry" />
         </mxCell>
 
-        <mxCell id="ed1" value="real measurements&#xa;PMU ms · SCADA s · AMI 15 min · DER" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="ga" target="c2">
+        <mxCell id="ed1" value="real measurements&#xa;PMU ms · SCADA s · AMI 15 min · DER" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#37474f;fontColor=#263238;labelBackgroundColor=#ffffff;strokeWidth=1.5;fontSize=10;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="ga" target="c2">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="ed2" value="network model → h(x)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=1;exitY=0.85;exitDx=0;exitDy=0;entryX=0;entryY=0.85;entryDx=0;entryDy=0;" edge="1" parent="1" source="a6" target="c3">
+        <mxCell id="ed2" value="network model → h(x)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#37474f;fontColor=#263238;labelBackgroundColor=#ffffff;strokeWidth=1.5;fontSize=10;exitX=1;exitY=0.85;exitDx=0;exitDy=0;entryX=0;entryY=0.85;entryDx=0;entryDy=0;" edge="1" parent="1" source="a6" target="c3">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
               <mxPoint x="620" y="540" />
@@ -118,42 +118,42 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="ed3" value="drives forecast" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;fontSize=10;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.85;entryDx=0;entryDy=0;" edge="1" parent="1" source="a5" target="b2">
+        <mxCell id="ed3" value="drives forecast" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#37474f;fontColor=#263238;labelBackgroundColor=#ffffff;strokeWidth=1.5;dashed=1;fontSize=10;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.85;entryDx=0;entryDy=0;" edge="1" parent="1" source="a5" target="b2">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="ed4" value="history → trains" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;fontSize=10;exitX=1;exitY=0.12;exitDx=0;exitDy=0;entryX=0;entryY=0.25;entryDx=0;entryDy=0;" edge="1" parent="1" source="ga" target="gb">
+        <mxCell id="ed4" value="history → trains" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#37474f;fontColor=#263238;labelBackgroundColor=#ffffff;strokeWidth=1.5;dashed=1;fontSize=10;exitX=1;exitY=0.12;exitDx=0;exitDy=0;entryX=0;entryY=0.25;entryDx=0;entryDy=0;" edge="1" parent="1" source="ga" target="gb">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="ed5" value="predict prior +&#xa;pseudo-measurements (low weight)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=1;exitY=0.3;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="gb" target="c1">
+        <mxCell id="ed5" value="predict prior +&#xa;pseudo-measurements (low weight)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#37474f;fontColor=#263238;labelBackgroundColor=#ffffff;strokeWidth=1.5;fontSize=10;exitX=1;exitY=0.3;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="gb" target="c1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="ed6" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.15;exitY=1;exitDx=0;exitDy=0;entryX=0.15;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="gc" source="c1" target="c3">
+        <mxCell id="ed6" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#37474f;fontColor=#263238;labelBackgroundColor=#ffffff;strokeWidth=1.5;exitX=0.15;exitY=1;exitDx=0;exitDy=0;entryX=0.15;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="gc" source="c1" target="c3">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
               <mxPoint x="48" y="180" />
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="ed7" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="gc" source="c2" target="c3">
+        <mxCell id="ed7" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#37474f;fontColor=#263238;labelBackgroundColor=#ffffff;strokeWidth=1.5;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="gc" source="c2" target="c3">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="ed8" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="gc" source="c3" target="c4">
+        <mxCell id="ed8" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#37474f;fontColor=#263238;labelBackgroundColor=#ffffff;strokeWidth=1.5;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="gc" source="c3" target="c4">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="ed9" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="gc" source="c4" target="c5">
+        <mxCell id="ed9" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#37474f;fontColor=#263238;labelBackgroundColor=#ffffff;strokeWidth=1.5;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="gc" source="c4" target="c5">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="ed10" value="propagate (recursive)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;fontSize=10;exitX=0.9;exitY=0;exitDx=0;exitDy=0;entryX=0.9;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="gc" source="c3" target="c1">
+        <mxCell id="ed10" value="propagate (recursive)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#37474f;fontColor=#263238;labelBackgroundColor=#ffffff;strokeWidth=1.5;dashed=1;fontSize=10;exitX=0.9;exitY=0;exitDx=0;exitDy=0;entryX=0.9;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="gc" source="c3" target="c1">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
               <mxPoint x="430" y="180" />
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="ed11" value="x̂ + covariance" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="c5" target="ge">
+        <mxCell id="ed11" value="x̂ + covariance" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#37474f;fontColor=#263238;labelBackgroundColor=#ffffff;strokeWidth=1.5;fontSize=10;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="c5" target="ge">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="ed12" value="boundary state ⇄ priors" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;startArrow=classic;startFill=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="gc" target="gf">
+        <mxCell id="ed12" value="boundary state ⇄ priors" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#37474f;fontColor=#263238;labelBackgroundColor=#ffffff;strokeWidth=1.5;fontSize=10;startArrow=classic;startFill=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="gc" target="gf">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
       </root>
