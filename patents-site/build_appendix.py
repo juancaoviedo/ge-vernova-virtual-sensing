@@ -53,6 +53,25 @@ APPENDICES = [
             "virtual sensing module &middot; Juan Carlos Oviedo Cepeda"
         ),
         "device_links": False,
+        # A pan/zoom/full-screen architecture diagram inlined at the top of the page,
+        # using the same vector viewer as the AGMS walkthrough.
+        "diagram": {
+            "svg": "appendix-virtual-sensing-module.svg",
+            "title": "The Module on One Page",
+            "intro": (
+                "The whole virtual-sensing module as one architecture: inputs (field devices "
+                "&amp; model) &rarr; forecast / pseudo-measurements &rarr; one coupled, "
+                "multi-rate state estimator (power flow embedded in <code>h(x)</code>) &rarr; "
+                "the four virtual sensors and the ORACS observability index, with the "
+                "federation layer and the open decisions. The diagram is the live vector: "
+                "<strong>drag to pan, scroll to zoom</strong>, and <strong>click it for "
+                "full-screen</strong>."
+            ),
+            "caption": (
+                "Virtual sensing module architecture (A1&ndash;A11) &mdash; reconstructed from "
+                "the design discussion; spine settled, decisions D1&ndash;D3 left open."
+            ),
+        },
     },
 ]
 
@@ -66,6 +85,81 @@ EXTRA_CSS = """
   blockquote p{margin:6px 0;}
   a.imglink{text-decoration:none;font-size:13px;margin-left:5px;opacity:.55;white-space:nowrap;}
   a.imglink:hover{opacity:1;}"""
+
+# Pan/zoom/full-screen viewer for an inline SVG. Identical to the AGMS walkthrough's viewer
+# (docs/architecture/AGMS-architecture.html) so the appendix diagram behaves the same.
+VIEWER_JS = """<script>
+(function(){
+  var v=document.getElementById('svgv');
+  if(!v) return;
+  var stage=v.querySelector('.svgv-stage'), svg=v.querySelector('svg');
+  if(!svg) return;
+  var bb=svg.viewBox&&svg.viewBox.baseVal;
+  var natW=(bb&&bb.width)||parseFloat(svg.getAttribute('width'))||1602;
+  var natH=(bb&&bb.height)||parseFloat(svg.getAttribute('height'))||806;
+  svg.removeAttribute('width'); svg.removeAttribute('height');
+  svg.setAttribute('preserveAspectRatio','xMidYMid meet');
+  svg.style.width='100%'; svg.style.height='100%'; svg.style.display='block';
+  var vb={x:0,y:0,w:natW,h:natH}, fitW=natW;
+  function applyVB(){ svg.setAttribute('viewBox', vb.x+' '+vb.y+' '+vb.w+' '+vb.h); }
+  function WH(){ var r=stage.getBoundingClientRect(); return [r.width||1, r.height||1]; }
+  function fit(){
+    var d=WH(), sa=d[0]/d[1], da=natW/natH;
+    if(da>sa){ vb.w=natW; vb.h=natW/sa; } else { vb.h=natH; vb.w=natH*sa; }
+    vb.x=(natW-vb.w)/2; vb.y=(natH-vb.h)/2; fitW=vb.w; applyVB();
+  }
+  function zoomAt(cx,cy,fac){
+    var d=WH(), W=d[0], H=d[1];
+    var nw=vb.w*fac;
+    if(nw < natW/16) fac=(natW/16)/vb.w;
+    if(vb.w*fac > fitW) fac=fitW/vb.w;
+    nw=vb.w*fac; var nh=vb.h*fac;
+    var ux=vb.x+(cx/W)*vb.w, uy=vb.y+(cy/H)*vb.h;
+    vb.x=ux-(cx/W)*nw; vb.y=uy-(cy/H)*nh; vb.w=nw; vb.h=nh; applyVB();
+  }
+  fit();
+  window.addEventListener('resize', fit);
+  stage.addEventListener('wheel', function(e){
+    e.preventDefault();
+    var r=stage.getBoundingClientRect();
+    zoomAt(e.clientX-r.left, e.clientY-r.top, e.deltaY<0?1/1.2:1.2);
+  }, {passive:false});
+  var down=false, moved=false, sx=0, sy=0, ox=0, oy=0;
+  stage.addEventListener('pointerdown', function(e){
+    e.preventDefault();
+    down=true; moved=false; sx=e.clientX; sy=e.clientY; ox=vb.x; oy=vb.y;
+    try{ stage.setPointerCapture(e.pointerId); }catch(_){}
+    stage.classList.add('grabbing');
+  });
+  stage.addEventListener('pointermove', function(e){
+    if(!down) return;
+    var d=WH(), dx=e.clientX-sx, dy=e.clientY-sy;
+    if(Math.abs(dx)>4||Math.abs(dy)>4) moved=true;
+    vb.x=ox-(dx/d[0])*vb.w; vb.y=oy-(dy/d[1])*vb.h; applyVB();
+  });
+  stage.addEventListener('pointerup', function(){
+    down=false; stage.classList.remove('grabbing');
+    if(!moved) toggleFs();
+  });
+  function toggleFs(){
+    var fsEl=document.fullscreenElement||document.webkitFullscreenElement;
+    if(fsEl){ (document.exitFullscreen||document.webkitExitFullscreen).call(document); }
+    else { (v.requestFullscreen||v.webkitRequestFullscreen).call(v); }
+  }
+  function onFs(){ setTimeout(fit, 80); }
+  document.addEventListener('fullscreenchange', onFs);
+  document.addEventListener('webkitfullscreenchange', onFs);
+  v.querySelector('.svgv-controls').addEventListener('click', function(e){
+    var b=e.target.closest('button'); if(!b) return;
+    var d=WH();
+    var a=b.getAttribute('data-act');
+    if(a==='in') zoomAt(d[0]/2, d[1]/2, 1/1.35);
+    else if(a==='out') zoomAt(d[0]/2, d[1]/2, 1.35);
+    else if(a==='reset') fit();
+    else if(a==='fs') toggleFs();
+  });
+})();
+</script>"""
 
 # Physical-hardware tiers get a per-row "see real-world photos" Google Images link.
 # Abstract tiers (6 topology, 7 pseudo-measurements, 8 control-center systems,
@@ -123,6 +217,43 @@ def _add_image_links(section_html: str, suffix: str) -> str:
 
     # First <td> of each row only (headers use <th>, so they are never matched).
     return re.sub(r"(<tr>\s*)<td>(.*?)</td>", repl, section_html, flags=re.S)
+
+
+def _inline_svg_viewer(diagram: dict) -> str:
+    """Build the pan/zoom/full-screen viewer card with the diagram SVG inlined as crisp vector.
+
+    Normalizes the draw.io SVG (drops the requiredFeatures gate, the embedded raster <image>
+    fallback, and the drawio.com FAQ link) so it renders as vector everywhere and is small —
+    then writes the cleaned SVG back to source (idempotent) and inlines it.
+    """
+    svg_path = PATENTS / diagram["svg"]
+    if not svg_path.exists():
+        fail(f"diagram SVG not found: {svg_path}")
+    svg_text = svg_path.read_text(encoding="utf-8")
+    cleaned = re.sub(r'\s*requiredFeatures="[^"]*"', "", svg_text)
+    cleaned = re.sub(r"<image\b[^>]*?/>", "", cleaned, flags=re.S)     # drop raster fallback
+    cleaned = re.sub(r"<a\b[^>]*drawio\.com/doc/faq[^>]*>.*?</a>", "", cleaned, flags=re.S)
+    if cleaned != svg_text:
+        svg_path.write_text(cleaned, encoding="utf-8")
+    svg_inline = cleaned[cleaned.index("<svg"):]                       # strip XML prolog/doctype
+
+    return f"""<section class="card" id="architecture">
+<h2 class="sec">{diagram["title"]}</h2>
+<p>{diagram["intro"]}</p>
+<figure class="diagram-figure">
+<div class="svgv" id="svgv">
+<div class="svgv-controls">
+<button type="button" data-act="out" title="Zoom out" aria-label="Zoom out">&minus;</button>
+<button type="button" data-act="in" title="Zoom in" aria-label="Zoom in">+</button>
+<button type="button" data-act="reset" title="Reset / fit to view" aria-label="Reset view">&#8634;</button>
+<button type="button" data-act="fs" title="Full screen" aria-label="Full screen">&#9974;</button>
+</div>
+<div class="svgv-stage"><div class="svgv-pan">{svg_inline}</div></div>
+<span class="svgv-hint">Drag to pan &middot; scroll to zoom &middot; click for full-screen</span>
+</div>
+<figcaption>{diagram["caption"]}</figcaption>
+</figure>
+</section>"""
 
 
 def _is_external_leak(url: str) -> bool:
@@ -189,8 +320,15 @@ def _build_one(spec: dict, css: str) -> None:
         )
         toc_lines.append(f'    <a href="#{sid}">{heading}</a>')
 
+    # Optional architecture diagram inlined at the very top, with a pan/zoom/full-screen viewer.
+    diagram = spec.get("diagram")
+    if diagram:
+        cards.insert(0, _inline_svg_viewer(diagram))
+        toc_lines.insert(0, f'    <a href="#architecture">{diagram["title"]}</a>')
+
     body = "\n".join(cards)
     toc = "\n".join(toc_lines)
+    viewer_js = VIEWER_JS if diagram else ""
 
     out = f"""<!DOCTYPE html>
 <html lang="en">
@@ -218,6 +356,7 @@ def _build_one(spec: dict, css: str) -> None:
     <footer>Appendix to the AGMS patent study notes &middot; Juan Carlos Oviedo Cepeda</footer>
   </main>
 </div>
+{viewer_js}
 </body>
 </html>
 """
@@ -226,7 +365,9 @@ def _build_one(spec: dict, css: str) -> None:
 
     # Fail loud on any external/network reference (self-containment); internal relative
     # cross-links between appendices/patent pages are allowed and link-checked at docs/ build.
-    ext = re.findall(r'(?:href|src)="([^"]*)"', out)
+    # Exclude any inlined <svg> (self-contained vector; its refs are intra-document) from the scan.
+    scan = re.sub(r"<svg\b.*?</svg>", "", out, flags=re.S)
+    ext = re.findall(r'(?:href|src)="([^"]*)"', scan)
     leaks = sorted({u for u in ext if _is_external_leak(u)})
     if leaks:
         fail(f"external reference(s) leaked into {spec['out']}: " + ", ".join(leaks))
