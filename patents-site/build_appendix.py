@@ -86,8 +86,10 @@ EXTRA_CSS = """
   a.imglink{text-decoration:none;font-size:13px;margin-left:5px;opacity:.55;white-space:nowrap;}
   a.imglink:hover{opacity:1;}"""
 
-# Pan/zoom/full-screen viewer for an inline SVG. Identical to the AGMS walkthrough's viewer
-# (docs/architecture/AGMS-architecture.html) so the appendix diagram behaves the same.
+# Pan/zoom/full-screen viewer for an inline SVG. Zooms via a CSS transform on the SVG (NOT by
+# mutating the viewBox): draw.io renders labels as <foreignObject> HTML, and Chromium fails to
+# repaint foreignObjects when an ancestor SVG's viewBox changes — so viewBox-zoom makes the
+# text vanish while boxes/arrows stay. A CSS transform scales the foreignObjects correctly.
 VIEWER_JS = """<script>
 (function(){
   var v=document.getElementById('svgv');
@@ -98,44 +100,43 @@ VIEWER_JS = """<script>
   var natW=(bb&&bb.width)||parseFloat(svg.getAttribute('width'))||1602;
   var natH=(bb&&bb.height)||parseFloat(svg.getAttribute('height'))||806;
   svg.removeAttribute('width'); svg.removeAttribute('height');
+  svg.setAttribute('viewBox','0 0 '+natW+' '+natH);
   svg.setAttribute('preserveAspectRatio','xMidYMid meet');
-  svg.style.width='100%'; svg.style.height='100%'; svg.style.display='block';
-  var vb={x:0,y:0,w:natW,h:natH}, fitW=natW;
-  function applyVB(){ svg.setAttribute('viewBox', vb.x+' '+vb.y+' '+vb.w+' '+vb.h); }
+  svg.style.position='absolute'; svg.style.top='0'; svg.style.left='0';
+  svg.style.width=natW+'px'; svg.style.height=natH+'px';
+  svg.style.transformOrigin='0 0'; svg.style.display='block';
+  var scale=1, tx=0, ty=0, fitScale=1;
   function WH(){ var r=stage.getBoundingClientRect(); return [r.width||1, r.height||1]; }
+  function apply(){ svg.style.transform='translate('+tx+'px,'+ty+'px) scale('+scale+')'; }
   function fit(){
-    var d=WH(), sa=d[0]/d[1], da=natW/natH;
-    if(da>sa){ vb.w=natW; vb.h=natW/sa; } else { vb.h=natH; vb.w=natH*sa; }
-    vb.x=(natW-vb.w)/2; vb.y=(natH-vb.h)/2; fitW=vb.w; applyVB();
+    var d=WH();
+    fitScale=Math.min(d[0]/natW, d[1]/natH);
+    scale=fitScale; tx=(d[0]-natW*scale)/2; ty=(d[1]-natH*scale)/2; apply();
   }
   function zoomAt(cx,cy,fac){
-    var d=WH(), W=d[0], H=d[1];
-    var nw=vb.w*fac;
-    if(nw < natW/16) fac=(natW/16)/vb.w;
-    if(vb.w*fac > fitW) fac=fitW/vb.w;
-    nw=vb.w*fac; var nh=vb.h*fac;
-    var ux=vb.x+(cx/W)*vb.w, uy=vb.y+(cy/H)*vb.h;
-    vb.x=ux-(cx/W)*nw; vb.y=uy-(cy/H)*nh; vb.w=nw; vb.h=nh; applyVB();
+    var ns=Math.max(fitScale, Math.min(scale*fac, fitScale*16));
+    var wx=(cx-tx)/scale, wy=(cy-ty)/scale;   // world point under the cursor, held fixed
+    scale=ns; tx=cx-wx*scale; ty=cy-wy*scale; apply();
   }
   fit();
   window.addEventListener('resize', fit);
   stage.addEventListener('wheel', function(e){
     e.preventDefault();
     var r=stage.getBoundingClientRect();
-    zoomAt(e.clientX-r.left, e.clientY-r.top, e.deltaY<0?1/1.2:1.2);
+    zoomAt(e.clientX-r.left, e.clientY-r.top, e.deltaY<0?1.2:1/1.2);
   }, {passive:false});
-  var down=false, moved=false, sx=0, sy=0, ox=0, oy=0;
+  var down=false, moved=false, sx=0, sy=0, otx=0, oty=0;
   stage.addEventListener('pointerdown', function(e){
     e.preventDefault();
-    down=true; moved=false; sx=e.clientX; sy=e.clientY; ox=vb.x; oy=vb.y;
+    down=true; moved=false; sx=e.clientX; sy=e.clientY; otx=tx; oty=ty;
     try{ stage.setPointerCapture(e.pointerId); }catch(_){}
     stage.classList.add('grabbing');
   });
   stage.addEventListener('pointermove', function(e){
     if(!down) return;
-    var d=WH(), dx=e.clientX-sx, dy=e.clientY-sy;
+    var dx=e.clientX-sx, dy=e.clientY-sy;
     if(Math.abs(dx)>4||Math.abs(dy)>4) moved=true;
-    vb.x=ox-(dx/d[0])*vb.w; vb.y=oy-(dy/d[1])*vb.h; applyVB();
+    tx=otx+dx; ty=oty+dy; apply();
   });
   stage.addEventListener('pointerup', function(){
     down=false; stage.classList.remove('grabbing');
@@ -153,8 +154,8 @@ VIEWER_JS = """<script>
     var b=e.target.closest('button'); if(!b) return;
     var d=WH();
     var a=b.getAttribute('data-act');
-    if(a==='in') zoomAt(d[0]/2, d[1]/2, 1/1.35);
-    else if(a==='out') zoomAt(d[0]/2, d[1]/2, 1.35);
+    if(a==='in') zoomAt(d[0]/2, d[1]/2, 1.35);
+    else if(a==='out') zoomAt(d[0]/2, d[1]/2, 1/1.35);
     else if(a==='reset') fit();
     else if(a==='fs') toggleFs();
   });
