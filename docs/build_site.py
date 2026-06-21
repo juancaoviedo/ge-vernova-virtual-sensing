@@ -185,6 +185,8 @@ _TRIO_SRCS = {
     "INDEX.html":                 RESEARCH / "patents"  / "INDEX.html",
     "appendix-distribution-observability-sources.html":
         RESEARCH / "patents" / "appendix-distribution-observability-sources.html",
+    "appendix-virtual-sensing-module.html":
+        RESEARCH / "patents" / "appendix-virtual-sensing-module.html",
 }
 _SOURCES_SRCS = {
     "flisr-distributed-fsm-2014.html": RESEARCH / "sources" / "flisr-distributed-fsm-2014.html",
@@ -757,6 +759,9 @@ _ARCH_CARDS = [
     ("Appendix: Distribution Observability Sources",
      "Exhaustive inventory of distribution-level state-information sources (devices, sensors, protocols) for virtual sensing, classified four ways.",
      "architecture/appendix-distribution-observability-sources.html"),
+    ("Appendix: Virtual Sensing Module",
+     "From devices to network state — the state-estimator architecture (FASE, real-time topology, multi-rate Kalman fusion) and its open design decisions.",
+     "architecture/appendix-virtual-sensing-module.html"),
     ("AGMS Architecture Diagram",
      "View the full AGMS reference-architecture diagram (annotated PNG, click to zoom).",
      "architecture/diagram.html"),

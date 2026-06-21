@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Appendix — From Devices to Network State: the Virtual Sensing Module</title>
+<style>
+
+  :root{--panel:#fff;--ink:#1a2230;--muted:#5c6b7a;--line:#e3e8ee;--accent:#0b6e4f;--accent-soft:#e7f4ee;--gold:#b8860b;--code-bg:#f4f6f8;--callout:#fff8e6;--callout-line:#e0b84c;--juan-bg:#eef7f1;--juan-line:#0b6e4f;}
+  *{box-sizing:border-box;} html{scroll-behavior:smooth;}
+  body{margin:0;background:#eef1f5;color:var(--ink);font:16px/1.7 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 20px 80px;display:grid;grid-template-columns:250px 1fr;gap:36px;}
+  @media (max-width:900px){.wrap{grid-template-columns:1fr;}nav.toc{position:static!important;max-height:none!important;}}
+  header.masthead{grid-column:1/-1;background:linear-gradient(135deg,#0f1f2e 0%,#11342a 100%);color:#fff;border-radius:14px;padding:30px 36px;margin:28px 0 6px;box-shadow:0 8px 30px rgba(15,31,46,.25);}
+  header.masthead h1{margin:0;font-size:28px;letter-spacing:.2px;line-height:1.25;}
+  nav.toc{position:sticky;top:18px;align-self:start;max-height:calc(100vh - 36px);overflow:auto;font-size:13.5px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 14px;}
+  nav.toc h2{font-size:11px;text-transform:uppercase;letter-spacing:1.4px;color:var(--muted);margin:0 0 10px;}
+  nav.toc a{display:block;color:var(--muted);text-decoration:none;padding:5px 8px;border-radius:6px;border-left:2px solid transparent;}
+  nav.toc a:hover{color:var(--accent);background:var(--accent-soft);border-left-color:var(--accent);}
+  main{min-width:0;}
+  section.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 30px 26px;margin:18px 0;box-shadow:0 1px 3px rgba(20,30,45,.04);}
+  main>section.card:first-child{margin-top:0;}
+  h2.sec{font-size:22px;margin:10px 0 6px;padding-bottom:10px;border-bottom:2px solid var(--accent-soft);color:#0c2a20;scroll-margin-top:16px;}
+  h3.sub{font-size:17px;margin:22px 0 4px;color:#13433a;}
+  p{margin:12px 0;} strong{color:#0c2233;} em{color:#33324a;} a{color:var(--accent);}
+  code{background:var(--code-bg);border:1px solid var(--line);border-radius:5px;padding:1px 5px;font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace;font-size:13px;color:#33424f;}
+  pre.diagram{background:#0f1722;color:#d6e3ee;border-radius:10px;padding:18px 20px;overflow-x:auto;font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;line-height:1.5;border:1px solid #1c2a3a;}
+  table{width:100%;border-collapse:collapse;margin:14px 0;font-size:14.5px;}
+  th,td{text-align:left;vertical-align:top;padding:9px 12px;border-bottom:1px solid var(--line);}
+  thead th{background:var(--accent-soft);color:#0c2a20;border-bottom:2px solid #cfe7dc;font-size:13px;}
+  tbody tr:nth-child(even){background:#fafbfc;} td code{font-size:12.5px;}
+  ul,ol{margin:12px 0;padding-left:24px;} li{margin:7px 0;}
+  .callout{background:var(--callout);border-left:4px solid var(--callout-line);border-radius:0 8px 8px 0;padding:12px 18px;margin:16px 0;}
+  .callout p{margin:0;}
+  .juan{background:var(--juan-bg);border-left:4px solid var(--juan-line);border-radius:0 8px 8px 0;padding:11px 18px;margin:14px 0;font-size:14.5px;}
+  footer{grid-column:1/-1;text-align:center;color:var(--muted);font-size:12.5px;margin-top:24px;}
+  figure.diagram-figure{margin:8px 0 0;}
+  figure.diagram-figure figcaption{margin-top:8px;font-size:12.5px;color:var(--muted);text-align:center;}
+  .svgv{position:relative;border:1px solid var(--line);border-radius:10px;background:#fff;overflow:hidden;}
+  .svgv-stage{position:relative;width:100%;height:70vh;max-height:780px;overflow:hidden;cursor:grab;touch-action:none;background:#fff;user-select:none;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;}
+  .svgv-stage.grabbing{cursor:grabbing;}
+  .svgv-pan{position:absolute;inset:0;}
+  .svgv-pan svg{display:block;width:100%;height:100%;}
+  .svgv-pan a{color:inherit;text-decoration:none;}
+  .svgv-controls{position:absolute;top:10px;right:10px;z-index:3;display:flex;gap:6px;}
+  .svgv-controls button{width:34px;height:34px;padding:0;border:1px solid var(--line);background:rgba(255,255,255,.94);border-radius:8px;font:600 17px/1 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;color:var(--ink);cursor:pointer;box-shadow:0 1px 3px rgba(20,30,45,.12);}
+  .svgv-controls button:hover{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);}
+  .svgv-hint{position:absolute;left:10px;bottom:10px;z-index:3;font-size:11.5px;color:var(--muted);background:rgba(255,255,255,.86);border:1px solid var(--line);border-radius:6px;padding:3px 8px;pointer-events:none;}
+  .svgv:fullscreen{width:100vw;height:100vh;border:0;border-radius:0;}
+  .svgv:fullscreen .svgv-stage{height:100vh;max-height:none;}
+  .svgv:-webkit-full-screen{width:100vw;height:100vh;}
+  .svgv:-webkit-full-screen .svgv-stage{height:100vh;max-height:none;}
+
+  header.masthead p.sub{margin:10px 0 0;font-size:14px;color:#cfe0d8;font-weight:400;}
+  main pre{background:#0f1722;color:#d6e3ee;border-radius:10px;padding:16px 20px;overflow-x:auto;font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;line-height:1.6;border:1px solid #1c2a3a;}
+  main pre code{background:none;border:0;color:inherit;padding:0;font-size:inherit;}
+  blockquote{background:var(--callout);border-left:4px solid var(--callout-line);border-radius:0 8px 8px 0;padding:12px 18px;margin:16px 0;color:#4a3d12;}
+  blockquote p{margin:6px 0;}
+  a.imglink{text-decoration:none;font-size:13px;margin-left:5px;opacity:.55;white-space:nowrap;}
+  a.imglink:hover{opacity:1;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="masthead">
+    <h1>Appendix — From Devices to Network State: the Virtual Sensing Module</h1>
+    <p class="sub">From devices to network state — the state-estimator architecture for the virtual sensing module &middot; Juan Carlos Oviedo Cepeda</p>
+  </header>
+  <nav class="toc">
+    <h2>Contents</h2>
+    <a href="#purpose-how-this-connects-to-the-first-appendix">Purpose & How This Connects to the First Appendix</a>
+    <a href="#the-object-we-reconstruct-and-the-four-outputs">The Object We Reconstruct, and the Four Outputs</a>
+    <a href="#module-1-2-load-and-der-forecasting-the-predict-step-and-the-pseudo-measurements">Module 1 & 2 — Load and DER Forecasting (the predict step *and* the pseudo-measurements)</a>
+    <a href="#module-3-real-time-topology-query-it-don-t-rebuild-it">Module 3 — Real-Time Topology (query it; don't rebuild it)</a>
+    <a href="#module-4-the-estimator-kalman-fase-not-wls-snapshot">Module 4 — The Estimator: Kalman/FASE, not WLS-snapshot</a>
+    <a href="#three-deep-threads-and-how-each-touches-the-architecture">Three Deep Threads (and how each touches the architecture)</a>
+    <a href="#running-architecture-spec-a1-a11">Running Architecture Spec (A1–A11)</a>
+    <a href="#open-decisions">Open Decisions</a>
+    <a href="#where-this-leaves-the-deployment-proposal">Where This Leaves the Deployment Proposal</a>
+  </nav>
+  <main>
+<section class="card" id="purpose-how-this-connects-to-the-first-appendix">
+<h2 class="sec" id="purpose-how-this-connects-to-the-first-appendix">Purpose & How This Connects to the First Appendix</h2>
+<p>The companion appendix —
+<a href="appendix-distribution-observability-sources.html">Distribution-Level State-Information Sources</a> —
+enumerated the <em>inputs</em>: every device, sensor, system, and protocol that can observe a
+distribution (or transmission) grid, tagged by ORACS observability and reachability. <strong>This
+appendix is the other half: how those inputs become the <em>state of the network</em></strong> through the
+virtual-sensing module the job description asks for — <em>"infer critical power grid parameters
+(voltage stability, phase angles, line temperature, asset health) from limited edge sensor
+data … using Kalman filters, state estimation."</em></p>
+<p>It is a <strong>working design</strong>, not a finished one: the architecture spine is settled, but three
+decisions are deliberately left <strong>open</strong> (see <a href="#open-decisions">Open Decisions</a>) because they
+depend on the target feeder and hardware and should be made per deployment.</p>
+<blockquote>
+<p><strong>One sentence:</strong> the module reconstructs one latent object — the complex nodal voltage
+state of the network — from a sparse, multi-rate, partly-untrustworthy mix of real
+measurements, model constraints, and forecasts, and emits that state <strong>plus its
+uncertainty</strong>, which is exactly the ORACS <em>observability index</em> and the prerequisite for
+the ORACS <em>dispatchability of DERs/microgrid</em>.</p>
+</blockquote>
+</section>
+<section class="card" id="the-object-we-reconstruct-and-the-four-outputs">
+<h2 class="sec" id="the-object-we-reconstruct-and-the-four-outputs">The Object We Reconstruct, and the Four Outputs</h2>
+<p>The <strong>state</strong> is <code>x = {|V|∠θ}</code> — complex voltage at every node (per-phase for distribution;
+see <a href="#open-decisions">D1</a>). Once <code>x</code> is known with the network model, everything else is a
+derived computation. The JD's four named virtual sensors are <em>outputs</em> of <code>x</code>, not separate
+estimators:</p>
+<table>
+<thead>
+<tr>
+<th>JD target</th>
+<th>Reconstructed from</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Phase angles</strong></td>
+<td>µPMU where present (direct); everywhere else θ is a <em>solved state variable</em> — "virtual phasors" from Kirchhoff + magnitudes</td>
+</tr>
+<tr>
+<td><strong>Voltage stability</strong></td>
+<td>the reconstructed <code>|V|</code> profile + sensitivities (dV/dQ, P-V/Q-V margins)</td>
+</tr>
+<tr>
+<td><strong>Line temperature</strong></td>
+<td>line current + ambient weather → an IEEE-738 thermal EKF (a second, small estimator)</td>
+</tr>
+<tr>
+<td><strong>Asset health</strong></td>
+<td>condition signals (DGA, PD) fused with loading <em>from</em> the state estimate → prognostics</td>
+</tr>
+</tbody>
+</table>
+<p>Three of the four are <em>derived from <code>x</code></em>, not measured. That is the whole point of "virtual"
+sensing. <strong>Scope note:</strong> the machinery is the same for transmission and distribution (the
+patents are T&amp;D-general), but transmission is already well-observed — the module earns its
+keep at the <strong>distribution / DER edge</strong>, where most of the state must be reconstructed from
+priors.</p>
+</section>
+<section class="card" id="module-1-2-load-and-der-forecasting-the-predict-step-and-the-pseudo-measurements">
+<h2 class="sec" id="module-1-2-load-and-der-forecasting-the-predict-step-and-the-pseudo-measurements">Module 1 & 2 — Load and DER Forecasting (the predict step *and* the pseudo-measurements)</h2>
+<p>Two forecasting modules supply what the sensors don't directly give: a <strong>load</strong> forecaster
+and a <strong>DER-generation</strong> forecaster. They are essential, but their role is widely
+mis-stated, so three corrections matter:</p>
+<ul>
+<li><strong>Zero-injection nodes are NOT forecast.</strong> A junction with no load and no generation is
+  <em>known</em> to inject zero. It enters the estimator as a <strong>virtual measurement with near-zero
+  variance — the HIGHEST weight in the problem</strong> (effectively an equality constraint), not a
+  low-weight pseudo-measurement. Keep three buckets distinct: <em>real measurements</em>,
+  <em>virtual/zero-injection (high weight)</em>, <em>pseudo-measurements (low weight)</em>.</li>
+<li><strong>The forecaster's <em>inputs</em> are not pseudo-measurements.</strong> AMI, DER-inverter telemetry, and
+  line/PQ sensors are <strong>real measurements</strong> wherever they exist (medium–high weight). The
+  forecaster <em>learns</em> from their history, but at runtime a node <em>with</em> telemetry uses the
+  measurement; only a node <em>without</em> telemetry uses the forecast as its pseudo-measurement.
+  The pseudo-measurement fills the <strong>gaps between</strong> real sensors.</li>
+<li><strong>"Low weight" is true for the pseudo-measurement role — and misleading.</strong> In a
+  forecasting-aided estimator the forecast is also the <strong>predict step</strong>: the state-transition
+  model that propagates <code>x̂(t|t-1)</code> between sparse real updates. That is the <em>prior mean of the
+  whole state</em> — the backbone of the recursive filter, not a low-weight afterthought. So each
+  forecaster does <strong>double duty</strong>: (a) low-weight pseudo-measurements at unmeasured nodes;
+  (b) the high-value predict step for <em>every</em> node.</li>
+</ul>
+<p><strong>Net-injection subtlety.</strong> AMI meters <em>net</em> power (load − behind-meter PV), so "load" and
+"DER" partly collapse into one observed <strong>net injection</strong> with invisible PV inside — handled
+explicitly in <a href="#thread-b-behind-meter-net-injection-disaggregation">Thread B</a>.</p>
+<h3 class="sub">So should we even build the forecasters? Yes — but right-size them.</h3>
+<p>The "low weight ⇒ low value" intuition is the trap. Build them, because:</p>
+<ol>
+<li><strong>Without pseudo-measurements the network is <em>unobservable</em> — there is no solution at all.</strong>
+   A low-weight measurement that is the <em>only</em> thing constraining a node is what makes the
+   gain matrix non-singular. Low weight ≠ low importance.</li>
+<li><strong>The forecast <em>is</em> the predict step</strong> — its quality sets tracking quality between real
+   measurements.</li>
+</ol>
+<p>But because the pseudo-measurement weight is low (σ of roughly 20–50%), the estimator does
+<strong>not</strong> need a high-accuracy forecast. Start simple (persistence / historical load-shape +
+clear-sky PV); graduate to heavy ML only if residuals demand it. The forecaster's <em>value
+scales with how under-observed the feeder is</em> — everything on a rural feeder, marginal on a
+dense-AMI urban one.</p>
+</section>
+<section class="card" id="module-3-real-time-topology-query-it-don-t-rebuild-it">
+<h2 class="sec" id="module-3-real-time-topology-query-it-don-t-rebuild-it">Module 3 — Real-Time Topology (query it; don't rebuild it)</h2>
+<p>State estimation is undefined without the as-operated connectivity model, and it must be
+<strong>real-time</strong> (switching changes the radial configuration constantly). The right move is to
+<strong>consume</strong> the model, not read raw SCADA:</p>
+<ul>
+<li>The <strong>ADMS</strong> (Advanced Distribution Management System) already owns as-operated topology via
+  its <strong>topology processor / network model service</strong>, exposed over <strong>CIM (IEC 61968/61970)</strong>
+  or a vendor API. The big hook: <strong>GE Vernova's own GridOS / ADMS (PowerOn)</strong> is exactly this
+  — the module consumes <em>their</em> network model. (Others: Schneider EcoStruxure ADMS, Hitachi
+  Network Manager, Siemens Spectrum Power, Oracle, Survalent, OSI monarch.)</li>
+<li><strong>ETAP Real-Time</strong> can be a real-time SE/load-flow source where it's deployed; <strong>CYME /
+  CYMDIST</strong> is primarily the <em>validated offline</em> model you initialize from, not the real-time
+  authority.</li>
+<li><strong>Edge / island-mode nuance:</strong> when the WAN to the ADMS drops, the cell can't query the
+  central model. So the edge module keeps a <strong>cached network model</strong> and tracks <em>local</em> switch
+  changes in real time via <strong>IEC 61850 GOOSE / DNP3</strong> at the substation, applying them to the
+  cache. ADMS = authoritative base model (when connected); local GOOSE/DNP3 = real-time delta
+  (always). This is the AGMS "operating cell survives loss of WAN" pattern made concrete.</li>
+</ul>
+</section>
+<section class="card" id="module-4-the-estimator-kalman-fase-not-wls-snapshot">
+<h2 class="sec" id="module-4-the-estimator-kalman-fase-not-wls-snapshot">Module 4 — The Estimator: Kalman/FASE, not WLS-snapshot</h2>
+<h3 class="sub">Why a traditional WLS snapshot is insufficient</h3>
+<p>Classical Weighted Least Squares SE is a <em>static snapshot</em>: take one batch of (assumed
+simultaneous) measurements, minimize weighted residuals, solve for <code>x</code>. It breaks at the edge
+three ways:</p>
+<ol>
+<li><strong>Under-observability</strong> — at any single instant there aren't enough real measurements; the
+   gain matrix is singular without heavy pseudo-measurements, and a one-shot solve discards
+   all temporal information.</li>
+<li><strong>Asynchrony / multi-rate</strong> — PMU at ms, SCADA at seconds, AMI every 15 min. WLS has no
+   principled way to fuse measurements taken at <em>different times</em>; freezing a "snapshot" and
+   pretending they're simultaneous is wrong exactly when the state moves fast (DER ramps,
+   clouds).</li>
+<li><strong>No prediction</strong> — WLS can't propagate state through a gap. When a feeder goes quiet it
+   has nothing.</li>
+</ol>
+<p>WLS isn't discarded — it's the <strong>update math</strong> embedded inside the recursive filter.</p>
+<h3 class="sub">What Kalman/FASE adds</h3>
+<p>Kalman = the WLS update <strong>plus</strong> a time model:</p>
+<ul>
+<li><strong>Predict step</strong> — propagate the state with a transition model + process noise <code>Q</code>. In
+  <strong>FASE (Forecasting-Aided State Estimation)</strong> that transition model is the load/DER forecast
+  (Modules 1 &amp; 2). This is why the forecasters are the engine, not an accessory.</li>
+<li><strong>Update step</strong> — when a measurement arrives, correct the prior. This <em>is</em> the WLS math
+  (same <code>h(x)</code>, same <code>R</code> weighting).</li>
+</ul>
+<h3 class="sub">Multi-rate fusion — why it's critical and how it's achieved</h3>
+<p>Because edge data is inherently multi-rate, the estimator is <strong>asynchronous by construction</strong>:
+run <strong>predict</strong> on a clock (propagate from the forecast), and fire an <strong>update</strong> <em>whenever any
+measurement arrives</em>, using only that source's rows of <code>H</code> and <code>R</code>. A PMU corrects the state
+ms-by-ms; SCADA every few seconds; AMI applies a slow correction every 15 min; a DER inverter
+whenever it reports. Between arrivals the forecast propagates the state, so an estimate always
+exists and is always current. A snapshot estimator would either <strong>waste the fast PMU data</strong> or
+<strong>stall waiting on the slow AMI</strong> — multi-rate fusion lets each source contribute at its native
+cadence.</p>
+<h3 class="sub">One coupled estimator — not a bank of per-signal filters</h3>
+<p>The single most important architectural point:</p>
+<ul>
+<li>The state <code>x</code> is the <strong>whole network's nodal voltages</strong>, and <strong>one coupled estimator</strong> runs
+  over all of it. Each incoming measurement updates the <em>coupled</em> state through the network
+  model — a measurement at node A informs node B via the admittance matrix (Kirchhoff). That
+  cross-coupling <strong>is the value</strong>. Filtering each signal independently and feeding "clean"
+  signals to a power flow would destroy the coupling and the model constraints that make
+  virtual sensing work. <strong>The Kalman filter <em>is</em> the network-wide state estimator; it is not a
+  pre-filter in front of a power flow.</strong></li>
+<li><strong>Where the power flow lives:</strong> inside the measurement function <code>h(x)</code>. The nonlinear
+  <code>P,Q = f(V,θ)</code> relations and the <code>Ybus</code> admittance matrix <em>are</em> <code>h(x)</code>; the EKF linearizes
+  them via the Jacobian <code>H</code> (or the UKF samples sigma points). You are <strong>not</strong> "running a power
+  flow then Kalman-filtering its output" — the filter's measurement model <em>embeds</em> the
+  power-flow equations. The right mental model is <strong>a continuous solver for the power-flow
+  state that updates when measurements arrive</strong> — the estimate is always current (continuous),
+  corrections are event-driven (on arrival).</li>
+<li><strong>Do you pre-filter each signal with its own Kalman? Generally no.</strong> What you need before a
+  measurement enters the update is <strong>validation/gating</strong> (range checks, rate-of-change limits,
+  stuck-sensor/flatline detection, timestamp + quality flags, unit/scaling) — that is
+  measurement <em>validation</em>, not a state estimator. After the update, do <strong>residual-based
+  bad-data detection</strong> (chi-square test on normalized residuals) to catch liars that passed the
+  gate. Per-signal <em>denoising</em> is a narrow exception for a specifically noisy/fast channel (a
+  raw PMU/waveform stream) and is used cautiously — over-smoothing adds latency, hides real
+  dynamics, and corrupts the noise statistics <code>R</code>. <strong>Default: raw measurement → validation gate
+  → single network-wide SE update → residual χ² check.</strong> Not a filter bank.</li>
+</ul>
+<h3 class="sub">The stack, in one picture</h3>
+<pre><code>forecast (load + DER)  ──►  PREDICT  x̂(t|t-1)        ← FASE: the forecast IS the transition model
+                                  │
+incoming measurements ──► validate/gate ──► UPDATE ──► x̂(t|t)   ← WLS math inside; h(x) = power-flow eqns
+   (PMU ms / SCADA s / AMI 15min / DER)        │
+                                          residual χ² bad-data check
+                                                  │
+                                          x̂ + covariance ──► voltage stability · angles · line temp · health
+                                                              └─ covariance = ORACS observability index
+                                                                 → enables safe DER/microgrid dispatchability
+</code></pre>
+</section>
+<section class="card" id="three-deep-threads-and-how-each-touches-the-architecture">
+<h2 class="sec" id="three-deep-threads-and-how-each-touches-the-architecture">Three Deep Threads (and how each touches the architecture)</h2>
+<h3 class="sub">Thread A — Filter core (EKF vs UKF vs EnKF) and the state formulation underneath it</h3>
+<p>The filter choice sits <em>downstream</em> of a bigger one: the <strong>state formulation</strong>. Distribution
+is three-phase and unbalanced (single-phase laterals, untransposed lines, mutual coupling), so
+the honest state is <strong>per-phase complex voltages</strong> (~3× the state), and there is a second
+choice — <strong>node-voltage</strong> (polar <code>|V|,θ</code>) vs <strong>branch-current</strong> (BCSE), the latter often
+better-conditioned for <em>radial</em> feeders. Then the core:</p>
+<ul>
+<li><strong>EKF</strong> — Jacobian linearization; cheapest, but needs an analytic/numeric <code>H</code> (painful for
+  three-phase <code>h</code>) and degrades when far from the operating point — i.e. under low
+  observability, its worst case.</li>
+<li><strong>UKF</strong> — no Jacobian; push <code>2n+1</code> sigma points through the true <code>h(x)</code>. Robust far from the
+  operating point (the low-observability regime), at ~<code>2n+1</code> evaluations of <code>h</code> per step. Use a
+  square-root UKF for stability. Sensible <strong>default for distribution.</strong></li>
+<li><strong>EnKF</strong> — Monte-Carlo ensemble; scales to very large networks, parallelizes well, handles
+  mild non-Gaussianity; sampling-error in the covariance. For scale.</li>
+<li>Corner case: where PMUs make <code>h</code> <strong>linear</strong> in rectangular coordinates → a plain linear KF,
+  cheap and optimal, over the PMU-observable subset.</li>
+</ul>
+<p><strong>Architecture impact:</strong> commit to a <strong>3-phase per-phase state</strong> (modifies A1 — see
+<a href="#open-decisions">D1</a>); make the <strong>filter a pluggable core</strong> behind a stable predict/update
+interface (refines A3); and note that filter × state-size × edge-compute are now one linked
+choice driven by feeder archetype (couples to A9).</p>
+<h3 class="sub">Thread B — Behind-meter net-injection disaggregation</h3>
+<p>AMI meters <strong>net</strong> power (load − behind-meter PV). Treat net reads as load and you
+under-estimate gross load and stay <strong>blind to the PV that is actually driving the voltage
+rise</strong> — the exact quantity the voltage-stability target and the AGMS DER-dispatchability story
+depend on. Disaggregation recovers the two hidden components (gross load, gross PV) from the
+one observed net + side information (irradiance/weather, PV nameplate from interconnection
+records, time-of-day, nearby metered PV as a reference). It shares its PV physics with the
+Module-2 DER forecaster, so they should be one block.</p>
+<p><strong>Architecture impact:</strong> adds a <strong>DER/PV estimation block (A10)</strong> doing double duty — forecast
+(predict input) <em>and</em> current disaggregation (update pseudo-measurement) — upgrading Module 2;
+optionally grows the state if disaggregation is done by <strong>state augmentation</strong> (see
+<a href="#open-decisions">D2</a>); splits A5's "DER pseudo-measurement" into gross-load and gross-PV.</p>
+<h3 class="sub">Thread C — Federated / multi-area DSSE</h3>
+<p>You never run one giant estimator for a whole utility. Partition by substation/feeder: each
+<strong>edge cell</strong> estimates its own area, and areas are stitched at boundaries (tie-lines, shared
+buses) into a coherent system estimate. This maps almost one-to-one onto the patents:
+operating cell = estimation area, federation = multi-area coordination, scout-master =
+coordinator, island mode = an area running on stale boundary conditions when cut off. Two
+families: <strong>hierarchical</strong> (local estimators + a coordinator reconciles boundaries) and
+<strong>peer-to-peer</strong> (neighbors exchange only boundary-bus estimates + covariance and iterate to
+consensus via ADMM / consensus+innovation / gossip). Peer-to-peer shares boundary state, never
+raw measurements — matching the patent's POV "no raw data leaves the cell," and surviving WAN
+loss.</p>
+<p><strong>Architecture impact:</strong> clarifies A1 ("one coupled estimator" was always <em>per area</em>); adds the
+<strong>federation layer (A11)</strong> — a boundary-state exchange interface + a coordination mode (see
+<a href="#open-decisions">D3</a>); adds a <strong>graceful-degradation spec</strong> (on WAN/neighbor loss, use
+last-known boundary conditions as priors with inflated covariance and keep running — island
+mode); makes the observability index <strong>per-cell</strong>, assembled into the system view. Optional
+extra layer: <strong>federated <em>learning</em></strong> of the forecasters across cells (share model weights, not
+load data) — the JD's "federated data pipelines," tied to Phase 5.</p>
+</section>
+<section class="card" id="running-architecture-spec-a1-a11">
+<h2 class="sec" id="running-architecture-spec-a1-a11">Running Architecture Spec (A1–A11)</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Element</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>A1</strong></td>
+<td>State = nodal voltages, <strong>3-phase per-phase</strong>; one coupled estimator <em>per area</em></td>
+<td>spine + open [D1]</td>
+</tr>
+<tr>
+<td><strong>A2</strong></td>
+<td>Predict step = load+DER forecast (FASE); process noise from forecast uncertainty</td>
+<td>spine</td>
+</tr>
+<tr>
+<td><strong>A3</strong></td>
+<td>Update step = WLS math; power flow embedded in <code>h(x)</code>; <strong>pluggable filter core</strong> (EKF/UKF/EnKF)</td>
+<td>spine, core deferred</td>
+</tr>
+<tr>
+<td><strong>A4</strong></td>
+<td>Multi-rate asynchronous: predict on a clock, update on each measurement arrival</td>
+<td>spine</td>
+</tr>
+<tr>
+<td><strong>A5</strong></td>
+<td>Inputs = real measurements + zero-injection (high-weight virtual) + pseudo-measurements (low-weight forecasts)</td>
+<td>spine</td>
+</tr>
+<tr>
+<td><strong>A6</strong></td>
+<td>Validation/gating in; residual χ² bad-data out; no per-signal Kalman bank</td>
+<td>spine</td>
+</tr>
+<tr>
+<td><strong>A7</strong></td>
+<td>Topology from ADMS/CIM (GridOS) + local GOOSE/DNP3 deltas, cached for island mode</td>
+<td>spine</td>
+</tr>
+<tr>
+<td><strong>A8</strong></td>
+<td>Output = x̂ + covariance; covariance = ORACS observability index; enables DER dispatchability</td>
+<td>spine</td>
+</tr>
+<tr>
+<td><strong>A9</strong></td>
+<td>Placement = substation edge, island-capable; compute coupled to filter × state size</td>
+<td>spine</td>
+</tr>
+<tr>
+<td><strong>A10</strong></td>
+<td><strong>DER/PV estimation block</strong> — forecast + behind-meter disaggregation</td>
+<td>new (Thread B)</td>
+</tr>
+<tr>
+<td><strong>A11</strong></td>
+<td><strong>Federation layer</strong> — boundary-state exchange + island degradation; per-cell observability</td>
+<td>new (Thread C)</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section class="card" id="open-decisions">
+<h2 class="sec" id="open-decisions">Open Decisions</h2>
+<p>These three are <strong>deliberately left open</strong> — they are real forks that depend on the target
+feeder (archetype), the available hardware, and the deployment posture, and committing too
+early would over-fit the design. Each should be decided per deployment, not globally.</p>
+<h3 class="sub">D1 — State formulation: three-phase <strong>node-voltage</strong> vs <strong>branch-current</strong></h3>
+<ul>
+<li><strong>Node-voltage (polar <code>|V|,θ</code>)</strong> — the textbook formulation; natural for mixed
+  meshed/radial networks and for voltage-centric outputs (voltage stability); Jacobian is
+  standard.</li>
+<li><strong>Branch-current (BCSE)</strong> — state is branch currents; often <strong>better-conditioned for radial
+  distribution</strong> and reduces some nonlinearity, but is awkward where the network meshes and for
+  direct voltage outputs.</li>
+<li><strong>Why open:</strong> the choice is driven by feeder archetype (radial rural vs meshed urban) and
+  interacts with the filter core (Thread A) and edge compute. <strong>Highest-leverage decision</strong> —
+  it shapes <code>h(x)</code>, the Jacobian, observability conditioning, and the compute footprint.</li>
+</ul>
+<h3 class="sub">D2 — Disaggregation placement: <strong>pre-SE pseudo-measurement</strong> vs <strong>in-filter state augmentation</strong></h3>
+<ul>
+<li><strong>Pre-SE</strong> — a standalone disaggregator turns one net measurement into two pseudo-measurements
+  (gross load, gross PV) feeding the pseudo layer. Cleaner separation, simpler estimator,
+  weaker coupling to real anchors.</li>
+<li><strong>State augmentation</strong> — add per-node DER output as extra <em>states</em> the filter estimates
+  jointly, using network coupling + weather as drivers and real inverter telemetry as anchors.
+  More principled and accurate where anchors exist, but <strong>grows the state</strong> (couples back to D1
+  and edge compute) and needs enough anchors to be observable.</li>
+<li><strong>Why open:</strong> depends on DER density and how much real inverter telemetry exists to anchor the
+  augmented states.</li>
+</ul>
+<h3 class="sub">D3 — Federation mode: <strong>hierarchical</strong> vs <strong>peer-to-peer</strong></h3>
+<ul>
+<li><strong>Hierarchical</strong> — local estimators + a cloud/ADMS coordinator reconciles boundaries.
+  Simpler to reason about and converge, but depends on the coordinator being reachable.</li>
+<li><strong>Peer-to-peer (consensus)</strong> — neighbors exchange boundary estimates and iterate (ADMM /
+  consensus+innovation / gossip); no central coordinator; shares boundary state not raw data;
+  <strong>survives WAN loss</strong> and matches the AGMS federated-cell / island-mode model.</li>
+<li><strong>Why open:</strong> a trade between convergence simplicity (hierarchical) and resilience +
+  patent-alignment (peer-to-peer). The AGMS architecture leans peer-to-peer, but a first
+  deployment may start hierarchical for tractability.</li>
+</ul>
+<blockquote>
+<p><strong>What is NOT open:</strong> the spine — FASE predict + multi-rate asynchronous update, one coupled
+network-wide estimator with the power flow embedded in <code>h(x)</code>, validation-in / χ²-out,
+topology from ADMS + local deltas, and output = state + covariance = ORACS observability
+index. The three open decisions tune <em>how</em> the spine is realized for a given feeder; they do
+not change the spine.</p>
+</blockquote>
+</section>
+<section class="card" id="where-this-leaves-the-deployment-proposal">
+<h2 class="sec" id="where-this-leaves-the-deployment-proposal">Where This Leaves the Deployment Proposal</h2>
+<p>This appendix + the companion
+<a href="appendix-distribution-observability-sources.html">device inventory</a> together give the two
+halves of the virtual-sensing deployment proposal: <strong>what we can observe</strong> (devices →
+measurement classes) and <strong>how it becomes state</strong> (devices → estimator → ORACS observability
+index → safe DER dispatchability). The remaining proposal work is to instantiate this against a
+specific feeder archetype and resolve D1–D3 for that case.</p>
+</section>
+    <footer>Appendix to the AGMS patent study notes &middot; Juan Carlos Oviedo Cepeda</footer>
+  </main>
+</div>
+</body>
+</html>

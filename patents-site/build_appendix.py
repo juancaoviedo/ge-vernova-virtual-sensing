@@ -1,22 +1,21 @@
 #!/usr/bin/env python3
 """
-build_appendix.py — Render the distribution-observability appendix from Markdown into a
-self-contained, styled HTML page that matches the existing AGMS patent study notes.
+build_appendix.py — Render the AGMS patent *appendices* from Markdown into self-contained,
+styled HTML pages that match the existing patent study notes.
 
-It derives styling from the canonical patent page so the appendix is visually identical
-to the rest of the family (single source of truth for the look-and-feel):
+Each appendix derives styling from the canonical patent page so it is visually identical to
+the rest of the family (single source of truth for the look-and-feel). Output per appendix is
+ONE self-contained file: all CSS inline, masthead + sticky TOC + .card sections (one per H2),
+noindex,nofollow, and no network dependencies (renders offline at file://) — except the
+deliberate Google Images "see the real device" links on the device-inventory appendix.
 
-  source MD   : .planning/research/patents/appendix-distribution-observability-sources.md
-  style donor : .planning/research/patents/AGMS-architecture.html  (its <style> block)
-  output HTML : .planning/research/patents/appendix-distribution-observability-sources.html
+Appendices (see APPENDICES registry below):
+  - appendix-distribution-observability-sources  (device inventory; per-row image links)
+  - appendix-virtual-sensing-module              (state-estimator architecture)
 
-The output is ONE self-contained file:
-  - all CSS inline (copied verbatim from the donor + a few additions),
-  - masthead + sticky left TOC + .card sections (one per H2),
-  - noindex,nofollow (study material — never indexed),
-  - zero network dependencies (renders offline at file://).
-
-docs/build_site.py then copies the output into docs/architecture/ during the site build.
+docs/build_site.py then copies the outputs into docs/architecture/ during the site build.
+Internal cross-links between the two appendices (and to other patent pages) are allowed and
+resolved at the docs/ layer; only true external/network references are rejected.
 
 Run from anywhere:  python3 patents-site/build_appendix.py
 """
@@ -32,14 +31,30 @@ import markdown
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent
 PATENTS = ROOT / ".planning" / "research" / "patents"
-SRC_MD = PATENTS / "appendix-distribution-observability-sources.md"
 STYLE_DONOR = PATENTS / "AGMS-architecture.html"
-OUT = PATENTS / "appendix-distribution-observability-sources.html"
 
-SUBTITLE = (
-    "The universe of distribution-level state-information sources, framed by the ORACS "
-    "observability &amp; reachability indexes &middot; Juan Carlos Oviedo Cepeda"
-)
+# Registry of appendices to build. device_links=True injects per-row Google Images links on
+# the physical-hardware tiers (only meaningful for the device-inventory appendix).
+APPENDICES = [
+    {
+        "md": "appendix-distribution-observability-sources.md",
+        "out": "appendix-distribution-observability-sources.html",
+        "subtitle": (
+            "The universe of distribution-level state-information sources, framed by the "
+            "ORACS observability &amp; reachability indexes &middot; Juan Carlos Oviedo Cepeda"
+        ),
+        "device_links": True,
+    },
+    {
+        "md": "appendix-virtual-sensing-module.md",
+        "out": "appendix-virtual-sensing-module.html",
+        "subtitle": (
+            "From devices to network state — the state-estimator architecture for the "
+            "virtual sensing module &middot; Juan Carlos Oviedo Cepeda"
+        ),
+        "device_links": False,
+    },
+]
 
 # Code/diagram blocks and blockquote callouts aren't covered by the donor's note CSS;
 # add the few rules needed so fenced code and blockquotes match the family's styling.
@@ -110,29 +125,39 @@ def _add_image_links(section_html: str, suffix: str) -> str:
     return re.sub(r"(<tr>\s*)<td>(.*?)</td>", repl, section_html, flags=re.S)
 
 
-def main() -> None:
-    if not SRC_MD.exists():
-        fail(f"source markdown not found: {SRC_MD}")
-    if not STYLE_DONOR.exists():
-        fail(f"style donor not found: {STYLE_DONOR}")
+def _is_external_leak(url: str) -> bool:
+    """A self-containment violation = a network/external reference.
 
-    # 1. Pull the donor stylesheet verbatim (includes masthead/toc/card/table CSS) + additions.
-    donor = STYLE_DONOR.read_text(encoding="utf-8")
-    style_m = re.search(r"<style>(.*?)</style>", donor, re.S)
-    if not style_m:
-        fail("could not locate <style> block in style donor")
-    css = style_m.group(1).rstrip() + "\n" + EXTRA_CSS
+    Allowed (return False): pure anchors (#...), data: URIs, the deliberate Google Images
+    links, and *relative same-site* links (e.g. a sibling appendix/patent .html, with or
+    without an #anchor) which are resolved at the docs/ layer and link-checked there.
+    Rejected (return True): anything with a URL scheme (http/https/mailto/...) other than the
+    Google exception, and protocol-relative (//) or absolute (/...) references.
+    """
+    if url.startswith("#") or url.startswith("data:"):
+        return False
+    if url.startswith("https://www.google.com/search"):
+        return False
+    if url.startswith("//") or url.startswith("/"):
+        return True
+    return bool(re.match(r"^[a-zA-Z][a-zA-Z0-9+.\-]*:", url))  # has a scheme -> external
 
-    text = SRC_MD.read_text(encoding="utf-8")
 
-    # 2. Extract the H1 title (masthead), then split the rest into H2 sections.
+def _build_one(spec: dict, css: str) -> None:
+    src_md = PATENTS / spec["md"]
+    out_path = PATENTS / spec["out"]
+    if not src_md.exists():
+        fail(f"source markdown not found: {src_md}")
+
+    text = src_md.read_text(encoding="utf-8")
+
+    # Extract the H1 title (masthead), then split the rest into H2 sections.
     title_m = re.search(r"(?m)^# (.+)$", text)
     if not title_m:
-        fail("source markdown has no H1 title")
+        fail(f"source markdown has no H1 title: {src_md}")
     title = title_m.group(1).strip()
     rest = text[title_m.end():]
 
-    # Split on top-level H2 headings; first chunk is any preamble (ignored if blank).
     chunks = re.split(r"(?m)^## ", rest)
     sections = []  # (sid, heading, body_md)
     for chunk in chunks[1:]:
@@ -143,7 +168,7 @@ def main() -> None:
         body_md = "\n".join(ln for ln in body_md.splitlines() if ln.strip() != "---")
         sections.append((slugify(heading), heading, body_md))
     if not sections:
-        fail("no H2 sections found in source markdown")
+        fail(f"no H2 sections found in source markdown: {src_md}")
 
     md = markdown.Markdown(
         extensions=["tables", "fenced_code", "attr_list", "sane_lists", "md_in_html"]
@@ -153,12 +178,11 @@ def main() -> None:
     for sid, heading, body_md in sections:
         md.reset()
         body_html = md.convert(body_md)
-        # Style sub-headings like the rest of the family (h3.sub / h4.sub).
         body_html = body_html.replace("<h3>", '<h3 class="sub">').replace("<h4>", '<h4 class="sub">')
-        # Add per-device "see real-world photos" image-search links on the hardware tiers.
-        tier_m = re.match(r"tier-(\d+)-", sid)
-        if tier_m and int(tier_m.group(1)) in _DEVICE_TIERS:
-            body_html = _add_image_links(body_html, _TIER_SUFFIX.get(int(tier_m.group(1)), ""))
+        if spec["device_links"]:
+            tier_m = re.match(r"tier-(\d+)-", sid)
+            if tier_m and int(tier_m.group(1)) in _DEVICE_TIERS:
+                body_html = _add_image_links(body_html, _TIER_SUFFIX.get(int(tier_m.group(1)), ""))
         cards.append(
             f'<section class="card" id="{sid}">\n'
             f'<h2 class="sec" id="{sid}">{heading}</h2>\n{body_html}\n</section>'
@@ -183,7 +207,7 @@ def main() -> None:
 <div class="wrap">
   <header class="masthead">
     <h1>{title}</h1>
-    <p class="sub">{SUBTITLE}</p>
+    <p class="sub">{spec["subtitle"]}</p>
   </header>
   <nav class="toc">
     <h2>Contents</h2>
@@ -198,17 +222,30 @@ def main() -> None:
 </html>
 """
 
-    OUT.write_text(out, encoding="utf-8")
+    out_path.write_text(out, encoding="utf-8")
 
-    # Fail loud if any external href/src slipped in (this page must be self-contained),
-    # EXCEPT the deliberate Google Images "see the real device" links on hardware rows.
-    ext = re.findall(r'(?:href|src)="((?!#)(?!data:)[^"]*)"', out)
-    leaks = [u for u in ext if not u.startswith("https://www.google.com/search")]
+    # Fail loud on any external/network reference (self-containment); internal relative
+    # cross-links between appendices/patent pages are allowed and link-checked at docs/ build.
+    ext = re.findall(r'(?:href|src)="([^"]*)"', out)
+    leaks = sorted({u for u in ext if _is_external_leak(u)})
     if leaks:
-        fail("external reference(s) leaked into output: " + ", ".join(sorted(set(leaks))))
+        fail(f"external reference(s) leaked into {spec['out']}: " + ", ".join(leaks))
 
     kb = len(out.encode("utf-8")) / 1024
-    print(f"Wrote {OUT.relative_to(ROOT)} ({kb:.0f} KB, {len(sections)} card sections).")
+    print(f"Wrote {out_path.relative_to(ROOT)} ({kb:.0f} KB, {len(sections)} card sections).")
+
+
+def main() -> None:
+    if not STYLE_DONOR.exists():
+        fail(f"style donor not found: {STYLE_DONOR}")
+    donor = STYLE_DONOR.read_text(encoding="utf-8")
+    style_m = re.search(r"<style>(.*?)</style>", donor, re.S)
+    if not style_m:
+        fail("could not locate <style> block in style donor")
+    css = style_m.group(1).rstrip() + "\n" + EXTRA_CSS
+
+    for spec in APPENDICES:
+        _build_one(spec, css)
 
 
 if __name__ == "__main__":

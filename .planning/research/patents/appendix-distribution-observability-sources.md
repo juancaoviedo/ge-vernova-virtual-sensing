@@ -29,6 +29,12 @@ four ways to drive the deployment proposal.
 > realism lives. Each source is tagged by what it **observes** and how you **reach** it —
 > the ORACS observability/reachability pair.
 
+> **Companion appendix.** This appendix is the *inputs* half. Its companion —
+> [From Devices to Network State: the Virtual Sensing Module](appendix-virtual-sensing-module.html)
+> — is the *processing* half: how these sources become the reconstructed network state through
+> the state estimator (forecasting/FASE, real-time topology, multi-rate Kalman fusion), and the
+> open architecture decisions for that module.
+
 ## How to Read This Inventory
 
 Each tier is a table with three columns:
