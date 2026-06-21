@@ -1,6 +1,9 @@
 # Crawl virtualenv
 .venv-crawl/
 
+# Site/appendix build virtualenv (markdown + pygments + pymdown-extensions)
+.build-venv/
+
 # Python
 __pycache__/
 *.pyc

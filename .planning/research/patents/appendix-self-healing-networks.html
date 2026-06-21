@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Appendix — Self-Healing Distribution Networks (FLISR and the Action Layer)</title>
+<style>
+
+  :root{--panel:#fff;--ink:#1a2230;--muted:#5c6b7a;--line:#e3e8ee;--accent:#0b6e4f;--accent-soft:#e7f4ee;--gold:#b8860b;--code-bg:#f4f6f8;--callout:#fff8e6;--callout-line:#e0b84c;--juan-bg:#eef7f1;--juan-line:#0b6e4f;}
+  *{box-sizing:border-box;} html{scroll-behavior:smooth;}
+  body{margin:0;background:#eef1f5;color:var(--ink);font:16px/1.7 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 20px 80px;display:grid;grid-template-columns:250px 1fr;gap:36px;}
+  @media (max-width:900px){.wrap{grid-template-columns:1fr;}nav.toc{position:static!important;max-height:none!important;}}
+  header.masthead{grid-column:1/-1;background:linear-gradient(135deg,#0f1f2e 0%,#11342a 100%);color:#fff;border-radius:14px;padding:30px 36px;margin:28px 0 6px;box-shadow:0 8px 30px rgba(15,31,46,.25);}
+  header.masthead h1{margin:0;font-size:28px;letter-spacing:.2px;line-height:1.25;}
+  nav.toc{position:sticky;top:18px;align-self:start;max-height:calc(100vh - 36px);overflow:auto;font-size:13.5px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 14px;}
+  nav.toc h2{font-size:11px;text-transform:uppercase;letter-spacing:1.4px;color:var(--muted);margin:0 0 10px;}
+  nav.toc a{display:block;color:var(--muted);text-decoration:none;padding:5px 8px;border-radius:6px;border-left:2px solid transparent;}
+  nav.toc a:hover{color:var(--accent);background:var(--accent-soft);border-left-color:var(--accent);}
+  main{min-width:0;}
+  section.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 30px 26px;margin:18px 0;box-shadow:0 1px 3px rgba(20,30,45,.04);}
+  main>section.card:first-child{margin-top:0;}
+  h2.sec{font-size:22px;margin:10px 0 6px;padding-bottom:10px;border-bottom:2px solid var(--accent-soft);color:#0c2a20;scroll-margin-top:16px;}
+  h3.sub{font-size:17px;margin:22px 0 4px;color:#13433a;}
+  p{margin:12px 0;} strong{color:#0c2233;} em{color:#33324a;} a{color:var(--accent);}
+  code{background:var(--code-bg);border:1px solid var(--line);border-radius:5px;padding:1px 5px;font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace;font-size:13px;color:#33424f;}
+  pre.diagram{background:#0f1722;color:#d6e3ee;border-radius:10px;padding:18px 20px;overflow-x:auto;font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;line-height:1.5;border:1px solid #1c2a3a;}
+  table{width:100%;border-collapse:collapse;margin:14px 0;font-size:14.5px;}
+  th,td{text-align:left;vertical-align:top;padding:9px 12px;border-bottom:1px solid var(--line);}
+  thead th{background:var(--accent-soft);color:#0c2a20;border-bottom:2px solid #cfe7dc;font-size:13px;}
+  tbody tr:nth-child(even){background:#fafbfc;} td code{font-size:12.5px;}
+  ul,ol{margin:12px 0;padding-left:24px;} li{margin:7px 0;}
+  .callout{background:var(--callout);border-left:4px solid var(--callout-line);border-radius:0 8px 8px 0;padding:12px 18px;margin:16px 0;}
+  .callout p{margin:0;}
+  .juan{background:var(--juan-bg);border-left:4px solid var(--juan-line);border-radius:0 8px 8px 0;padding:11px 18px;margin:14px 0;font-size:14.5px;}
+  footer{grid-column:1/-1;text-align:center;color:var(--muted);font-size:12.5px;margin-top:24px;}
+  figure.diagram-figure{margin:8px 0 0;}
+  figure.diagram-figure figcaption{margin-top:8px;font-size:12.5px;color:var(--muted);text-align:center;}
+  .svgv{position:relative;border:1px solid var(--line);border-radius:10px;background:#fff;overflow:hidden;}
+  .svgv-stage{position:relative;width:100%;height:70vh;max-height:780px;overflow:hidden;cursor:grab;touch-action:none;background:#fff;user-select:none;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;}
+  .svgv-stage.grabbing{cursor:grabbing;}
+  .svgv-pan{position:absolute;inset:0;}
+  .svgv-pan svg{display:block;width:100%;height:100%;}
+  .svgv-pan a{color:inherit;text-decoration:none;}
+  .svgv-controls{position:absolute;top:10px;right:10px;z-index:3;display:flex;gap:6px;}
+  .svgv-controls button{width:34px;height:34px;padding:0;border:1px solid var(--line);background:rgba(255,255,255,.94);border-radius:8px;font:600 17px/1 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;color:var(--ink);cursor:pointer;box-shadow:0 1px 3px rgba(20,30,45,.12);}
+  .svgv-controls button:hover{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);}
+  .svgv-hint{position:absolute;left:10px;bottom:10px;z-index:3;font-size:11.5px;color:var(--muted);background:rgba(255,255,255,.86);border:1px solid var(--line);border-radius:6px;padding:3px 8px;pointer-events:none;}
+  .svgv:fullscreen{width:100vw;height:100vh;border:0;border-radius:0;}
+  .svgv:fullscreen .svgv-stage{height:100vh;max-height:none;}
+  .svgv:-webkit-full-screen{width:100vw;height:100vh;}
+  .svgv:-webkit-full-screen .svgv-stage{height:100vh;max-height:none;}
+
+  header.masthead p.sub{margin:10px 0 0;font-size:14px;color:#cfe0d8;font-weight:400;}
+  main pre{background:#0f1722;color:#d6e3ee;border-radius:10px;padding:16px 20px;overflow-x:auto;font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;line-height:1.6;border:1px solid #1c2a3a;}
+  main pre code{background:none;border:0;color:inherit;padding:0;font-size:inherit;}
+  blockquote{background:var(--callout);border-left:4px solid var(--callout-line);border-radius:0 8px 8px 0;padding:12px 18px;margin:16px 0;color:#4a3d12;}
+  blockquote p{margin:6px 0;}
+  a.imglink{text-decoration:none;font-size:13px;margin-left:5px;opacity:.55;white-space:nowrap;}
+  a.imglink:hover{opacity:1;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="masthead">
+    <h1>Appendix — Self-Healing Distribution Networks (FLISR and the Action Layer)</h1>
+    <p class="sub">Self-healing distribution networks &mdash; FLISR (fault location, isolation, service restoration) as the action layer on top of virtual sensing &middot; Juan Carlos Oviedo Cepeda</p>
+  </header>
+  <nav class="toc">
+    <h2>Contents</h2>
+    <a href="#purpose-framing">Purpose & framing</a>
+    <a href="#self-healing-vs-resilience-get-the-distinction-right-first">Self-healing vs. resilience — get the distinction right first</a>
+    <a href="#flisr-the-four-stage-loop">FLISR — the four-stage loop</a>
+    <a href="#the-five-control-actions-the-verbs-of-restoration">The five control actions (the verbs of restoration)</a>
+    <a href="#worked-example-the-ieee-33-bus-self-healing-run-meteab-et-al">Worked example — the IEEE 33-bus self-healing run (Meteab et al.)</a>
+    <a href="#permanent-vs-temporary-fault-the-decision-branch">Permanent vs. temporary fault — the decision branch</a>
+    <a href="#networked-microgrids-and-island-mode-restoration">Networked microgrids and island-mode restoration</a>
+    <a href="#centralized-vs-distributed-self-healing-the-architecture-fork">Centralized vs. distributed self-healing (the architecture fork)</a>
+    <a href="#objective-functions-and-algorithms-the-optimization-underneath">Objective functions and algorithms (the optimization underneath)</a>
+    <a href="#the-open-frontier-what-the-review-says-is-still-hard">The open frontier (what the review says is still hard)</a>
+    <a href="#wrap-up-where-self-healing-sits">Wrap-up — where self-healing sits</a>
+  </nav>
+  <main>
+<section class="card" id="purpose-framing">
+<h2 class="sec" id="purpose-framing">Purpose & framing</h2>
+<p>The two companion appendixes stop at the <em>state</em>: the
+<a href="appendix-distribution-observability-sources.html">device inventory</a> enumerates what a feeder
+can <strong>observe</strong>, and the <a href="appendix-virtual-sensing-module.html">virtual sensing module</a> turns
+those observations into the reconstructed network state plus its uncertainty. <strong>This appendix
+is about what you <em>do</em> with that state</strong> — the <strong>action layer</strong> that detects a fault, isolates
+it, and restores service. It is a standalone study card, grounded in two source papers:</p>
+<ul>
+<li><strong>Arefifar, Alam &amp; Hamadi (2023)</strong>, <em>"A Review on Self-Healing in Modern Power Distribution
+  Systems,"</em> J. of Modern Power Systems &amp; Clean Energy — the <strong>taxonomy</strong>: stages, control
+  actions, objective functions, optimization algorithms, centralized vs. distributed
+  architectures, and the open research frontier.</li>
+<li><strong>Meteab, Tousi &amp; Omran (2025)</strong>, <em>"Efficient self-healing framework for smart distribution
+  networks,"</em> Scientific Reports — a <strong>concrete worked framework</strong>: an IEEE 33-bus feeder
+  with a three-phase fault, isolated and restored by tie-switch reconfiguration with PSO-placed
+  distributed generation.</li>
+</ul>
+<p>The interview value is the layering. Virtual sensing is the <em>eyes</em>; self-healing is the
+<em>hands</em>. The job description names both — "voltage stability, phase angles, line temperature,
+asset health" (sensing) and "decentralized grid operations" (acting) — and self-healing is the
+loop that closes one onto the other. Where it touches the AGMS family, self-healing is the
+<strong>ORACS operation loop in execution</strong>: detect (Observability), reach the switches
+(Reachability), reconfigure (Controllability), simulate-before-commit (the granted Operation
+Loop Formation patent, US 12,596,341 B2), and ride out WAN loss as an island (the operating
+cell).</p>
+<blockquote>
+<p><strong>One sentence:</strong> self-healing is the closed loop that consumes the reconstructed grid state
+and <em>acts on it</em> — <strong>F</strong>ault <strong>L</strong>ocation, <strong>I</strong>solation, and <strong>S</strong>ervice <strong>R</strong>estoration —
+autonomously, in milliseconds-to-minutes, with minimal human intervention.</p>
+</blockquote>
+</section>
+<section class="card" id="self-healing-vs-resilience-get-the-distinction-right-first">
+<h2 class="sec" id="self-healing-vs-resilience-get-the-distinction-right-first">Self-healing vs. resilience — get the distinction right first</h2>
+<p>The single sharpest framing in the review (Arefifar §II) is a distinction interviewers love to
+test, because the words are used interchangeably in marketing and they are <strong>not</strong> the same:</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th><strong>Self-healing</strong></th>
+<th><strong>Resilience</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Question it answers</td>
+<td><em>How fast do I recover </em><em>after</em><em> the hit?</em></td>
+<td><em>How well do I </em><em>withstand</em><em> the hit?</em></td>
+</tr>
+<tr>
+<td>Temporal position</td>
+<td><strong>After</strong> the incident — minimize its impact</td>
+<td><strong>Around</strong> the incident — absorb / survive it</td>
+</tr>
+<tr>
+<td>Metric flavor</td>
+<td>Restoration time, customers restored, unserved load</td>
+<td>Withstand a low-frequency high-impact event</td>
+</tr>
+<tr>
+<td>Relationship</td>
+<td>Self-healing <strong>improves</strong> resilience</td>
+<td>Resilience is the broader property</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>The trap is</strong> calling a system "resilient" when you mean it reconfigures quickly after a
+fault. Say it precisely: <em>resilience is the ability to withstand the disaster; self-healing
+is the ability to recover from a fault automatically once it has happened — and a good
+self-healing system raises the system's resilience.</em></p>
+</blockquote>
+<p>Both source papers anchor self-healing to its origin: the term comes jointly from the U.S. DOD
+and EPRI's <em>Complex Interactive Networks</em> initiative, and NETL's "modern grid" view names
+self-healing as the <strong>defining characteristic of a smart grid</strong> — the ability of the grid to
+<em>automatically and intelligently</em> restore itself after faults.</p>
+</section>
+<section class="card" id="flisr-the-four-stage-loop">
+<h2 class="sec" id="flisr-the-four-stage-loop">FLISR — the four-stage loop</h2>
+<p>Self-healing is not one act; it is a <strong>staged loop</strong>. Arefifar decomposes it into four stages;
+Meteab collapses the same idea into a three-phase engineering pipeline. Lining them up is the
+cleanest way to hold the whole thing in your head:</p>
+<table>
+<thead>
+<tr>
+<th>Arefifar stage (review taxonomy)</th>
+<th>Meteab phase (worked framework)</th>
+<th>What happens</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>1. Fault Detection</strong></td>
+<td>Fault Detection &amp; Isolation</td>
+<td>Sensors/relays see the abnormal event (overcurrent, voltage anomaly) as fast as possible</td>
+</tr>
+<tr>
+<td><strong>2. Fault Understanding</strong> (classification + location)</td>
+<td><em>(folded into detection)</em></td>
+<td>Classify the fault (symmetrical vs. unsymmetrical; LG / LL / LLG) and <strong>locate</strong> it</td>
+</tr>
+<tr>
+<td><strong>3. Fault Isolation</strong></td>
+<td><em>(isolation)</em></td>
+<td>Trip breakers / open switches to disconnect the faulted segment from healthy feeder</td>
+</tr>
+<tr>
+<td><strong>4. Service Restoration</strong></td>
+<td>Network Reconfiguration → Power Restoration</td>
+<td>Reroute power from available sources to downstream healthy loads</td>
+</tr>
+</tbody>
+</table>
+<p>The industry acronym for the whole loop is <strong>FLISR — Fault Location, Isolation, Service
+Restoration.</strong> Per the U.S. DOE figure both papers cite, FLISR cuts <strong>customer minutes of
+interruption by ~51%</strong> and <strong>the number of customers interrupted by ~45%</strong> for an outage event.
+That single statistic is the business case — memorize it.</p>
+<blockquote>
+<p><strong>One sentence:</strong> FLISR = <em>find the fault, fence it off, feed the rest from somewhere else</em> —
+and doing it without a truck roll is worth roughly half your outage-minutes.</p>
+</blockquote>
+<p><strong>Detection nuance</strong> worth a sentence in the room: detection is "straightforward" only on a
+slide. On a real feeder, distinguishing a true fault from a transient inrush, and <em>locating</em> it
+with sparse sensing, is exactly where the <strong>virtual-sensing state estimate earns its keep</strong> —
+the residual/χ² bad-data machinery from the sensing appendix is a fault <em>detector</em>, and the
+reconstructed state narrows the <em>location</em>.</p>
+</section>
+<section class="card" id="the-five-control-actions-the-verbs-of-restoration">
+<h2 class="sec" id="the-five-control-actions-the-verbs-of-restoration">The five control actions (the verbs of restoration)</h2>
+<p>Once a fault is isolated, restoration is performed through a set of <strong>control actions</strong>.
+Arefifar (§IV) classifies them into five; Meteab's framework exercises the first two heavily
+and the others implicitly. These are the levers a self-healing controller pulls:</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Control action</th>
+<th>What it does</th>
+<th>Seen in Meteab's IEEE-33 case</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><strong>Grid reconfiguration</strong></td>
+<td>Open/close sectionalizing + tie switches to re-route power while keeping the feeder <strong>radial</strong></td>
+<td>★ core — open Sw-8/Sw-9, close tie Sw-35</td>
+</tr>
+<tr>
+<td>2</td>
+<td><strong>DG output control</strong></td>
+<td>Dispatch distributed generators to supply load locally; needs <strong>forecasted</strong> DG/load to plan</td>
+<td>★ PSO-sized DGs at buses 6 &amp; 32 backstop the restored zone</td>
+</tr>
+<tr>
+<td>3</td>
+<td><strong>Load management</strong></td>
+<td>Shed / curtail by <strong>customer priority</strong> when sources can't cover all load</td>
+<td>implicit (restore max load within limits)</td>
+</tr>
+<tr>
+<td>4</td>
+<td><strong>Energy storage control</strong></td>
+<td>Discharge BESS to energize remaining loads when DG is insufficient</td>
+<td>— (named as the resilience extension)</td>
+</tr>
+<tr>
+<td>5</td>
+<td><strong>Reactive power source control</strong></td>
+<td>Switch caps/reactors or use smart-inverter Volt-VAR to hold voltage in band</td>
+<td>implicit (voltage profile constraint)</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>The trap is</strong> treating "self-healing" as synonymous with "reconfiguration." Reconfiguration
+is the <strong>first and most common</strong> control action, but the modern story is the <em>coordination</em> of
+all five — DG dispatch, storage, load priority, and reactive support <strong>together</strong> — which is
+exactly the multi-resource orchestration the AGMS operating cell is built to do.</p>
+</blockquote>
+<p><strong>Reconfiguration's two jobs</strong> (Arefifar §IV-A), worth saying explicitly: it both (a) <em>isolates</em>
+the faulted zone to stop the fault current hurting healthy loads, and (b) <em>reroutes</em> power to
+the downstream loads. One mechanism, two purposes — isolation <strong>and</strong> restoration.</p>
+</section>
+<section class="card" id="worked-example-the-ieee-33-bus-self-healing-run-meteab-et-al">
+<h2 class="sec" id="worked-example-the-ieee-33-bus-self-healing-run-meteab-et-al">Worked example — the IEEE 33-bus self-healing run (Meteab et al.)</h2>
+<p>This is the appendix's one <strong>concrete, say-aloud</strong> example — a small enough system to draw on a
+whiteboard, large enough to be credible. Know these numbers.</p>
+<p><strong>The testbed.</strong> IEEE 33-bus radial feeder, 12.66 kV, total load <strong>3715 kW + 2300 kVAR</strong>,
+<strong>32 sectionalizing switches</strong> (normally closed) + <strong>5 tie switches</strong> (normally open). Initial
+load-flow: losses <strong>202.66 kW</strong>, minimum voltage <strong>0.90 p.u. at bus 17</strong>, with under-voltage
+(&lt;0.95 p.u.) in 19 sections — i.e. it starts out stressed.</p>
+<p><strong>The method stack</strong> (each piece is a small interview hook):</p>
+<table>
+<thead>
+<tr>
+<th>Step</th>
+<th>Tool</th>
+<th>Why it's the right choice here</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Load flow</td>
+<td><strong>Backward/Forward Sweep</strong></td>
+<td>Purpose-built for <strong>radial</strong> feeders with <strong>high R/X</strong>, where Newton-Raphson and Gauss-Seidel struggle to converge</td>
+</tr>
+<tr>
+<td>DG sizing &amp; placement</td>
+<td><strong>Particle Swarm Optimization (PSO)</strong></td>
+<td>Fast, swarm information-sharing convergence; beats GA/WOA on speed for this loss-minimization objective</td>
+</tr>
+<tr>
+<td>Restoration</td>
+<td><strong>Tie-switch reconfiguration</strong></td>
+<td>Close a normally-open tie to back-feed the isolated healthy zone, keeping radiality</td>
+</tr>
+</tbody>
+</table>
+<p><strong>The fault and the fix.</strong> A three-phase short (a "big disturbance") is dropped in <strong>Section 8</strong>.
+The loop:</p>
+<ol>
+<li><strong>Detect &amp; isolate</strong> — the relay trips, opening <strong>Sw-8</strong> (and <strong>Sw-9</strong>) to fence off the
+   faulted line. This disrupts power to Sects. 8–17: an unserved load of <strong>815 kW</strong>.</li>
+<li><strong>Reconfigure</strong> — open <strong>Sw-9</strong>, <strong>close normally-open tie Sw-35</strong> — the optimal switching
+   that minimizes losses and balances load while <em>staying radial</em>.</li>
+<li><strong>Restore</strong> — the 815 kW flows back to feeders 9–17 through the tie. With the PSO-placed DGs
+   backstopping, post-fault losses drop to <strong>48.6 kW (a 76% reduction vs. 202.66 kW)</strong> and the
+   minimum voltage recovers to <strong>0.94 p.u.</strong> — all within acceptable 0.95–1.05 limits after DG.</li>
+</ol>
+<p><strong>The headline number:</strong> in the MATLAB/Simulink run, voltage at bus 9 re-stabilizes to
+<strong>0.947 p.u. within ~60 milliseconds</strong> of the fault, using only <strong>three switch operations per
+fault</strong> (one bus-bar trip, one downstream trip, one tie-close).</p>
+<blockquote>
+<p><strong>The trap is</strong> quoting "60 ms" as if a truck-roll restoration is being beaten by seconds. The
+60 ms is the <strong>automated switching transient</strong> in simulation — the point is <em>no human in the
+loop</em>, fully automatic detect-isolate-reconfigure, not the multi-minute manual dispatch it
+replaces.</p>
+</blockquote>
+</section>
+<section class="card" id="permanent-vs-temporary-fault-the-decision-branch">
+<h2 class="sec" id="permanent-vs-temporary-fault-the-decision-branch">Permanent vs. temporary fault — the decision branch</h2>
+<p>Meteab's Fig. 1 encodes a branch that is easy to forget and good to volunteer: the <strong>smart
+recloser's first action</strong> is <em>disconnect &amp; reclose</em>. What happens next depends on the fault:</p>
+<table>
+<thead>
+<tr>
+<th>Fault type</th>
+<th>Recloser outcome</th>
+<th>Self-healing response</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Temporary</strong> (e.g. branch contact, transient)</td>
+<td>Reclose <strong>succeeds</strong> — fault clears</td>
+<td>Restore power via the <strong>regular</strong> supply; no reconfiguration needed</td>
+</tr>
+<tr>
+<td><strong>Permanent</strong> (e.g. three-phase short)</td>
+<td>Reclose <strong>fails</strong> — fault persists</td>
+<td><strong>Isolate</strong> the affected area and use <strong>microgrid / DG sources</strong> to restore the unaffected zone</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>One sentence:</strong> the recloser's reclose attempt is a free <em>test</em> — it weeds out transient
+faults cheaply, so the expensive reconfiguration logic only fires for the <strong>permanent</strong> ones.</p>
+</blockquote>
+<p>This is the substrate for the next card: when the fault is permanent and the main feed is gone,
+restoration leans on <strong>local generation running in island mode</strong> — the resilience extension.</p>
+</section>
+<section class="card" id="networked-microgrids-and-island-mode-restoration">
+<h2 class="sec" id="networked-microgrids-and-island-mode-restoration">Networked microgrids and island-mode restoration</h2>
+<p>Both papers converge on the same resilience pattern. Arefifar (§VII-H) names <strong>networked
+microgrids</strong> as a leading future direction; Meteab operationalizes it (permanent fault →
+microgrid sources restore the unaffected area). The idea:</p>
+<ul>
+<li>When a fault severs a zone from its source, the de-energized area is <strong>sectionalized into an
+  islanded microgrid</strong> that <strong>autonomously supplies</strong> its customers from local DG + storage —
+  rescheduling DG output to cover as many affected loads as possible.</li>
+<li><strong>Multiple points of common coupling</strong> within a networked microgrid let healthy sub-grids
+  <strong>compensate</strong> for shortages in the faulted area — a self-sufficient micro-grid formed <em>on
+  demand</em> for the duration of the outage.</li>
+<li>The hard problem the review flags as still-open: <strong>priority-based formation</strong> of those
+  microgrids under uncertainty — <em>which</em> loads to energize first when local generation can't
+  cover them all (load management by customer priority, control action #3).</li>
+</ul>
+<p><strong>Where this lands on the AGMS architecture</strong> (kept light, standalone): an on-demand islanded
+microgrid that self-forms, restores critical load, and self-terminates when the WAN/main feed
+returns is — almost verbatim — the patents' <strong>operating cell that "operates autonomously
+without WAN" (island mode)</strong>. The self-healing literature and the patent family are describing
+the same object from two directions.</p>
+</section>
+<section class="card" id="centralized-vs-distributed-self-healing-the-architecture-fork">
+<h2 class="sec" id="centralized-vs-distributed-self-healing-the-architecture-fork">Centralized vs. distributed self-healing (the architecture fork)</h2>
+<p>The review (§VI-E, §VII-E, and the Centralized-Approach discussion) draws the fork that maps
+straight onto the role's "<strong>decentralized</strong> grid operations" language:</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th><strong>Centralized</strong></th>
+<th><strong>Distributed / decentralized</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Data path</td>
+<td>IEDs → <strong>SCADA</strong> → control center; strategy computed centrally</td>
+<td><strong>Peer-to-peer</strong> multi-agent; agents exchange messages and decide locally</td>
+</tr>
+<tr>
+<td>Decision locus</td>
+<td>One control center plans the restoration</td>
+<td>Feeder / zone / switch / DG <strong>agents</strong> cooperate (the multi-agent pattern)</td>
+</tr>
+<tr>
+<td>Strength</td>
+<td>Global optimum, full-system view, simpler to reason about</td>
+<td>Survives comms loss; scales; lower latency; local autonomy</td>
+</tr>
+<tr>
+<td>Weakness</td>
+<td>Single point of failure; latency; comms-dependent</td>
+<td>Harder to guarantee global optimality; coordination complexity</td>
+</tr>
+<tr>
+<td>Future-work flag (review)</td>
+<td>"overcoming the limitations of the centralized approach"</td>
+<td>the <strong>research frontier</strong> the review pushes toward</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>The trap is</strong> assuming centralized = obsolete. The review is explicit that centralized
+approaches are <em>"gaining attention"</em> again (HPC/GPGPU make central optimization fast), while
+distributed multi-agent is where resilience lives. The honest answer is <strong>hybrid</strong>: a
+centralized planner that degrades to distributed agent autonomy when the WAN drops — which is,
+again, the AGMS operating-cell story.</p>
+</blockquote>
+<p>This fork is the cleanest bridge to the <strong>federated multi-area</strong> thread in the virtual-sensing
+appendix (its <a href="appendix-virtual-sensing-module.html#open-decisions">Thread C / D3</a>): hierarchical
+(coordinator reconciles) vs. peer-to-peer (consensus, survives WAN loss) is the <em>same</em> fork, one
+layer up — federation for <em>estimation</em> there, for <em>restoration</em> here.</p>
+</section>
+<section class="card" id="objective-functions-and-algorithms-the-optimization-underneath">
+<h2 class="sec" id="objective-functions-and-algorithms-the-optimization-underneath">Objective functions and algorithms (the optimization underneath)</h2>
+<p>Restoration is an <strong>optimization problem</strong>: pick the switching/dispatch plan that best satisfies
+an objective under radiality, voltage, and current constraints. The review (Fig. 3, Tables I–II)
+catalogs both the objectives and the solvers — useful to recognize, not to derive.</p>
+<p><strong>Eight objective functions</strong> self-healing papers optimize for:</p>
+<table>
+<thead>
+<tr>
+<th>Objective</th>
+<th>Plain-English goal</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Reduce power losses</td>
+<td>minimize <code>I²R</code> over the restored configuration (Meteab's PSO target)</td>
+</tr>
+<tr>
+<td>Minimize recovery time</td>
+<td>restore the most load in the least time</td>
+</tr>
+<tr>
+<td>Minimize operational cost</td>
+<td>cheap generators, less load-shed, shorter transfer distance</td>
+</tr>
+<tr>
+<td><strong>Minimize number of switching operations</strong></td>
+<td>fewer switch ops = faster, less equipment wear (Meteab's 3-switch result)</td>
+</tr>
+<tr>
+<td>Improve voltage profile</td>
+<td>hold every bus inside 0.95–1.05 p.u.</td>
+</tr>
+<tr>
+<td><strong>Improve system observability</strong></td>
+<td>place PMUs so the restored network stays observable</td>
+</tr>
+<tr>
+<td>Enhance system resiliency</td>
+<td>survive high-impact events; mobile resources, multi-microgrids</td>
+</tr>
+<tr>
+<td>Enhance system reliability</td>
+<td>reduce SAIDI/SAIFI-type interruption exposure</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Solver families</strong> the review tabulates (recognize the names):</p>
+<pre><code>MILP / MINLP            the workhorses — switching + load-shed + restoration as integer programs
+Multi-agent             feeder/zone/switch/DG agents cooperate (distributed restoration)
+Graph theory            spanning-tree / connectivity reasoning for radial reconfiguration
+Heuristics / metaheur.  PSO (Meteab), GA, Tabu search, fuzzy logic, ant-colony, GWO
+Dynamic programming     staged restoration toward the global optimum
+</code></pre>
+<blockquote>
+<p><strong>The trap is</strong> getting pulled into solver math in the room. The interview-grade point is the
+<em>shape</em>: restoration is a <strong>constrained combinatorial optimization</strong> — discrete switch states,
+continuous DG/var dispatch, hard radiality + voltage/current limits — and <strong>simulate-before-
+commit</strong> (validate the candidate plan in a power-flow/load-flow before you actually throw the
+switches) is the safety gate. That gate is literally claim 3 of the granted Operation Loop
+Formation patent.</p>
+</blockquote>
+</section>
+<section class="card" id="the-open-frontier-what-the-review-says-is-still-hard">
+<h2 class="sec" id="the-open-frontier-what-the-review-says-is-still-hard">The open frontier (what the review says is still hard)</h2>
+<p>Arefifar's §VII (Future Work) is a ready-made list of "where the role's work goes next" — each a
+talking point that connects self-healing back to the sensing stack and the JD:</p>
+<table>
+<thead>
+<tr>
+<th>Frontier</th>
+<th>Why it's open</th>
+<th>Connects to</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Improve observability</strong></td>
+<td>restoration needs the network to stay observable; optimal <strong>PMU placement</strong> under changing topology</td>
+<td>the device-inventory + virtual-sensing appendixes directly</td>
+</tr>
+<tr>
+<td><strong>Accurate forecasting</strong></td>
+<td>non-dispatchable DG/RES output is uncertain; restoration planning needs <strong>forecasted</strong> load &amp; generation</td>
+<td>FASE predict-step / pseudo-measurements (sensing appendix)</td>
+</tr>
+<tr>
+<td><strong>Cyber security</strong></td>
+<td>control actions are only as trustworthy as the data; any cyber-attack corrupts the heal</td>
+<td>the patents' <code>ga-authenticationkey</code> / POV trust boundary</td>
+</tr>
+<tr>
+<td><strong>Event-prediction models</strong></td>
+<td>predict critical events (cascades, weather, cyber) <em>before</em> they hit — pre-emptive healing</td>
+<td>GWM alert-correlation / learning engine (AGMS)</td>
+</tr>
+<tr>
+<td><strong>Networked microgrid formation</strong></td>
+<td>priority-based, uncertainty-aware islanding is unsolved</td>
+<td>island-mode operating cells (AGMS)</td>
+</tr>
+<tr>
+<td><strong>High-performance computing</strong></td>
+<td>real-time restoration at scale needs GPGPU/HPC acceleration</td>
+<td>edge-compute placement (deployment story)</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>One sentence:</strong> every open problem in self-healing is <em>"the action layer is only as good as
+the state estimate and the forecast feeding it"</em> — which is precisely why virtual sensing and
+self-healing are one system, not two.</p>
+</blockquote>
+</section>
+<section class="card" id="wrap-up-where-self-healing-sits">
+<h2 class="sec" id="wrap-up-where-self-healing-sits">Wrap-up — where self-healing sits</h2>
+<p>A standalone closer, not a deployment-proposal continuation. The clean mental stack, top to
+bottom:</p>
+<pre><code>   STATE          observe the grid            → device inventory  (see also: that appendix)
+     │            reconstruct + uncertainty   → virtual sensing module (see also: that appendix)
+     ▼
+   ACTION         FLISR: detect → isolate → restore   ← THIS appendix
+     │            via 5 control actions, optimized, simulate-before-commit
+     ▼
+   RESILIENCE     island-mode microgrids, networked PCCs, priority restoration
+</code></pre>
+<p>Self-healing is the <strong>action layer</strong>: it is what makes the reconstructed state <em>worth</em>
+reconstructing. The two source papers split the labor cleanly — <strong>Arefifar</strong> gives the map (the
+distinction from resilience, the FLISR stages, the five control actions, the centralized↔
+distributed fork, the open frontier), and <strong>Meteab</strong> gives the worked route (IEEE 33-bus,
+BW/FW + PSO, a Sect.-8 fault isolated and restored through tie Sw-35 in ~60 ms with a 76% loss
+cut).</p>
+<p>For Juan, the interview-speakable through-line is short: <em>"I've built the sensing and the edge
+orchestration; self-healing is the FLISR control loop that sits on top — detect with the state
+estimate, isolate with the switches I can reach, restore by reconfiguring and dispatching DG,
+and validate the plan before committing — and when the WAN drops, that loop keeps running as an
+island. That last property is the AGMS operating cell, and the simulate-before-commit gate is
+the granted Operation Loop Formation patent."</em></p>
+<p>The companion appendixes (<a href="appendix-distribution-observability-sources.html">device inventory</a>,
+<a href="appendix-virtual-sensing-module.html">virtual sensing module</a>) are the <em>state</em> half; this one
+is the <em>action</em> half — they read independently, but together they are eyes-and-hands.</p>
+</section>
+    <footer>Appendix to the AGMS patent study notes &middot; Juan Carlos Oviedo Cepeda</footer>
+  </main>
+</div>
+
+</body>
+</html>
