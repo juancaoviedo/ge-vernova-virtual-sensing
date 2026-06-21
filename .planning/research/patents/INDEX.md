@@ -40,6 +40,15 @@ for additional detail from the searchable text layer.
    state estimator (forecasting/FASE, real-time topology, multi-rate Kalman fusion), with a
    running architecture spec and the open design decisions.
 
+**Standalone appendix** — [`appendix-self-healing-networks.md`](appendix-self-healing-networks.md):
+the *action* layer that consumes the reconstructed state — **FLISR** (fault location, isolation,
+service restoration). PDF-driven (Arefifar et al.'s self-healing review + Meteab et al.'s IEEE
+33-bus worked framework): the self-healing-vs-resilience distinction, the four-stage FLISR loop,
+the five control actions, centralized vs. distributed architectures, island-mode networked
+microgrids, and the optimization/objective landscape — tied to the granted Operation Loop
+Formation patent's simulate-before-commit gate and the operating cell's island mode. It reads
+independently of the matched-pair appendixes above (a light "see also" only).
+
 ---
 
 ## Authoritative Application Numbers (continuation cohort, all filed 2023-04-06)

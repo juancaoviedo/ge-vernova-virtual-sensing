@@ -187,6 +187,8 @@ _TRIO_SRCS = {
         RESEARCH / "patents" / "appendix-distribution-observability-sources.html",
     "appendix-virtual-sensing-module.html":
         RESEARCH / "patents" / "appendix-virtual-sensing-module.html",
+    "appendix-self-healing-networks.html":
+        RESEARCH / "patents" / "appendix-self-healing-networks.html",
 }
 _SOURCES_SRCS = {
     "flisr-distributed-fsm-2014.html": RESEARCH / "sources" / "flisr-distributed-fsm-2014.html",
@@ -762,6 +764,9 @@ _ARCH_CARDS = [
     ("Appendix: Virtual Sensing Module",
      "From devices to network state — the state-estimator architecture (FASE, real-time topology, multi-rate Kalman fusion) and its open design decisions.",
      "architecture/appendix-virtual-sensing-module.html"),
+    ("Appendix: Self-Healing Networks",
+     "FLISR as the action layer on top of virtual sensing — fault location, isolation, and service restoration via reconfiguration, DG dispatch, and island-mode microgrids, with a worked IEEE 33-bus example.",
+     "architecture/appendix-self-healing-networks.html"),
     ("AGMS Architecture Diagram",
      "View the full AGMS reference-architecture diagram (annotated PNG, click to zoom).",
      "architecture/diagram.html"),

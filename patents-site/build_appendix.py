@@ -12,6 +12,7 @@ deliberate Google Images "see the real device" links on the device-inventory app
 Appendices (see APPENDICES registry below):
   - appendix-distribution-observability-sources  (device inventory; per-row image links)
   - appendix-virtual-sensing-module              (state-estimator architecture)
+  - appendix-self-healing-networks               (FLISR / self-healing action layer; standalone)
 
 docs/build_site.py then copies the outputs into docs/architecture/ during the site build.
 Internal cross-links between the two appendices (and to other patent pages) are allowed and
@@ -72,6 +73,16 @@ APPENDICES = [
                 "the design discussion; spine settled, decisions D1&ndash;D3 left open."
             ),
         },
+    },
+    {
+        "md": "appendix-self-healing-networks.md",
+        "out": "appendix-self-healing-networks.html",
+        "subtitle": (
+            "Self-healing distribution networks &mdash; FLISR (fault location, isolation, "
+            "service restoration) as the action layer on top of virtual sensing "
+            "&middot; Juan Carlos Oviedo Cepeda"
+        ),
+        "device_links": False,
     },
 ]
 
