@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: ready_to_plan
-stopped_at: Completed 06-05 SYSTEM-DESIGN-DRILLS.md (two whiteboard drills)
-last_updated: "2026-06-16T07:24:12.877Z"
-last_activity: 2026-06-16
+stopped_at: Phase 8 (IEEE 33-Bus DER Measurement Source) added to roadmap — ready to plan
+last_updated: "2026-06-22T00:00:00.000Z"
+last_activity: 2026-06-22
 progress:
-  total_phases: 8
+  total_phases: 9
   completed_phases: 8
   total_plans: 23
   completed_plans: 23
-  percent: 100
+  percent: 89
 ---
 
 # Project State
@@ -114,6 +114,7 @@ Recent decisions affecting current work:
 ### Roadmap Evolution
 
 - Phase 7 added: Integrated HTML Study Site — consolidate all phase study notes + research HTML/diagram assets (AGMS architecture/patents, study notes, demo explanations and references) into one navigable HTML site for revision
+- Phase 8 added (2026-06-22): IEEE 33-Bus DER Measurement Source — first hands-on build phase (pivot from study notes). System 1 of a two-system design: recreate the IEEE 33-bus network with renewable DER in PandaPower (per `.planning/research/articles/ieee33.pdf` / `case33.xlsx`; cross-ref repo Chinmaya-J-Jena/der_load_flow_IEEE33bus), drive a 144-step (10-min) daily profile, persist every power-flow snapshot to a local InfluxDB via Docker Compose. Virtual-sensing module (System 2) deferred to a later phase.
 
 ### Pending Todos
 

@@ -22,6 +22,7 @@ deliverable maps to exactly one phase; no requirement is orphaned.
 - [x] **Phase 5: Federated Architectures & Security** - Close Gap 5: distinguish federated from distributed, master FedAvg/FedProx/Krum, and frame edge security (completed 2026-06-14)
 - [x] **Phase 6: Synthesis, Drills & Mock Interview** - Convert all knowledge to deliverable interview answers: vocabulary bridges, OSED pitch, STAR stories, system-design drills, timed Q&A rehearsal (completed 2026-06-16)
 - [x] **Phase 7: Integrated HTML Study Site** - Consolidate all phase study notes and research HTML/diagram assets into one navigable HTML study site: AGMS architecture (patents), study notes, and demo explanations/references (completed 2026-06-15)
+- [ ] **Phase 8: IEEE 33-Bus DER Measurement Source** - Build the re-runnable "ground-truth" System 1: radial balanced IEEE 33-bus network with renewable DER (solar+wind) + RPCs + feeder OLTC in PandaPower, driven by a 96-step (15-min) day whose profiles are ingested once from the open-power-system-data set into InfluxDB, with every full power-flow snapshot persisted to local InfluxDB and shown on a Grafana dashboard (Docker Compose) — infrastructure only, no virtual-sensing module yet (see 08-SPEC.md)
 
 ## Phase Details
 
@@ -136,10 +137,24 @@ deliverable maps to exactly one phase; no requirement is orphaned.
   - [x] 07-03-PLAN.md — Card-grid hub + demos page with embedded key code and inline results (HTML-01, HTML-05)
   - [x] 07-04-PLAN.md — Publish-readiness: .nojekyll, robots/noindex, link-validation pass, PUBLISH.md, offline smoke check (HTML-06, HTML-07)
 
+### Phase 8: IEEE 33-Bus DER Measurement Source
+**Goal**: A re-runnable "ground-truth" measurement source exists — the radial, balanced enhanced IEEE 33-bus network with renewable DER (solar+wind at buses 18/22/25/33), RPC shunts at 18/33, and a feeder OLTC + phase shifter (per `.planning/research/articles/ieee33.pdf` / `case33.xlsx`) modeled in PandaPower, driven through a 96-step (15-minute) day whose load+solar+wind profiles are ingested once from the open-power-system-data 15-min set into InfluxDB and read back from there at run time, with the full power-flow state registered at every step, persisted to local InfluxDB, and visualized via a provisioned Grafana dashboard. This is **System 1** (the measurement source) in a two-system design; **System 2** (the virtual-sensing module that estimates state from the measurements) is explicitly OUT OF SCOPE and handled in a later phase. Decisions are locked in `08-SPEC.md` (ambiguity 0.13).
+**Depends on**: Phase 7
+**Requirements**: 7 locked in 08-SPEC.md (run /gsd-discuss-phase 8 next)
+**Success Criteria** (what must be TRUE):
+  1. A PandaPower model of the radial balanced enhanced IEEE 33-bus system — renewable DG `sgen` at 18/22/25/33, RPC shunts at 18 (0.4 MVAr) & 33 (0.6 MVAr), feeder OLTC + phase shifter — runs a converging Newton-Raphson power flow from a single Python entry point
+  2. The 15-min open-power-system-data profiles (DE load/solar/wind) are ingested once into InfluxDB (96 points/day); if the source is unreachable the step halts and notifies (no synthetic/xlsx fallback)
+  3. A 96-step batch driver reads the profiles from InfluxDB (solar→subset, wind→subset of DG buses), runs one power flow per step, and captures the full system state at each step
+  4. Each snapshot's full power-flow state (bus |V|/angle, line P/Q & loading, slack feed-in, DER output, OLTC tap, losses) is written to local InfluxDB started via Docker Compose
+  5. A provisioned Grafana dashboard renders the 96-step evolution of the key variables without manual setup
+  6. The runner is deterministic, repeatable, and documented (README) so the measurement set regenerates on demand
+**Plans**: TBD
+- [ ] TBD (run /gsd-plan-phase 8 to break down)
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 0 → 1 → 2 → 3 → 4 → 5 → 6 → 7
+Phases execute in numeric order: 0 → 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -151,3 +166,4 @@ Phases execute in numeric order: 0 → 1 → 2 → 3 → 4 → 5 → 6 → 7
 | 5. Federated Architectures & Security | 3/3 | Complete   | 2026-06-14 |
 | 6. Synthesis, Drills & Mock Interview | 6/6 | Complete    | 2026-06-16 |
 | 7. Integrated HTML Study Site | 4/4 | Complete    | 2026-06-15 |
+| 8. IEEE 33-Bus DER Measurement Source | 0/TBD | Not started | - |
