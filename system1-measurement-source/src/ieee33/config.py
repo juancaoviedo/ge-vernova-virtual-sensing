@@ -86,19 +86,45 @@ RPC_SHUNTS = {17: -0.4, 32: -0.6}  # {pp_bus_idx: q_mvar}  negative = capacitive
 TIE_LINE_IDX = [32, 33, 34]        # pandapower line indices; in_service=False for radial
 
 # ---------------------------------------------------------------------------
+# Line thermal rating
+# case33bw ships max_i_ka = 99999 (placeholder) on every line, so loading_percent
+# comes out ≈ 0.0001 % (meaningless). Set a nominal 12.66 kV feeder conductor
+# ampacity so loading_percent is realistic (trunk near the substation ≈ 40-50 % at
+# peak, tapering toward the laterals). Affects loading_percent only — NOT the power
+# flow solution (vm_pu / P / Q are unchanged by the rating).
+# ---------------------------------------------------------------------------
+LINE_MAX_I_KA = 0.4                 # kA   nominal feeder conductor ampacity (~400 A)
+
+# ---------------------------------------------------------------------------
 # Feeder transformer (OLTC + phase shifter) parameters
-# Inserted between a new HV bus and bus 0; DiscreteTapControl regulates LV side
+# Inserted between a new HV bus and bus 0; a line-drop-compensation controller
+# (FeederTapControl in network.py) regulates a downstream reference bus.
 # ---------------------------------------------------------------------------
 TRAFO_SN_MVA        = 10.0          # MVA   feeder rating
 TRAFO_VK_PERCENT    = 4.0           # %     short-circuit voltage
 TRAFO_VKR_PERCENT   = 0.5           # %     resistive component
-TAP_MIN             = -5            # —     minimum tap position (0.95 pu → −5 × 1% steps)
-TAP_MAX             =  5            # —     maximum tap position (1.05 pu → +5 × 1% steps)
+TAP_MIN             = -5            # —     minimum tap position (boost: −5 × 1% steps = +5% at LV)
+TAP_MAX             =  5            # —     maximum tap position (buck:  +5 × 1% steps = −5% at LV)
 TAP_STEP_PERCENT    = 1.0           # %     voltage change per tap step
 TAP_NEUTRAL         = 0             # —     neutral tap position (ratio = 1.0)
-VM_LOWER_PU         = 0.95          # pu    DiscreteTapControl lower deadband limit
-VM_UPPER_PU         = 1.05          # pu    DiscreteTapControl upper deadband limit
 SHIFT_DEGREE        = 0.0           # deg   scheduled phase-shift angle at baseline (±5° range)
+
+# pandapower 3.x REQUIRES tap_changer_type to be set for the tap to affect the power
+# flow. create_transformer_from_parameters leaves it NaN by default, which makes the
+# tap INERT (changing tap_pos has zero effect on voltage). "Ratio" = standard OLTC
+# voltage-ratio tap changer. (Found via the OLTC-never-tapped investigation.)
+TAP_CHANGER_TYPE    = "Ratio"
+
+# OLTC regulation strategy: line-drop compensation.
+# case33bw is fed from a stiff slack, so bus 0 (the trafo LV bus, adjacent to the
+# slack) barely moves (0.993-0.997 pu) — regulating it never moves the tap. Instead
+# regulate a representative DOWNSTREAM main-trunk bus to ~1.0 pu, so the tap actively
+# boosts at evening peak and backs off under midday DER → visible daily switching,
+# and the sagging laterals are lifted above 0.95 pu. tap_changer/band tuned against
+# the real 96-step day: tap ranges −1..−4, day vmin≈0.985, day vmax≈1.037.
+OLTC_REF_BUS        = 17            # pandapower idx (article bus 18, end of main trunk) — regulated bus
+OLTC_VM_LOWER_PU    = 0.99         # pu    regulate OLTC_REF_BUS into [0.99, 1.01] (1.0 ±1%)
+OLTC_VM_UPPER_PU    = 1.01         # pu
 
 # ---------------------------------------------------------------------------
 # Validation constants (D-14)
