@@ -1,8 +1,8 @@
 ---
 phase: 08-ieee-33-bus-der-measurement-source
 verified: 2026-06-23T05:50:00Z
-status: human_needed
-score: 6/7 must-haves verified (SPEC-1..SPEC-6 automated; SPEC-7 requires live Grafana re-check from clean state)
+status: passed
+score: 7/7 must-haves verified (SPEC-1..SPEC-6 automated; SPEC-7 Grafana render confirmed by the user 2026-06-23 after the post-UAT dashboard/units/OLTC fixes)
 overrides_applied: 0
 human_verification:
   - test: "Run make clean && uv sync && make all, then open http://localhost:3000 and confirm the IEEE33 dashboard auto-renders all six panels without manual setup"
