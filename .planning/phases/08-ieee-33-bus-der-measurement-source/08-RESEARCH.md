@@ -729,7 +729,12 @@ def validate_base_case(tolerance_pu=0.005):
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED at plan time)
+
+> All three were resolved during `/gsd-plan-phase 8` and are reflected in the plans:
+> 1. **TARGET_DATE** — RESOLVED: Plan 08-01 Task 3 runs `scripts/inspect_opsd_day.py` and pins the chosen high-DER day in `config.TARGET_DATE` (Wave 1) before any dependent plan runs.
+> 2. **Feeder transformer impedance** — RESOLVED: adopted `sn_mva=10.0`, `vk_percent=4.0`, `vkr_percent=0.5` in `config.py`; the Baran & Wu base-case validation gate (Plan 08-02 Task 2) catches any impedance pathology (bus 0 must hold ≈1.0 pu).
+> 3. **case33bw tie-lines** — RESOLVED: Plan 08-02 Task 1 explicitly forces the tie-lines (pandapower line idx 32/33/34) `in_service=False` regardless of the `pn.case33bw()` default, with a runtime assertion.
 
 1. **Exact high-DER DE day for TARGET_DATE**
    - What we know: Dataset covers 2015–2020; DE summer months have highest solar CF
