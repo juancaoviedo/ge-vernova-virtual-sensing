@@ -54,14 +54,17 @@ PEAK_LOAD_MVAR = 2.3                # MVAr  article total reactive demand at pea
 DG_NAMEPLATE_MW = 0.2               # MW    case33.xlsx: 200 kW per unit at buses 18/22/25/33
 
 # D-04: DELIBERATE DEVIATION from article's 200 kW baseline.
-# Raw nameplate total = 4 × 0.2 MW = 0.8 MW ≈ 21% of 3.715 MW peak — too small to
-# produce visible midday reverse flow, voltage rise, or OLTC tapping (RESEARCH Pitfall 5).
-# Scale factor 2.8 raises each unit to 0.56 MW; 4 × 0.56 = 2.24 MW ≈ 60% of peak.
-# This surfaces the interview-grade physics: midday PV pushes voltage above 1.0 pu,
-# power flows back toward the substation, the OLTC taps to hold the 0.95–1.05 band.
-# Benchmark proportions are preserved (all four units scaled equally).
-DG_SCALE_FACTOR = 2.8               # —     D-04: documented deliberate deviation (×2.8 from article nameplate)
-DG_EFFECTIVE_MW = DG_NAMEPLATE_MW * DG_SCALE_FACTOR   # MW  = 0.56 MW per unit
+# Raw nameplate total = 4 × 0.2 MW = 0.8 MW ≈ 21% of 3.715 MW peak — far too small for the
+# high-DER physics we want. Scale factor 8.5 raises each unit to 1.7 MW; 4 × 1.7 = 6.8 MW total
+# (~183% of peak load). With the day's solar+wind capacity factors this gives a peak production
+# ≈ 4.5 MW around midday — just above the ~3.6 MW midday load — so the feeder genuinely
+# REVERSE-FEEDS at midday (slack EXPORTS ~0.8 MW), DER-bus voltages float above 1.0 pu, and the
+# OLTC actively BUCKS midday / BOOSTS evening (a full two-way daily tap swing).
+# (Was 2.8 → 0.56 MW/unit, a moderate ~60% penetration with NO reverse flow; raised per user
+# request to surface reverse-flow over-voltage for the downstream estimator.) Benchmark
+# proportions preserved (all four units scaled equally).
+DG_SCALE_FACTOR = 8.5               # —     D-04: high-DER deviation (×8.5 → 1.7 MW/unit, ~183% penetration)
+DG_EFFECTIVE_MW = DG_NAMEPLATE_MW * DG_SCALE_FACTOR   # MW  = 1.7 MW per unit
 
 # ---------------------------------------------------------------------------
 # Solar/wind bus split (D-05)
@@ -125,9 +128,9 @@ ACSR_CONDUCTORS = [
 TRAFO_SN_MVA        = 10.0          # MVA   feeder rating
 TRAFO_VK_PERCENT    = 4.0           # %     short-circuit voltage
 TRAFO_VKR_PERCENT   = 0.5           # %     resistive component
-TAP_MIN             = -5            # —     minimum tap position (boost: −5 × 1% steps = +5% at LV)
-TAP_MAX             =  5            # —     maximum tap position (buck:  +5 × 1% steps = −5% at LV)
-TAP_STEP_PERCENT    = 1.0           # %     voltage change per tap step
+TAP_MIN             = -10           # —     min tap (MAX BOOST: −10 × 1% = +10% at LV) — real substation OLTCs are ±10%
+TAP_MAX             =  10           # —     max tap (MAX BUCK:  +10 × 1% = −10% at LV)
+TAP_STEP_PERCENT    = 1.0           # %     voltage change per tap step (1% step over a ±10% range = 21 positions)
 TAP_NEUTRAL         = 0             # —     neutral tap position (ratio = 1.0)
 SHIFT_DEGREE        = 0.0           # deg   scheduled phase-shift angle at baseline (±5° range)
 
@@ -160,18 +163,18 @@ OLTC_VM_UPPER_PU    = 1.01         # pu
 #   tap_pos NEGATIVE = BOOST  → RAISES feeder voltage (tap -5 = max boost, +5% at LV)
 #   tap_pos POSITIVE = BUCK   → LOWERS feeder voltage (tap +5 = max buck,  -5% at LV)
 #
-# Two events, well separated:
-#   1. OVER-voltage: light-load early morning (steps 8-11 = 02:00-02:45, controller ≈ -2),
-#      force tap -5 (MAX BOOST). vmax steps up to ~1.05 (crosses the upper band). Boost is
-#      capped at +5 %, so a boost-only over-voltage tops out near 1.05 on this day.
-#   2. UNDER-voltage: evening peak (steps 74-77 = 18:30-19:30, controller ≈ -4), force tap +5
-#      (MAX BUCK). The -5 % buck STACKS with the load-driven drop → vmin collapses to ~0.90.
-# (The under-voltage event is deeper because the buck adds to the natural feeder drop, while
-# the boost has only +5 % of headroom above a ~1.0 light-load feeder — a real asymmetry.)
+# Two events, well separated, both at the ±10 % tap extremes:
+#   1. OVER-voltage: MIDDAY production peak (steps 46-49 = 11:30-12:15). At high DER the feeder
+#      reverse-feeds and the controller normally BUCKS (tap ≈ +2) to hold voltage; the event
+#      instead forces tap -10 (MAX BOOST), stacking +10 % on the DER-elevated feeder → vmax ≈ 1.14.
+#      (This is the classic high-PV over-voltage made worse by a mis-set / stuck OLTC.)
+#   2. UNDER-voltage: evening peak (steps 74-77 = 18:30-19:30, controller ≈ -3), force tap +10
+#      (MAX BUCK). The -10 % buck STACKS with the load-driven drop → vmin collapses to ~0.87.
+# Both are large, abrupt, convergent disturbances (~±13 % excursions) for the estimator.
 # ---------------------------------------------------------------------------
 OLTC_EVENTS = [
-    {"start_step": 8,  "end_step": 12, "tap_pos": -5},  # 02:00-02:45  MAX BOOST → over-voltage (~1.05)
-    {"start_step": 74, "end_step": 78, "tap_pos": 5},   # 18:30-19:30  MAX BUCK  → under-voltage (~0.90)
+    {"start_step": 46, "end_step": 50, "tap_pos": -10},  # 11:30-12:15  MAX BOOST + reverse flow → over-voltage (~1.14)
+    {"start_step": 74, "end_step": 78, "tap_pos": 10},   # 18:30-19:30  MAX BUCK              → under-voltage (~0.87)
 ]
 
 # ---------------------------------------------------------------------------

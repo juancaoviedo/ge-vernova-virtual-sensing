@@ -57,8 +57,8 @@
           },
           "unit": "short",
           "decimals": 4,
-          "min": 0.88,
-          "max": 1.10
+          "min": 0.85,
+          "max": 1.15
         },
         "overrides": []
       },
@@ -249,7 +249,7 @@
         "type": "influxdb",
         "uid": "ieee33-influxdb"
       },
-      "description": "OLTC feeder transformer tap position (integer steps, range -5 to +5). The controller uses line-drop compensation: it regulates a downstream reference bus (idx 17, end of main trunk) into [0.99, 1.01] pu, so the tap actively switches across the day — boosting (more negative tap raises LV voltage) at evening peak and backing off under midday DER. Sign: tap is on the HV side, so NEGATIVE tap = BOOST (raises feeder voltage), POSITIVE tap = BUCK (lowers it). Normally the controller rides -1 to -4 (lifting the laterals to a day-wide vmin ~0.985 pu). TWO forced DISTURBANCE EVENTS are injected for state-estimator stress-testing (config.OLTC_EVENTS): (1) OVER-voltage at 02:00-02:45 (steps 8-11) — tap pinned to -5 (max boost), vmax steps up to ~1.05; (2) UNDER-voltage at 18:30-19:30 (steps 74-77) — tap pinned to +5 (max buck), bus voltages collapse to ~0.90, then snap back. The buck event is deeper because it stacks with the load-driven voltage drop, while the boost has only +5% headroom.",
+      "description": "OLTC feeder transformer tap position (integer steps, range -5 to +5). The controller uses line-drop compensation: it regulates a downstream reference bus (idx 17, end of main trunk) into [0.99, 1.01] pu, so the tap actively switches across the day — boosting (more negative tap raises LV voltage) at evening peak and backing off under midday DER. Range ±10% (tap -10..+10, 1% steps). Sign: tap is on the HV side, so NEGATIVE tap = BOOST (raises feeder voltage), POSITIVE tap = BUCK (lowers it). With high DER (~6.8 MW), the controller swings BOTH ways over the day: it BUCKS (positive tap ~+1/+2) at midday to fight reverse-flow over-voltage, and BOOSTS (negative tap ~-2/-3) in the evening to support load. TWO forced DISTURBANCE EVENTS are injected for state-estimator stress-testing (config.OLTC_EVENTS): (1) OVER-voltage at 11:30-12:15 (steps 46-49) — during midday reverse flow the tap is pinned to -10 (max boost), so +10% stacks on the DER-elevated feeder -> vmax ~1.14; (2) UNDER-voltage at 18:30-19:30 (steps 74-77) - tap pinned to +10 (max buck), bus voltages collapse to ~0.87, then snap back.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -268,8 +268,8 @@
           "unit": "short",
           "displayName": "Tap Position",
           "decimals": 0,
-          "min": -6,
-          "max": 6,
+          "min": -11,
+          "max": 11,
           "noValue": "0"
         },
         "overrides": []
@@ -287,7 +287,7 @@
           "refId": "A"
         }
       ],
-      "title": "OLTC Tap Position (integer steps, -5 to +5)",
+      "title": "OLTC Tap Position (integer steps, -10 to +10)",
       "type": "timeseries"
     }
   ],
