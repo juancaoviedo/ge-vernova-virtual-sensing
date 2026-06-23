@@ -149,7 +149,7 @@ deliverable maps to exactly one phase; no requirement is orphaned.
   5. A provisioned Grafana dashboard renders the 96-step evolution of the key variables without manual setup
   6. The runner is deterministic, repeatable, and documented (README) so the measurement set regenerates on demand
 **Plans**: 5 plans
-- [ ] 08-01-PLAN.md — Scaffold (uv project + config) + infra-only Docker Compose (InfluxDB 2.9.1 + Grafana 11.6.15) + pin TARGET_DATE/DG-scaling (Wave 1)
+- [x] 08-01-PLAN.md — Scaffold (uv project + config) + infra-only Docker Compose (InfluxDB 2.9.1 + Grafana 11.6.15) + pin TARGET_DATE/DG-scaling (Wave 1)
 - [ ] 08-02-PLAN.md — pandapower enhanced IEEE 33-bus builder (DG + RPC shunts + series feeder OLTC) + Baran & Wu base-case validation (Wave 2)
 - [ ] 08-03-PLAN.md — InfluxDB helpers + one-time OPSD profile ingest (96 points; halt+notify, no fallback) + programmatic state bucket (Wave 2)
 - [ ] 08-04-PLAN.md — 96-step driver: read profiles from InfluxDB, OLTC-regulated power flow per step, full-state capture, persist + determinism check (Wave 3)
@@ -170,4 +170,4 @@ Phases execute in numeric order: 0 → 1 → 2 → 3 → 4 → 5 → 6 → 7 →
 | 5. Federated Architectures & Security | 3/3 | Complete   | 2026-06-14 |
 | 6. Synthesis, Drills & Mock Interview | 6/6 | Complete    | 2026-06-16 |
 | 7. Integrated HTML Study Site | 4/4 | Complete    | 2026-06-15 |
-| 8. IEEE 33-Bus DER Measurement Source | 0/5 | Planned | - |
+| 8. IEEE 33-Bus DER Measurement Source | 1/5 | In Progress|  |
