@@ -12,3 +12,8 @@ __pycache__/
 # Raw website crawl artifacts (the converted markdown/ is kept; the raw mirror is noise)
 summaries/intelligrid-architecture/mirror/
 summaries/intelligrid-architecture/wget-crawl.log
+
+# Phase 8 System 1
+system1-measurement-source/.env
+system1-measurement-source/.venv/
+*.egg-info/
