@@ -140,7 +140,7 @@ deliverable maps to exactly one phase; no requirement is orphaned.
 ### Phase 8: IEEE 33-Bus DER Measurement Source
 **Goal**: A re-runnable "ground-truth" measurement source exists — the radial, balanced enhanced IEEE 33-bus network with renewable DER (solar+wind at buses 18/22/25/33), RPC shunts at 18/33, and a feeder OLTC + phase shifter (per `.planning/research/articles/ieee33.pdf` / `case33.xlsx`) modeled in PandaPower, driven through a 96-step (15-minute) day whose load+solar+wind profiles are ingested once from the open-power-system-data 15-min set into InfluxDB and read back from there at run time, with the full power-flow state registered at every step, persisted to local InfluxDB, and visualized via a provisioned Grafana dashboard. This is **System 1** (the measurement source) in a two-system design; **System 2** (the virtual-sensing module that estimates state from the measurements) is explicitly OUT OF SCOPE and handled in a later phase. Decisions are locked in `08-SPEC.md` (ambiguity 0.13).
 **Depends on**: Phase 7
-**Requirements**: 7 locked in 08-SPEC.md (run /gsd-discuss-phase 8 next)
+**Requirements**: SPEC-1..SPEC-7 (locked in 08-SPEC.md)
 **Success Criteria** (what must be TRUE):
   1. A PandaPower model of the radial balanced enhanced IEEE 33-bus system — renewable DG `sgen` at 18/22/25/33, RPC shunts at 18 (0.4 MVAr) & 33 (0.6 MVAr), feeder OLTC + phase shifter — runs a converging Newton-Raphson power flow from a single Python entry point
   2. The 15-min open-power-system-data profiles (DE load/solar/wind) are ingested once into InfluxDB (96 points/day); if the source is unreachable the step halts and notifies (no synthetic/xlsx fallback)
@@ -148,8 +148,12 @@ deliverable maps to exactly one phase; no requirement is orphaned.
   4. Each snapshot's full power-flow state (bus |V|/angle, line P/Q & loading, slack feed-in, DER output, OLTC tap, losses) is written to local InfluxDB started via Docker Compose
   5. A provisioned Grafana dashboard renders the 96-step evolution of the key variables without manual setup
   6. The runner is deterministic, repeatable, and documented (README) so the measurement set regenerates on demand
-**Plans**: TBD
-- [ ] TBD (run /gsd-plan-phase 8 to break down)
+**Plans**: 5 plans
+- [ ] 08-01-PLAN.md — Scaffold (uv project + config) + infra-only Docker Compose (InfluxDB 2.9.1 + Grafana 11.6.15) + pin TARGET_DATE/DG-scaling (Wave 1)
+- [ ] 08-02-PLAN.md — pandapower enhanced IEEE 33-bus builder (DG + RPC shunts + series feeder OLTC) + Baran & Wu base-case validation (Wave 2)
+- [ ] 08-03-PLAN.md — InfluxDB helpers + one-time OPSD profile ingest (96 points; halt+notify, no fallback) + programmatic state bucket (Wave 2)
+- [ ] 08-04-PLAN.md — 96-step driver: read profiles from InfluxDB, OLTC-regulated power flow per step, full-state capture, persist + determinism check (Wave 3)
+- [ ] 08-05-PLAN.md — Grafana auto-provisioning (Flux datasource + SPEC-panel dashboard) + Makefile + README runbook + end-to-end human-verify checkpoint (Wave 4)
 
 ## Progress
 
@@ -166,4 +170,4 @@ Phases execute in numeric order: 0 → 1 → 2 → 3 → 4 → 5 → 6 → 7 →
 | 5. Federated Architectures & Security | 3/3 | Complete   | 2026-06-14 |
 | 6. Synthesis, Drills & Mock Interview | 6/6 | Complete    | 2026-06-16 |
 | 7. Integrated HTML Study Site | 4/4 | Complete    | 2026-06-15 |
-| 8. IEEE 33-Bus DER Measurement Source | 0/TBD | Not started | - |
+| 8. IEEE 33-Bus DER Measurement Source | 0/5 | Planned | - |
