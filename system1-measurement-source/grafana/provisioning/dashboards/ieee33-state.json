@@ -142,7 +142,7 @@
             "showPoints": "never",
             "spanNulls": false
           },
-          "unit": "watt",
+          "unit": "MW",
           "displayName": "Total Losses (MW)",
           "decimals": 4
         },
@@ -181,7 +181,7 @@
             "showPoints": "never",
             "spanNulls": false
           },
-          "unit": "watt",
+          "unit": "MW",
           "decimals": 4,
           "min": 0
         },
@@ -222,7 +222,7 @@
             "showPoints": "never",
             "spanNulls": false
           },
-          "unit": "watt",
+          "unit": "MW",
           "displayName": "Slack Feed-in (MW)",
           "decimals": 4
         },
@@ -249,7 +249,7 @@
         "type": "influxdb",
         "uid": "ieee33-influxdb"
       },
-      "description": "OLTC feeder transformer tap position (integer steps, range -5 to +5). Tap 0 = neutral (1.0 pu ratio). Positive tap = raise LV voltage; negative tap = lower LV voltage. Steps whenever LV side drifts outside the 0.95-1.05 pu deadband. Note: with DG_SCALE_FACTOR=2.8, the LV side stays within the deadband all day on this date (OLTC stays at 0), while buses 12-15 dip to ~0.949 pu at peak evening.",
+      "description": "OLTC feeder transformer tap position (integer steps, range -5 to +5). The controller uses line-drop compensation: it regulates a downstream reference bus (idx 17, end of main trunk) into [0.99, 1.01] pu, so the tap actively switches across the day — boosting (more negative tap raises LV voltage) at evening peak and backing off under midday DER. On 2017-06-07 the tap ranges -1 to -4 (4 distinct positions); this also lifts the sagging laterals so the day-wide vmin is ~0.985 pu (>= 0.95).",
       "fieldConfig": {
         "defaults": {
           "color": {
