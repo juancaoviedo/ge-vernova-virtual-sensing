@@ -1,0 +1,41 @@
+# LOCAL DEV STACK ONLY. ieee33-dev-token / admin passwords are fixed dev credentials, NOT production secrets. Ports bound to 127.0.0.1.
+
+services:
+  influxdb:
+    image: influxdb:2.9.1
+    ports:
+      - "127.0.0.1:8086:8086"      # SECURITY: bind to localhost only, not 0.0.0.0
+    environment:
+      DOCKER_INFLUXDB_INIT_MODE: setup
+      DOCKER_INFLUXDB_INIT_USERNAME: admin
+      DOCKER_INFLUXDB_INIT_PASSWORD: ieee33-admin-pw   # local dev only
+      DOCKER_INFLUXDB_INIT_ORG: ieee33
+      DOCKER_INFLUXDB_INIT_BUCKET: profiles            # creates ONLY profiles; 'state' created programmatically (Plan 03)
+      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: ieee33-dev-token
+    volumes:
+      - influxdb-data:/var/lib/influxdb2
+      - influxdb-config:/etc/influxdb2
+    healthcheck:
+      test: ["CMD", "influx", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  grafana:
+    image: grafana/grafana:11.6.15
+    ports:
+      - "127.0.0.1:3000:3000"      # SECURITY: localhost only
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_AUTH_ANONYMOUS_ENABLED: "true"   # local-only convenience; no login for demo
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning   # Plan 05 fills this dir
+      - grafana-data:/var/lib/grafana
+    depends_on:
+      influxdb:
+        condition: service_started
+
+volumes:
+  influxdb-data:
+  influxdb-config:
+  grafana-data:
