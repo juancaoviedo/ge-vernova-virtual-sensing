@@ -155,12 +155,23 @@ OLTC_VM_UPPER_PU    = 1.01         # pu
 # those steps. This injects a sharp, "breaking" voltage discontinuity into the ground
 # truth: the feeder jumps, holds, then snaps back when the controller resumes.
 # Empty list ([]) = clean baseline, no forced events.
-# Default: at evening peak (steps 74-77 = 18:30-19:30, where the controller naturally sits
-# at tap -4) force the tap to +5 for 4 steps (1 h), then release back to ~-4. That is a
-# 9-step (~9 %) swing at the regulated side — a large, abrupt disturbance.
+#
+# TAP SIGN (this transformer has the tap on the HV side):
+#   tap_pos NEGATIVE = BOOST  → RAISES feeder voltage (tap -5 = max boost, +5% at LV)
+#   tap_pos POSITIVE = BUCK   → LOWERS feeder voltage (tap +5 = max buck,  -5% at LV)
+#
+# Two events, well separated:
+#   1. OVER-voltage: light-load early morning (steps 8-11 = 02:00-02:45, controller ≈ -2),
+#      force tap -5 (MAX BOOST). vmax steps up to ~1.05 (crosses the upper band). Boost is
+#      capped at +5 %, so a boost-only over-voltage tops out near 1.05 on this day.
+#   2. UNDER-voltage: evening peak (steps 74-77 = 18:30-19:30, controller ≈ -4), force tap +5
+#      (MAX BUCK). The -5 % buck STACKS with the load-driven drop → vmin collapses to ~0.90.
+# (The under-voltage event is deeper because the buck adds to the natural feeder drop, while
+# the boost has only +5 % of headroom above a ~1.0 light-load feeder — a real asymmetry.)
 # ---------------------------------------------------------------------------
 OLTC_EVENTS = [
-    {"start_step": 74, "end_step": 78, "tap_pos": 5},
+    {"start_step": 8,  "end_step": 12, "tap_pos": -5},  # 02:00-02:45  MAX BOOST → over-voltage (~1.05)
+    {"start_step": 74, "end_step": 78, "tap_pos": 5},   # 18:30-19:30  MAX BUCK  → under-voltage (~0.90)
 ]
 
 # ---------------------------------------------------------------------------
