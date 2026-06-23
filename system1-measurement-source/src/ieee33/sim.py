@@ -193,18 +193,14 @@ def main() -> None:
         )
         oob_buses = list(state["res_bus"][oob_mask].index)
         if oob_buses:
-            # Per environment notes: band violations are an honest physics result, NOT a
-            # simulation error.  The Baran & Wu feeder has heavy lateral impedance; at
-            # evening peak loading (high load_pu, near-zero solar_pu) buses 12-15 dip
-            # marginally below 0.95 pu (~0.948-0.949 pu).  The OLTC monitors bus 0
-            # (which stays within the deadband), so it never taps to compensate.
-            # Record as observation-issues for the summary; do NOT add to the hard
-            # failure list (oob_issues tracked separately and reported, not fatal).
+            # With the line-drop-compensation OLTC (regulates a downstream reference
+            # bus to ~1.0 pu) the day-wide vmin is ~0.985 pu, so this branch is not
+            # expected to fire.  If it does, record it as an observation for the
+            # summary (non-fatal) rather than aborting the run.
             oob_observations.append(
-                f"step {i:02d} ({ts}): buses {oob_buses} marginally out of band "
+                f"step {i:02d} ({ts}): buses {oob_buses} out of band "
                 f"[{config.VBAND_LOW}, {config.VBAND_HIGH}] "
-                f"(vmin={vmin:.4f}, vmax={vmax:.4f}) — "
-                "honest physics: lateral impedance drop, OLTC monitors bus 0 only"
+                f"(vmin={vmin:.4f}, vmax={vmax:.4f})"
             )
 
         # Track OLTC activity (Pitfall 5)
@@ -242,26 +238,25 @@ def main() -> None:
             f"Only {converged_steps}/{config.N_STEPS} steps converged"
         )
 
-    # Assert OLTC actually regulated at least once (Pitfall 5).
-    # Per environment notes: if voltages stay in-band all day (bus 0 never leaves
-    # 0.95–1.05 deadband), the OLTC never taps — this is physically honest, not a failure.
-    # Report as an observation only; do NOT add to issues (do not abort the run).
+    # OLTC-activity check (Pitfall 5).  The line-drop-compensation controller regulates
+    # a downstream reference bus, so the tap is expected to switch across the day
+    # (typically -1..-4 on this date).  If the tap never moves, that now signals a
+    # regression (e.g. tap_changer_type unset → inert tap), so flag it as a hard issue.
     if max_tap_pos == 0:
-        print(
-            "OLTC-OBSERVATION: tap_pos == 0 for all 96 steps. "
-            "Bus 0 (LV side) stayed within the 0.95–1.05 deadband all day — "
-            "the OLTC had no need to regulate. "
-            "This is physically consistent: DG injection is moderate "
-            f"(solar_max≈0.474, wind_mean≈0.708, nameplate×{config.DG_SCALE_FACTOR}), "
-            "loads stay below VBAND_HIGH=1.05, and the Baran & Wu feeder impedance "
-            "drops voltage toward the ends rather than raising it above 1.05 at bus 0. "
-            "Documented in SUMMARY.md as a known honest observation (environment notes)."
+        issues.append(
+            "OLTC never tapped (max|tap_pos| == 0 across all 96 steps). The OLTC is "
+            "expected to switch with the daily load/DER cycle. Check that "
+            "net.trafo.tap_changer_type is set ('Ratio') and FeederTapControl is attached."
         )
 
     # Assert state bucket has exactly 96 points for bus 18 (SPEC-6 read-back)
+    # Scope the read-back to TARGET_DATE (NOT range(start: 0)) so a re-run after a
+    # TARGET_DATE change does not over-count stale points from a previous date and
+    # raise a false assertion failure.
     flux_readback = (
         f'from(bucket: "{config.STATE_BUCKET}")\n'
-        f'  |> range(start: 0)\n'
+        f'  |> range(start: {config.TARGET_DATE}T00:00:00Z, '
+        f'stop: {config.TARGET_DATE}T23:59:59Z)\n'
         f'  |> filter(fn: (r) => r._measurement == "bus")\n'
         f'  |> filter(fn: (r) => r.bus_id == "17")\n'
         f'  |> filter(fn: (r) => r._field == "vm_pu")'
