@@ -57,7 +57,7 @@
           },
           "unit": "short",
           "decimals": 4,
-          "min": 0.90,
+          "min": 0.88,
           "max": 1.10
         },
         "overrides": []
@@ -249,7 +249,7 @@
         "type": "influxdb",
         "uid": "ieee33-influxdb"
       },
-      "description": "OLTC feeder transformer tap position (integer steps, range -5 to +5). The controller uses line-drop compensation: it regulates a downstream reference bus (idx 17, end of main trunk) into [0.99, 1.01] pu, so the tap actively switches across the day — boosting (more negative tap raises LV voltage) at evening peak and backing off under midday DER. On 2017-06-07 the tap ranges -1 to -4 (4 distinct positions); this also lifts the sagging laterals so the day-wide vmin is ~0.985 pu (>= 0.95).",
+      "description": "OLTC feeder transformer tap position (integer steps, range -5 to +5). The controller uses line-drop compensation: it regulates a downstream reference bus (idx 17, end of main trunk) into [0.99, 1.01] pu, so the tap actively switches across the day — boosting (more negative tap raises LV voltage) at evening peak and backing off under midday DER. On 2017-06-07 the tap ranges -1 to -4 (lifting the sagging laterals to a day-wide vmin ~0.985 pu). NOTE: a forced OLTC DISTURBANCE EVENT is injected at 18:30-19:30 (steps 74-77) — the tap is pinned to +5, collapsing bus voltages to ~0.90 pu, then snaps back. This is a deliberate 'breaking change' for stress-testing the downstream state estimator (config.OLTC_EVENTS).",
       "fieldConfig": {
         "defaults": {
           "color": {

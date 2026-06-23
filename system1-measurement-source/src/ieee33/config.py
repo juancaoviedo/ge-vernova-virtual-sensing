@@ -86,14 +86,36 @@ RPC_SHUNTS = {17: -0.4, 32: -0.6}  # {pp_bus_idx: q_mvar}  negative = capacitive
 TIE_LINE_IDX = [32, 33, 34]        # pandapower line indices; in_service=False for radial
 
 # ---------------------------------------------------------------------------
-# Line thermal rating
-# case33bw ships max_i_ka = 99999 (placeholder) on every line, so loading_percent
-# comes out ≈ 0.0001 % (meaningless). Set a nominal 12.66 kV feeder conductor
-# ampacity so loading_percent is realistic (trunk near the substation ≈ 40-50 % at
-# peak, tapering toward the laterals). Affects loading_percent only — NOT the power
-# flow solution (vm_pu / P / Q are unchanged by the rating).
+# Line thermal ratings (ampacity) — inferred per-line from the real impedance.
+#
+# The benchmark provides NO line ratings (case33.xlsx: "no line capacity limitation";
+# case33bw ships max_i_ka=99999 placeholder → loading_percent ≈ 0). Rather than a flat
+# guess, we infer each line's conductor from its real resistance and use that conductor's
+# real nameplate ampacity:
+#   R = ρ·L/A  →  R is a proxy for cross-section A  →  bigger conductor = lower R = higher
+#   ampacity.  For each line we pick the standard ACSR conductor whose AC resistance is
+#   closest to the line's r_ohm_per_km, and assign its ampacity to max_i_ka.
+# This affects loading_percent ONLY — the power-flow solution (vm_pu/P/Q) is unchanged.
+#
+# Representative ACSR (aluminium) distribution conductors: (name, R_ohm_per_km @75°C AC,
+# ampacity_kA @75°C conductor / 25°C ambient / light wind+sun). Values are standard
+# tabulated ratings (Aluminum Association / typical utility tables); used as a transparent
+# lookup, not a precise thermal study.
 # ---------------------------------------------------------------------------
-LINE_MAX_I_KA = 0.4                 # kA   nominal feeder conductor ampacity (~400 A)
+ACSR_CONDUCTORS = [
+    # name            R_ohm_per_km   ampacity_kA
+    ("Drake 795",       0.0827,        0.907),
+    ("Grosbeak 636",    0.1027,        0.795),
+    ("Dove 556.5",      0.1180,        0.726),
+    ("Hawk 477",        0.1367,        0.659),
+    ("Linnet 336.4",    0.1939,        0.530),
+    ("Partridge 266.8", 0.2446,        0.457),
+    ("Penguin 4/0",     0.3676,        0.340),
+    ("Quail 2/0",       0.5837,        0.270),
+    ("Raven 1/0",       0.7360,        0.230),
+    ("Sparrow #2",      1.1700,        0.180),
+    ("Swan #4",         1.8600,        0.140),
+]
 
 # ---------------------------------------------------------------------------
 # Feeder transformer (OLTC + phase shifter) parameters
@@ -125,6 +147,21 @@ TAP_CHANGER_TYPE    = "Ratio"
 OLTC_REF_BUS        = 17            # pandapower idx (article bus 18, end of main trunk) — regulated bus
 OLTC_VM_LOWER_PU    = 0.99         # pu    regulate OLTC_REF_BUS into [0.99, 1.01] (1.0 ±1%)
 OLTC_VM_UPPER_PU    = 1.01         # pu
+
+# ---------------------------------------------------------------------------
+# OLTC disturbance events (for stress-testing the downstream state estimator, System 2)
+# Each event FORCES the tap to a fixed position over the step range [start_step, end_step)
+# (0-indexed, inclusive start / exclusive end), overriding the line-drop controller for
+# those steps. This injects a sharp, "breaking" voltage discontinuity into the ground
+# truth: the feeder jumps, holds, then snaps back when the controller resumes.
+# Empty list ([]) = clean baseline, no forced events.
+# Default: at evening peak (steps 74-77 = 18:30-19:30, where the controller naturally sits
+# at tap -4) force the tap to +5 for 4 steps (1 h), then release back to ~-4. That is a
+# 9-step (~9 %) swing at the regulated side — a large, abrupt disturbance.
+# ---------------------------------------------------------------------------
+OLTC_EVENTS = [
+    {"start_step": 74, "end_step": 78, "tap_pos": 5},
+]
 
 # ---------------------------------------------------------------------------
 # Validation constants (D-14)

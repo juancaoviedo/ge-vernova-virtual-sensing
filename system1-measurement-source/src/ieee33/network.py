@@ -21,6 +21,7 @@ Effect:       Returns a built pandapowerNet ready for power-flow simulation.
               No I/O, no side effects, no prints.
 """
 
+import numpy as np
 import pandapower as pp
 import pandapower.networks as pn
 from pandapower.control.basic_controller import Controller
@@ -94,7 +95,9 @@ def build_enhanced_33bus() -> tuple[pp.pandapowerNet, int]:
       actively switches across the day.  PITFALL 2: do NOT leave ext_grid at bus 0
       and add the trafo elsewhere — the OLTC must be between the source and bus 0.
     - Line ratings: case33bw ships max_i_ka=99999 (placeholder); replaced with a
-      nominal feeder ampacity (config.LINE_MAX_I_KA) so loading_percent is meaningful.
+      PER-LINE ampacity inferred from each segment's real resistance via the nearest
+      standard ACSR conductor (config.ACSR_CONDUCTORS), so loading_percent is realistic
+      and graded (large trunk conductors, small laterals).
     - 4 DG sgens at buses 17/21 (solar) and 24/32 (wind); p_mw set to the scaled
       effective nameplate (0.56 MW each per D-04).  A p_mw_nameplate column is
       added so the simulation loop can scale by a 0–1 profile without recomputing
@@ -123,11 +126,20 @@ def build_enhanced_33bus() -> tuple[pp.pandapowerNet, int]:
     # so the topology contract is explicit and not reliant on case33bw defaults.
     net.line.loc[config.TIE_LINE_IDX, "in_service"] = False
 
-    # ---- 2b. Set realistic line thermal ratings ----
-    # case33bw ships max_i_ka=99999 (placeholder) on every line → loading_percent ≈ 0.
-    # Apply a nominal 12.66 kV feeder ampacity so loading_percent is meaningful.
-    # This affects loading_percent ONLY — the power-flow solution is unchanged.
-    net.line["max_i_ka"] = config.LINE_MAX_I_KA
+    # ---- 2b. Per-line ampacity inferred from the real impedance (nearest ACSR conductor) ----
+    # case33bw ships max_i_ka=99999 (placeholder) → loading_percent ≈ 0; the benchmark defines
+    # no ratings. R = ρ·L/A makes resistance a proxy for conductor cross-section, so for each
+    # line we pick the standard ACSR conductor whose AC resistance is closest to the line's
+    # r_ohm_per_km and assign that conductor's real nameplate ampacity. Lower-R trunk lines get
+    # large conductors (high ampacity); high-R laterals get small ones. Affects loading_percent
+    # ONLY — the power-flow solution (vm_pu / P / Q) is unchanged by the rating.
+    cond_r = np.array([c[1] for c in config.ACSR_CONDUCTORS])
+    cond_a = np.array([c[2] for c in config.ACSR_CONDUCTORS])
+    cond_names = [c[0] for c in config.ACSR_CONDUCTORS]
+    r_vals = net.line["r_ohm_per_km"].to_numpy()
+    nearest = np.abs(r_vals[:, None] - cond_r[None, :]).argmin(axis=1)
+    net.line["max_i_ka"] = cond_a[nearest]
+    net.line["std_conductor"] = [cond_names[k] for k in nearest]  # transparency: inferred conductor
 
     # ---- 3. Assert base load totals match article peak demand (SPEC-1 acceptance) ----
     # case33bw loads are already at Baran & Wu peak; assert before any scaling.

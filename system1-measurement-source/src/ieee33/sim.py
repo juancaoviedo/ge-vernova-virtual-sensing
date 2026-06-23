@@ -34,7 +34,7 @@ from ieee33.network import build_enhanced_33bus
 # Per-step runner
 # ---------------------------------------------------------------------------
 
-def run_step(net, trafo_idx, base_p, base_q, load_pu, solar_pu, wind_pu) -> dict:
+def run_step(net, trafo_idx, base_p, base_q, load_pu, solar_pu, wind_pu, forced_tap=None) -> dict:
     """Scale loads and DGs, run power flow with OLTC, return full state dict.
 
     Args:
@@ -45,6 +45,9 @@ def run_step(net, trafo_idx, base_p, base_q, load_pu, solar_pu, wind_pu) -> dict
         load_pu:   float in [0, 1] — load profile scaling factor for this step.
         solar_pu:  float in [0, 1] — solar capacity-factor for this step.
         wind_pu:   float in [0, 1] — wind capacity-factor for this step.
+        forced_tap: optional int — if set, the OLTC tap is PINNED to this position and the
+                   line-drop controller is disabled for this step (a configured disturbance
+                   event). If None, the controller regulates normally (run_control=True).
 
     Returns:
         dict with keys:
@@ -65,8 +68,15 @@ def run_step(net, trafo_idx, base_p, base_q, load_pu, solar_pu, wind_pu) -> dict
         net.sgen.loc[wind_mask, "p_mw_nameplate"] * wind_pu
     )
 
-    # ---- power flow with OLTC controller (run_control=True activates DiscreteTapControl) ----
-    pp.runpp(net, algorithm="nr", calculate_voltage_angles=True, run_control=True)
+    # ---- power flow ----
+    # Normal step: run_control=True lets FeederTapControl regulate the OLTC.
+    # Disturbance event: pin the tap to forced_tap and disable control for this step,
+    # injecting a sharp voltage discontinuity into the ground truth.
+    if forced_tap is not None:
+        net.trafo.at[trafo_idx, "tap_pos"] = int(forced_tap)
+        pp.runpp(net, algorithm="nr", calculate_voltage_angles=True, run_control=False)
+    else:
+        pp.runpp(net, algorithm="nr", calculate_voltage_angles=True, run_control=True)
 
     # ---- read tap/shift from net.trafo (NOT res_trafo — Pitfall 6) ----
     tap_pos      = int(net.trafo.at[trafo_idx, "tap_pos"])
@@ -150,6 +160,15 @@ def main() -> None:
     converged_steps = 0
     max_tap_pos = 0          # track max |tap_pos| seen across the run; for OLTC-activity gate
 
+    # ---- build step → forced-tap map from configured OLTC disturbance events ----
+    forced_taps = {}
+    for ev in getattr(config, "OLTC_EVENTS", []):
+        for s in range(ev["start_step"], ev["end_step"]):
+            forced_taps[s] = ev["tap_pos"]
+    if forced_taps:
+        print(f"OLTC disturbance events active at steps {sorted(forced_taps)} "
+              f"(forced tap → {sorted(set(forced_taps.values()))}); controller overridden there.")
+
     # ---- 96-step sweep ----
     print(
         f"\n{'Step':>4}  {'UTC Time':<20}  {'Vmin':>6}  {'Vmax':>6}  "
@@ -170,8 +189,10 @@ def main() -> None:
         if ts.tzinfo is None:
             ts = ts.replace(tzinfo=timezone.utc)
 
-        # ---- run power flow ----
-        state = run_step(net, trafo_idx, base_p, base_q, load_pu, solar_pu, wind_pu)
+        # ---- run power flow (forced tap during a configured disturbance event) ----
+        forced = forced_taps.get(i)
+        state = run_step(net, trafo_idx, base_p, base_q, load_pu, solar_pu, wind_pu,
+                         forced_tap=forced)
 
         # ---- per-step validation ----
         if not net.converged:
@@ -197,10 +218,12 @@ def main() -> None:
             # bus to ~1.0 pu) the day-wide vmin is ~0.985 pu, so this branch is not
             # expected to fire.  If it does, record it as an observation for the
             # summary (non-fatal) rather than aborting the run.
+            evt_note = (f" — EXPECTED: forced OLTC disturbance event (tap={forced})"
+                        if forced is not None else "")
             oob_observations.append(
                 f"step {i:02d} ({ts}): buses {oob_buses} out of band "
                 f"[{config.VBAND_LOW}, {config.VBAND_HIGH}] "
-                f"(vmin={vmin:.4f}, vmax={vmax:.4f})"
+                f"(vmin={vmin:.4f}, vmax={vmax:.4f}){evt_note}"
             )
 
         # Track OLTC activity (Pitfall 5)
@@ -222,11 +245,12 @@ def main() -> None:
             state["system_dict"],
         )
 
-        # ---- console readout (every step) ----
+        # ---- console readout (every step; mark forced-event steps) ----
         loss = state["system_dict"]["total_loss_mw"]
+        evt_mark = " <EVENT" if forced is not None else ""
         print(
             f"{i:>4}  {str(ts)[:19]:<20}  {vmin:>6.4f}  {vmax:>6.4f}  "
-            f"{tap:>4}  {loss:>8.4f}"
+            f"{tap:>4}  {loss:>8.4f}{evt_mark}"
         )
 
     # ---- post-run validation gate (D-14 + Pitfall 5) ----
