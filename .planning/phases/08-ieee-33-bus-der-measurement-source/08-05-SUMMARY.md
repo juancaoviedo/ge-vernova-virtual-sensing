@@ -28,9 +28,9 @@ decisions:
   - "OLTC tap description documents honest physics: tap stays at 0 all day (LV bus within 0.95-1.05 deadband); buses 12-15 dip to ~0.949 pu at peak evening (steps 68-73)"
   - "Makefile clean target uses compose project prefix system1-measurement-source_ for all three volumes"
 metrics:
-  duration_minutes: 25
+  duration_minutes: 45
   completed_date: "2026-06-23"
-  tasks_completed: 2
+  tasks_completed: 3
   tasks_total: 3
   files_created: 5
   files_modified: 0
@@ -38,19 +38,19 @@ metrics:
 
 # Phase 08 Plan 05: Grafana Provisioning + Makefile + README Summary
 
-**One-liner:** Auto-provisioned Grafana 11.x dashboard with 6 SPEC panels over the InfluxDB `state` bucket (Flux queries, literal token, container DNS), plus a Makefile runbook and README documenting the full reproducible rhythm from a clean checkout.
+**One-liner:** Auto-provisioned Grafana 11.x dashboard with 6 SPEC panels over the InfluxDB `state` bucket (Flux queries, literal token, container DNS), plus a Makefile runbook and README — human-verified: all six panels render 96-step DE day data without manual setup (SPEC-7 / D-13 complete).
 
 ---
 
 ## Status
 
-**Tasks 1-2 complete.** Task 3 (human-verify checkpoint) paused for visual confirmation.
+**All 3 tasks complete. Task 3 (human-verify checkpoint) APPROVED.**
 
 | Task | Name | Status | Commit |
 |------|------|--------|--------|
 | 1 | Grafana provisioning (datasource + provider + dashboard JSON) | Complete | 1b6d448 |
 | 2 | Makefile + README (runbook + rhythm) | Complete | f6d6c03 |
-| 3 | Human-verify checkpoint | PAUSED — awaiting visual confirmation | — |
+| 3 | Human-verify checkpoint | APPROVED — all six SPEC panels rendered data | — (checkpoint) |
 
 ---
 
@@ -139,6 +139,34 @@ No new threat surface beyond the plan's declared threats (T-08-14, T-08-15, T-08
 
 ---
 
-## Self-Check: PENDING
+## Honest Physics Observations (carried from Wave-3 sim, recorded here for permanence)
 
-(Self-check will be completed after checkpoint approval in final state commit)
+These two observations were confirmed during the Wave-3 (Plan 04) simulation run and are visible in the Plan 05 dashboard. They are documented here so they are not lost between phases.
+
+### Observation 1 — OLTC tap stays at neutral (0) across all 96 steps
+
+The OLTC tap panel shows a flat line at 0 for the entire 2017-06-07 day. This is correct and expected behavior, not a query or dashboard defect.
+
+**Why:** The regulated LV-side bus (bus 0 in PandaPower, the substation secondary) remains within the 0.95–1.05 pu dead-band throughout the day. The DG_SCALE_FACTOR=2.8 scaling is large enough to cause visible midday reverse power flow and DER-bus voltage rise (to ~1.03 pu), but the regulated bus itself stays in-band — so the OLTC controller has no reason to tap.
+
+**Interview framing:** "The OLTC panel is flat — the substation bus held in-band all day. The interesting story is downstream: at the DER buses (17, 21, 24, 32) you can see voltages riding up to ~1.03 pu at midday as solar and wind push in, and the slack feed-in goes negative — that's the reverse power flow signature. A real distribution operator would monitor those DER-bus voltages for overvoltage, not the regulated LV side."
+
+### Observation 2 — Buses 12–15 dip to ~0.949 pu at peak evening (steps 68–73)
+
+Buses 12–15 are on the long Baran & Wu lateral branch (the 12→13→14→15 string), which carries load but has no DER injection. At peak evening demand (~17:00–18:30 local, corresponding to steps 68–73 of the 15-min UTC schedule), these buses dip marginally below the 0.95 pu lower threshold to approximately 0.949 pu.
+
+**Why:** The classic radial-feeder undervoltage phenomenon documented by Baran & Wu (1989): high X/R on the lateral, no local reactive support, peak load. The PandaPower model reproduces this faithfully without any correction.
+
+**Interview framing:** "The voltage-profile panel shows the Baran & Wu lateral-feeder dip — buses 12–15 touch ~0.949 pu at peak evening. That is exactly the under-observability problem DSSE + virtual sensing addresses: no AMI or µPMU on those laterals, yet the estimator needs to track whether they are in-band. This is the motivation for System 2."
+
+---
+
+## Self-Check: PASSED
+
+- [x] `system1-measurement-source/grafana/provisioning/datasources/influxdb.yml` — on disk (713 bytes)
+- [x] `system1-measurement-source/grafana/provisioning/dashboards/ieee33-state.json` — on disk (11 300 bytes)
+- [x] `system1-measurement-source/Makefile` — on disk (713 bytes)
+- [x] `system1-measurement-source/README.md` — on disk (8 742 bytes)
+- [x] Commit `1b6d448` — in git log (Task 1: Grafana provisioning)
+- [x] Commit `f6d6c03` — in git log (Task 2: Makefile + README)
+- [x] Task 3 human-verify checkpoint — APPROVED by user ("approved", all six panels rendered)
