@@ -1,0 +1,307 @@
+{
+  "__inputs": [],
+  "__requires": [
+    {
+      "type": "grafana",
+      "id": "grafana",
+      "name": "Grafana",
+      "version": "11.0.0"
+    },
+    {
+      "type": "datasource",
+      "id": "influxdb",
+      "name": "InfluxDB",
+      "version": "1.0.0"
+    },
+    {
+      "type": "panel",
+      "id": "timeseries",
+      "name": "Time series",
+      "version": ""
+    }
+  ],
+  "annotations": {
+    "list": []
+  },
+  "description": "IEEE 33-Bus DER Ground-Truth State: 96-step (15-min) power-flow snapshot from 2017-06-07, a high-DER DE day. Panels: bus voltage profile/envelope, line loadings, total losses, DG solar/wind output, slack feed-in (with reverse-power-flow midday), OLTC tap position.",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "ieee33-influxdb"
+      },
+      "description": "Bus voltage magnitudes (pu) for key DER buses (17, 21, 24, 32) and slack-side bus 0. Threshold lines at 0.95 and 1.05 pu mark the OLTC deadband. Physics: midday PV/wind injection pushes DER bus voltages toward/above 1.0 pu; OLTC taps to hold the deadband.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 5,
+            "showPoints": "never",
+            "spanNulls": false
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red",   "value": null },
+              { "color": "green", "value": 0.95 },
+              { "color": "red",   "value": 1.05 }
+            ]
+          },
+          "unit": "short",
+          "decimals": 4,
+          "min": 0.90,
+          "max": 1.10
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 0 },
+      "id": 1,
+      "options": {
+        "legend": { "calcs": ["min", "max", "mean"], "displayMode": "table", "placement": "bottom" },
+        "tooltip": { "mode": "multi", "sort": "none" },
+        "thresholds": {
+          "mode": "line",
+          "thresholds": [
+            { "color": "red", "value": 0.95 },
+            { "color": "red", "value": 1.05 }
+          ]
+        }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "influxdb", "uid": "ieee33-influxdb" },
+          "query": "from(bucket: \"state\")\n  |> range(start: 2017-06-07T00:00:00Z, stop: 2017-06-07T23:59:59Z)\n  |> filter(fn: (r) => r._measurement == \"bus\")\n  |> filter(fn: (r) => r._field == \"vm_pu\")\n  |> filter(fn: (r) => r.bus_id == \"0\" or r.bus_id == \"17\" or r.bus_id == \"21\" or r.bus_id == \"24\" or r.bus_id == \"32\")\n  |> sort(columns: [\"_time\"])",
+          "refId": "A"
+        }
+      ],
+      "title": "Bus Voltage Profile / Envelope (pu)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "ieee33-influxdb"
+      },
+      "description": "Line loading (%) for feeder trunk lines 0, 1, 2 and representative lateral lines 10, 20. Higher loading midday as DER injects power back through the feeder; peak loading occurs at peak evening demand (steps 68-73).",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 5,
+            "showPoints": "never",
+            "spanNulls": false
+          },
+          "unit": "percent",
+          "decimals": 1,
+          "min": 0
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 9, "w": 12, "x": 12, "y": 0 },
+      "id": 2,
+      "options": {
+        "legend": { "calcs": ["min", "max", "mean"], "displayMode": "table", "placement": "bottom" },
+        "tooltip": { "mode": "multi", "sort": "none" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "influxdb", "uid": "ieee33-influxdb" },
+          "query": "from(bucket: \"state\")\n  |> range(start: 2017-06-07T00:00:00Z, stop: 2017-06-07T23:59:59Z)\n  |> filter(fn: (r) => r._measurement == \"line\")\n  |> filter(fn: (r) => r._field == \"loading_percent\")\n  |> filter(fn: (r) => r.line_id == \"0\" or r.line_id == \"1\" or r.line_id == \"2\" or r.line_id == \"10\" or r.line_id == \"20\")\n  |> sort(columns: [\"_time\"])",
+          "refId": "A"
+        }
+      ],
+      "title": "Line Loadings (%)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "ieee33-influxdb"
+      },
+      "description": "Total system active power losses (MW). Losses dip at midday as DER generation reduces net feeder current; losses peak at evening demand peak when reverse-flow currents subside and load current maximises.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "orange"
+          },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "spanNulls": false
+          },
+          "unit": "watt",
+          "displayName": "Total Losses (MW)",
+          "decimals": 4
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 9 },
+      "id": 3,
+      "options": {
+        "legend": { "calcs": ["min", "max", "mean"], "displayMode": "list", "placement": "bottom" },
+        "tooltip": { "mode": "single", "sort": "none" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "influxdb", "uid": "ieee33-influxdb" },
+          "query": "from(bucket: \"state\")\n  |> range(start: 2017-06-07T00:00:00Z, stop: 2017-06-07T23:59:59Z)\n  |> filter(fn: (r) => r._measurement == \"system\")\n  |> filter(fn: (r) => r._field == \"total_loss_mw\")\n  |> sort(columns: [\"_time\"])",
+          "refId": "A"
+        }
+      ],
+      "title": "Total System Losses (MW)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "ieee33-influxdb"
+      },
+      "description": "Active power output (MW) for all four DG units by sgen_id. sgen_id 0/1 = solar (buses 17, 21) — bell-curve peaking at noon. sgen_id 2/3 = wind (buses 24, 32) — flatter profile driven by DE_wind_profile.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "spanNulls": false
+          },
+          "unit": "watt",
+          "decimals": 4,
+          "min": 0
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 9 },
+      "id": 4,
+      "options": {
+        "legend": { "calcs": ["min", "max", "mean"], "displayMode": "table", "placement": "bottom" },
+        "tooltip": { "mode": "multi", "sort": "none" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "influxdb", "uid": "ieee33-influxdb" },
+          "query": "from(bucket: \"state\")\n  |> range(start: 2017-06-07T00:00:00Z, stop: 2017-06-07T23:59:59Z)\n  |> filter(fn: (r) => r._measurement == \"sgen\")\n  |> filter(fn: (r) => r._field == \"p_mw\")\n  |> sort(columns: [\"_time\"])",
+          "refId": "A"
+        }
+      ],
+      "title": "DG Output — Solar & Wind (MW)",
+      "type": "timeseries",
+      "tags": ["sgen"]
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "ieee33-influxdb"
+      },
+      "description": "Slack bus (substation) active power feed-in (MW). Positive = substation supplying load. Negative = midday reverse power flow (DER generation > feeder demand; excess power flows toward the substation). A hallmark of high-DER distribution operation.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "blue"
+          },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "spanNulls": false
+          },
+          "unit": "watt",
+          "displayName": "Slack Feed-in (MW)",
+          "decimals": 4
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 9 },
+      "id": 5,
+      "options": {
+        "legend": { "calcs": ["min", "max", "mean"], "displayMode": "list", "placement": "bottom" },
+        "tooltip": { "mode": "single", "sort": "none" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "influxdb", "uid": "ieee33-influxdb" },
+          "query": "from(bucket: \"state\")\n  |> range(start: 2017-06-07T00:00:00Z, stop: 2017-06-07T23:59:59Z)\n  |> filter(fn: (r) => r._measurement == \"system\")\n  |> filter(fn: (r) => r._field == \"slack_p_mw\")\n  |> sort(columns: [\"_time\"])",
+          "refId": "A"
+        }
+      ],
+      "title": "Slack / Substation Feed-in (MW)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "ieee33-influxdb"
+      },
+      "description": "OLTC feeder transformer tap position (integer steps, range -5 to +5). Tap 0 = neutral (1.0 pu ratio). Positive tap = raise LV voltage; negative tap = lower LV voltage. Steps whenever LV side drifts outside the 0.95-1.05 pu deadband. Note: with DG_SCALE_FACTOR=2.8, the LV side stays within the deadband all day on this date (OLTC stays at 0), while buses 12-15 dip to ~0.949 pu at peak evening.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "purple"
+          },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 0,
+            "showPoints": "always",
+            "pointSize": 4,
+            "spanNulls": false,
+            "drawStyle": "line",
+            "lineInterpolation": "stepAfter"
+          },
+          "unit": "short",
+          "displayName": "Tap Position",
+          "decimals": 0,
+          "min": -6,
+          "max": 6,
+          "noValue": "0"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 7, "w": 24, "x": 0, "y": 17 },
+      "id": 6,
+      "options": {
+        "legend": { "calcs": ["min", "max", "last"], "displayMode": "list", "placement": "bottom" },
+        "tooltip": { "mode": "single", "sort": "none" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "influxdb", "uid": "ieee33-influxdb" },
+          "query": "from(bucket: \"state\")\n  |> range(start: 2017-06-07T00:00:00Z, stop: 2017-06-07T23:59:59Z)\n  |> filter(fn: (r) => r._measurement == \"system\")\n  |> filter(fn: (r) => r._field == \"tap_pos\")\n  |> sort(columns: [\"_time\"])",
+          "refId": "A"
+        }
+      ],
+      "title": "OLTC Tap Position (integer steps, -5 to +5)",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "tags": ["ieee33", "power-systems", "der", "pandapower"],
+  "templating": { "list": [] },
+  "time": {
+    "from": "2017-06-07T00:00:00.000Z",
+    "to": "2017-06-07T23:59:59.000Z"
+  },
+  "timepicker": {},
+  "timezone": "utc",
+  "title": "IEEE33 DER State — 2017-06-07 High-DER DE Day",
+  "uid": "ieee33-state-v1",
+  "version": 1
+}

@@ -1,0 +1,18 @@
+# LOCAL DEV ONLY — ieee33-dev-token is a fixed development credential, NOT a production secret.
+# Pitfall 8 / GitHub issue #89519: Grafana env-var substitution in secureJsonData is unreliable.
+# Hard-code the same literal token that DOCKER_INFLUXDB_INIT_ADMIN_TOKEN was set to.
+apiVersion: 1
+datasources:
+  - name: InfluxDB-IEEE33
+    type: influxdb
+    uid: ieee33-influxdb
+    access: proxy
+    url: http://influxdb:8086        # container-to-container service name (not localhost)
+    jsonData:
+      version: Flux
+      organization: ieee33
+      defaultBucket: state
+      tlsSkipVerify: true
+    secureJsonData:
+      token: ieee33-dev-token          # LITERAL string — do NOT use env-var substitution (Pitfall 8 / issue #89519)
+    isDefault: true
