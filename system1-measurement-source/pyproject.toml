@@ -16,6 +16,7 @@ dependencies = [
 ingest   = "ieee33.ingest:main"
 sim      = "ieee33.sim:main"
 validate = "ieee33.validate:main"
+fault-sim = "ieee33.fault_sim:main"
 
 [build-system]
 requires = ["hatchling"]
