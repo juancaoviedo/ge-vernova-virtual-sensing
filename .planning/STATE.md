@@ -3,11 +3,11 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: Phase 8.1 inserted (urgent) — not planned yet
-stopped_at: Completed 08-01-PLAN.md
-last_updated: "2026-06-24T16:47:58.176Z"
+stopped_at: Phase 8.1 context gathered
+last_updated: "2026-06-24T19:38:16.178Z"
 last_activity: 2026-06-23
 progress:
-  total_phases: 10
+  total_phases: 11
   completed_phases: 8
   total_plans: 28
   completed_plans: 28
@@ -121,6 +121,7 @@ Recent decisions affecting current work:
 - Phase 7 added: Integrated HTML Study Site — consolidate all phase study notes + research HTML/diagram assets (AGMS architecture/patents, study notes, demo explanations and references) into one navigable HTML site for revision
 - Phase 8 added (2026-06-22): IEEE 33-Bus DER Measurement Source — first hands-on build phase (pivot from study notes). System 1 of a two-system design: recreate the IEEE 33-bus network with renewable DER in PandaPower (per `.planning/research/articles/ieee33.pdf` / `case33.xlsx`; cross-ref repo Chinmaya-J-Jena/der_load_flow_IEEE33bus), drive a 144-step (10-min) daily profile, persist every power-flow snapshot to a local InfluxDB via Docker Compose. Virtual-sensing module (System 2) deferred to a later phase.
 - Phase 08.1 inserted after Phase 8: System 1 fault & reconfiguration scenario: a separate short quasi-static (steady-state, NOT EMT) simulation reusing System 1 — fault -> isolate -> reconfigure (tie-line) -> restore on the IEEE 33-bus net, written to a dedicated InfluxDB bucket + Grafana dashboard, to stress-test the System 2 estimator. Scope is ONLY the System 1 failure scenario (measurement system, System 2 estimator, System 3 self-healing loop are later/out of scope). (URGENT)
+- Phase 9 added (2026-06-24): Measurement System (Observability Layer) — config-driven sensor-model layer between System 1 and System 2. Reads System 1 ground truth from InfluxDB, applies sensor placement (`well_observed` / `realistic_sparse`) + noise (`gaussian` / `gaussian_outliers` / `instrument`) + sampling (`snapshot` / `multirate_async`) over both the static day (`state`) and the failure scenario (`fault_event`), writes to a dedicated `measurements` bucket + Grafana dashboards. State formulation = node-voltage. Scoring oracle kept separate. **Hard schema dependency on Phase 8.1's `fault_event` metadata (must freeze first).** Streaming out of scope. Locked decisions in ROADMAP Phase 9.
 
 ### Pending Todos
 
@@ -151,6 +152,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-06-23T05:35:38.393Z
-Stopped at: Completed 08-01-PLAN.md
-Resume file: None
+Last session: 2026-06-24T19:38:16.158Z
+Stopped at: Phase 8.1 context gathered
+Resume file: .planning/phases/08.1-system-1-fault-and-reconfiguration-scenario/08.1-CONTEXT.md
