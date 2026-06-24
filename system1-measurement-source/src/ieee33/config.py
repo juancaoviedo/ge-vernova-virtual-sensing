@@ -89,6 +89,25 @@ RPC_SHUNTS = {17: -0.4, 32: -0.6}  # {pp_bus_idx: q_mvar}  negative = capacitive
 TIE_LINE_IDX = [32, 33, 34]        # pandapower line indices; in_service=False for radial
 
 # ---------------------------------------------------------------------------
+# Fault / reconfiguration scenario constants (Phase 8.1)
+# Article-N = pandapower idx N-1 (0-indexed). D-07, D-08, D-09, D-10.
+# ---------------------------------------------------------------------------
+FAULT_LINE_IDX      = 7                   # pp line idx 7 = article branch 8->9 (Section-8 fault), D-07
+FAULT_DEAD_BUS_IDX  = list(range(8, 18))  # pp bus idx 8..17 = article buses 9-18 (dead zone), D-07
+FAULT_TIE_IDX       = 34                  # pp line idx 34 = article tie 12<->22 (primary restore tie), D-08
+FAULT_N_STEPS       = 40                  # total snapshots in the window (D-09)
+FAULT_STEP_S        = 3                   # seconds between snapshots (D-09)
+FAULT_PRE_STEPS     = 13                  # pre_fault block length (D-09)
+FAULT_ISO_STEPS     = 7                   # faulted_isolated block length (D-09)
+FAULT_RST_STEPS     = 20                  # restored block length (D-09)
+FAULT_EVENING_PEAK_STEP = 72              # D-10: 96-step-day index whose OPSD UTC ts anchors the window
+FAULT_PHASE_PRE     = "pre_fault"         # D-02 phase tag values
+FAULT_PHASE_ISO     = "faulted_isolated"
+FAULT_PHASE_RST     = "restored"
+# Note (D-12 landmine): OLTC_REF_BUS=17 is INSIDE FAULT_DEAD_BUS_IDX (idx 8..17),
+# so the runner MUST pin the tap during the faulted_isolated block (run_control=False).
+
+# ---------------------------------------------------------------------------
 # Line thermal ratings (ampacity) — inferred per-line from the real impedance.
 #
 # The benchmark provides NO line ratings (case33.xlsx: "no line capacity limitation";
@@ -198,3 +217,4 @@ INFLUXDB_TOKEN   = os.getenv("INFLUXDB_TOKEN", "ieee33-dev-token")
 INFLUXDB_ORG     = os.getenv("INFLUXDB_ORG",   "ieee33")
 PROFILES_BUCKET  = "profiles"                   # one-time ingest of 96-step load/solar/wind (D-06)
 STATE_BUCKET     = "state"                      # per-run power-flow snapshots (D-06)
+FAULT_EVENT_BUCKET = "fault_event"             # 40-step fault/reconfiguration scenario (Phase 8.1, D-naming-locked)
