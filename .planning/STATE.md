@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: milestone_complete
+status: Phase 8.1 inserted (urgent) — not planned yet
 stopped_at: Completed 08-01-PLAN.md
-last_updated: "2026-06-23T05:35:38.409Z"
+last_updated: "2026-06-24T16:47:58.176Z"
 last_activity: 2026-06-23
 progress:
-  total_phases: 9
-  completed_phases: 9
+  total_phases: 10
+  completed_phases: 8
   total_plans: 28
   completed_plans: 28
   percent: 100
@@ -21,13 +21,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-13)
 
 **Core value:** Juan walks into the interview able to connect his real experience to this role's exact requirements — and to the director's own patented work — with confidence and specifics.
-**Current focus:** Phase 08 — ieee-33-bus-der-measurement-source
+**Current focus:** Phase 08.1 — system-1-fault-and-reconfiguration-scenario
 
 ## Current Position
 
-Phase: 08
+Phase: 08.1
 Plan: Not started
-Status: Milestone complete
+Status: Phase 8.1 inserted (urgent) — not planned yet
 Last activity: 2026-06-23
 
 Progress: [██████████] 100%
@@ -120,6 +120,7 @@ Recent decisions affecting current work:
 
 - Phase 7 added: Integrated HTML Study Site — consolidate all phase study notes + research HTML/diagram assets (AGMS architecture/patents, study notes, demo explanations and references) into one navigable HTML site for revision
 - Phase 8 added (2026-06-22): IEEE 33-Bus DER Measurement Source — first hands-on build phase (pivot from study notes). System 1 of a two-system design: recreate the IEEE 33-bus network with renewable DER in PandaPower (per `.planning/research/articles/ieee33.pdf` / `case33.xlsx`; cross-ref repo Chinmaya-J-Jena/der_load_flow_IEEE33bus), drive a 144-step (10-min) daily profile, persist every power-flow snapshot to a local InfluxDB via Docker Compose. Virtual-sensing module (System 2) deferred to a later phase.
+- Phase 08.1 inserted after Phase 8: System 1 fault & reconfiguration scenario: a separate short quasi-static (steady-state, NOT EMT) simulation reusing System 1 — fault -> isolate -> reconfigure (tie-line) -> restore on the IEEE 33-bus net, written to a dedicated InfluxDB bucket + Grafana dashboard, to stress-test the System 2 estimator. Scope is ONLY the System 1 failure scenario (measurement system, System 2 estimator, System 3 self-healing loop are later/out of scope). (URGENT)
 
 ### Pending Todos
 

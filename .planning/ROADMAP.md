@@ -171,3 +171,13 @@ Phases execute in numeric order: 0 → 1 → 2 → 3 → 4 → 5 → 6 → 7 →
 | 6. Synthesis, Drills & Mock Interview | 6/6 | Complete    | 2026-06-16 |
 | 7. Integrated HTML Study Site | 4/4 | Complete    | 2026-06-15 |
 | 8. IEEE 33-Bus DER Measurement Source | 5/5 | Complete    | 2026-06-23 |
+
+### Phase 08.1: System 1 fault and reconfiguration scenario (INSERTED)
+
+**Goal:** [Urgent work - to be planned]
+**Requirements**: TBD
+**Depends on:** Phase 8
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd-plan-phase 08.1 to break down)
