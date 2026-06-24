@@ -181,3 +181,31 @@ Phases execute in numeric order: 0 → 1 → 2 → 3 → 4 → 5 → 6 → 7 →
 
 Plans:
 - [ ] TBD (run /gsd-plan-phase 08.1 to break down)
+
+### Phase 9: Measurement System (Observability Layer)
+
+**Goal:** Build the **measurement layer** between System 1 (ground-truth behaviour) and the future System 2 (state estimator). It reads System 1's full ground-truth state from InfluxDB, applies a **config-driven sensor model** (which buses/lines are instrumented, with what measurement class), corrupts it with **config-selectable noise**, samples it at the configured **cadence**, and writes the resulting measurement set (`z` + assumed σ + topology/switch metadata + phase tag) to a **new dedicated `measurements` InfluxDB bucket** tagged by experiment + scenario — plus provisioned Grafana dashboards of the observed states. Its job is to **destroy information realistically** (manufacture under-observability), not pass state through faithfully — that is what makes virtual sensing necessary. This is the "Measurement System" in Juan's multi-system design: System 1 (behaviour) → **Measurement System (P9)** → System 2 (estimator) → System 3 (self-healing). Interview tie: the AGMS perception edge — Inspector scouts streaming observations as POV frames.
+
+**Depends on:** Phase 8 (System 1 `state` bucket / 96-step day) **and Phase 8.1** (the `fault_event` bucket + its topology/event metadata schema — **must be frozen first; hard schema dependency**, schema still being finalized via /gsd-discuss-phase 8.1)
+**Requirements**: TBD (run /gsd-spec-phase 9)
+
+**Locked design decisions (from 2026-06-24 discussion):**
+- **State formulation = NODE-VOLTAGE** (V magnitude + angle); branch-current is awareness-only. Matches all study material + ORACS-covariance framing, handles PMU angles + topology change cleanly, and pandapower ground truth is already node-voltage.
+- **Config-driven knobs** (measurement-config, separate from System 1 config):
+  - **(a) Sensor placement** — 2 presets: `well_observed` (feeder-head SCADA + DER telemetry + several μPMUs + broad AMI; redundancy > 1) and `realistic_sparse` (feeder-head SCADA + DER + 2–3 μPMUs + AMI on ~30% of loads, rest pseudo; redundancy borderline — **headline scenario**).
+  - **(b) Experiment / data source** — switch between the **static day** (`state` bucket, 96 steps) and the **failure scenario** (`fault_event` bucket, 40 steps).
+  - **(c) Sampling mode** — **both** built & fully functional: `snapshot` (one consistent set per timestamp) and `multirate_async` (per-class cadence: PMU fast / SCADA medium / AMI slow → patchwork of differently-aged measurements, FASE-ready).
+  - **(d) Noise model** — 3 switchable: `gaussian` (white per-class %σ), `gaussian_outliers` (Gaussian + sparse gross errors → exercises bad-data detection), `instrument` (quantization + systematic bias + mild temporal correlation).
+- **Measurement-class taxonomy** = design space: SCADA, μPMU (|V|+angle), AMI, DER telemetry, **zero-injection virtual** (P=Q=0 near-exact, very high weight — IEEE-33 has few natural ones, designate some), **pseudo-measurements** (load-forecast at unmetered buses, large σ; the System 1 load **profile** is the natural pseudo mean). Each measurement: `{type, location, value=true+noise, assumed_sigma, class, timestamp}`.
+- **True σ vs assumed σ separable** in config (default equal) → enables later robustness-to-mis-specified-noise testing.
+- **Topology/switch metadata published alongside z** (in-service status + phase tag + dead-bus set). Static day = fixed/known topology; failure case = propagate 8.1's `fault_event` metadata.
+- **Scoring oracle kept SEPARATE** — measurement layer emits only `z` + topology + σ; ground truth stays in `state`/`fault_event` for later System-2-vs-System-1 comparison.
+- **Grafana**: provisioned dashboards over `measurements` showing observed states — one for the static full-day scenario, one for the failure scenario (true-vs-measured overlay; observed-vs-pseudo footprint).
+- **Determinism**: seeded noise. Reuse `system1-measurement-source/` repo, `uv`, the Docker InfluxDB+Grafana stack, `influx.py` helpers.
+
+**Out of scope:** System 2 (estimator), System 3 (self-healing loop), live streaming transport (NATS / MQTT / C37.118-over-UDP — optional later afterthought), any change to System 1's day or the fault scenario physics.
+
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd-spec-phase 9, then /gsd-plan-phase 9 to break down)
