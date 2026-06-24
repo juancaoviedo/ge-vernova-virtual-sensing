@@ -147,6 +147,7 @@ version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "influxdb-client" },
+    { name = "networkx" },
     { name = "numpy" },
     { name = "openpyxl" },
     { name = "pandapower" },
@@ -158,6 +159,7 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "influxdb-client", specifier = "==1.50.0" },
+    { name = "networkx", specifier = ">=3.0" },
     { name = "numpy", specifier = ">=1.26,<2.4" },
     { name = "openpyxl", specifier = ">=3.1" },
     { name = "pandapower", specifier = "==3.4.0" },
