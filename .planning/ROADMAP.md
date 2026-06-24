@@ -177,11 +177,11 @@ Phases execute in numeric order: 0 → 1 → 2 → 3 → 4 → 5 → 6 → 7 →
 **Goal:** Produce a separate, re-runnable, quasi-steady-state fault-and-reconfiguration dataset on the existing System 1 IEEE 33-bus model — replicating the article's Section-8 fault → isolate → tie-restore sequence as a 40-step (2-min @ 3-s), three-block window (pre_fault → faulted_isolated → restored) frozen at the evening-peak operating point, with full power-flow state plus topology/event metadata per snapshot, persisted to a dedicated `fault_event` InfluxDB bucket and its own provisioned Grafana dashboard — to stress-test the future System 2 estimator.
 **Requirements**: SPEC-1..SPEC-10 (see 08.1-SPEC.md); decisions D-01..D-18 (see 08.1-CONTEXT.md)
 **Depends on:** Phase 8
-**Plans:** 4 plans
+**Plans:** 2/4 plans executed
 
 Plans:
 - [x] 08.1-01-PLAN.md — Additive data-contract layer: fault constants + fault_event bucket in config.py, write_fault_step() in influx.py, fault-sim entry in pyproject.toml
-- [ ] 08.1-02-PLAN.md — The fault_sim.py runner: frozen evening-peak op-point, 40-step 3-block walk, fault/isolate/tie-restore, validation + determinism gates, console table
+- [x] 08.1-02-PLAN.md — The fault_sim.py runner: frozen evening-peak op-point, 40-step 3-block walk, fault/isolate/tie-restore, validation + determinism gates, console table
 - [ ] 08.1-03-PLAN.md — Auto-provisioned Grafana dashboard ieee33-fault-event.json (SPEC-8 minimums + 4 D-13 extras) over the fault_event bucket
 - [ ] 08.1-04-PLAN.md — README runbook (uv run fault-sim) + qualitative article-comparison note (SPEC-10)
 
