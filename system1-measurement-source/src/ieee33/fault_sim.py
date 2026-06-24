@@ -233,12 +233,17 @@ def run_fault_step(
     in_service_mask = net.line["in_service"]
     res_line_inservice = net.res_line[in_service_mask].copy()
 
+    # ---- energised buses only: pandapower sets dead-bus rows to NaN in res_bus ----
+    # Filter to in-service buses so callers never see NaN voltage values from the dead zone.
+    bus_in_service_mask = net.bus["in_service"]
+    res_bus_energised = net.res_bus[bus_in_service_mask].copy()
+
     # ---- system-level scalars (mirrors sim.run_step lines 89-106) ----
     total_load_mw  = float(net.res_load["p_mw"].sum())
     total_gen_mw   = float(net.res_sgen["p_mw"].sum() + net.res_ext_grid["p_mw"].sum())
     total_loss_mw  = float(net.res_line["pl_mw"].sum() + net.res_trafo["pl_mw"].sum())
-    vmin_pu        = float(net.res_bus["vm_pu"].min())
-    vmax_pu        = float(net.res_bus["vm_pu"].max())
+    vmin_pu        = float(res_bus_energised["vm_pu"].min())
+    vmax_pu        = float(res_bus_energised["vm_pu"].max())
     slack_p_mw     = float(net.res_ext_grid["p_mw"].iloc[0])
     slack_q_mvar   = float(net.res_ext_grid["q_mvar"].iloc[0])
 
@@ -253,7 +258,7 @@ def run_fault_step(
     }
 
     return {
-        "res_bus":            net.res_bus.copy(),
+        "res_bus":            res_bus_energised,
         "res_line_inservice": res_line_inservice,
         "res_sgen":           net.res_sgen.copy(),
         "res_ext_grid":       net.res_ext_grid.copy(),
@@ -426,7 +431,8 @@ def main() -> None:
         if not net.converged:
             issues.append(f"step {i:02d} ({phase}): power flow NOT converged")
 
-        energised_vm = net.res_bus["vm_pu"]
+        # Use state["res_bus"] (already filtered to in-service buses) for NaN check
+        energised_vm = state["res_bus"]["vm_pu"]
         if energised_vm.isna().any():
             issues.append(f"step {i:02d} ({phase}): NaN in energised bus vm_pu")
 
