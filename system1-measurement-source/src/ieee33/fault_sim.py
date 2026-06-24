@@ -527,8 +527,9 @@ def main() -> None:
             f">= pre_fault={pre_served_load:.4f} MW (expected drop)"
         )
     else:
+        iso_min_str = f"{min(iso_loads):.4f}" if iso_loads else "N/A"
         print(
-            f"D-16 served-load drop OK: iso_min={min(iso_loads) if iso_loads else 'N/A':.4f} MW "
+            f"D-16 served-load drop OK: iso_min={iso_min_str} MW "
             f"< pre_fault={pre_served_load:.4f} MW"
         )
 
