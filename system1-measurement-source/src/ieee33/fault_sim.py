@@ -156,7 +156,8 @@ def _select_restore_tie(
             print(f"  Restore tie selected: line idx {tie_idx}, vmin={achieved_vmin:.4f} pu")
             return tie_idx, achieved_vmin
 
-        except Exception:
+        except Exception as exc:
+            print(f"  tie_idx={tie_idx}: exception during probe ({type(exc).__name__}: {exc})")
             continue
 
     raise RuntimeError(
