@@ -203,3 +203,75 @@ Re-running `uv run sim` (or `make sim`) always produces the **identical 96-snaps
 InfluxDB overwrites existing points with the same measurement + tag + timestamp combination.
 There are no stochastic elements: the Newton-Raphson solver, OPSD profiles, and DG scaling
 are all deterministic. This ensures the interview demo is reproducible from any clean state.
+
+---
+
+## Fault & Reconfiguration Scenario (Phase 8.1)
+
+A separate, re-runnable quasi-steady-state fault/reconfiguration dataset built on the same
+System 1 model. It replicates the article's Section-8 fault → isolate → tie-restore sequence
+as a 40-step (2-min window at 3-s spacing), three-block time series frozen at the evening-peak
+operating point. Produced by `fault_sim.py` and stored in the dedicated `fault_event` bucket —
+the `profiles` and `state` buckets are untouched.
+
+### Run it
+
+```bash
+docker compose up -d     # if not already running (starts InfluxDB + Grafana)
+uv run ingest            # one-time; populates the profiles bucket the runner freezes on
+uv run fault-sim         # writes 40 fault-event snapshots to the fault_event bucket
+```
+
+`fault-sim` is deterministic and zero-arg. Re-running overwrites the same 40 snapshots
+in place — the dataset is identical every run. While running, it prints a per-step console
+table showing `step / phase / vmin / served load / tap / dead count` for each of the 40
+snapshots.
+
+### What it does
+
+- **Permanent 3-phase fault** on line index 7 (article branch 8→9): the line is taken
+  out of service and never re-energised in this scenario.
+- **Isolation of the downstream zone** (buses 8–17, lines 8–16 out of service): the
+  in-zone DG at bus 17 loses its grid connection and the OLTC tap is pinned at the
+  evening-peak value (−2, BOOST) because its reference bus (17) is inside the dead zone.
+  The 10 de-energised buses show voltage collapse to 0 pu. Served load drops from
+  ~3.29 MW to ~2.69 MW (≈ 0.60 MW shed).
+- **Tie-34 closure** (normally-open tie index 34, article 12↔22): the algorithm checks
+  all candidate tie lines via graph traversal, selects tie 34 as the restoration path,
+  and asserts the result is still a radial tree (`nx.is_tree` gate).
+- **Back-feed and full restoration**: the de-energised zone is re-energised via tie 34.
+  Served load recovers to ~3.29 MW. Restored minimum bus voltage reaches ~0.997 pu
+  (clean in-band, no shortfall flag).
+- **Data continuity (D-05)**: faulted line 7 is zero-filled across all 40 snapshots so
+  the series never has a gap. In-zone lines 8–16 resume normal values in the restored block.
+
+### View it
+
+Open Grafana at **http://localhost:3000** and select the
+**"IEEE 33-Bus — Fault & Reconfiguration"** dashboard. It is auto-provisioned alongside the
+96-step-day dashboard — no manual datasource or dashboard import step is required.
+
+Headline panels:
+
+| Panel | What it shows |
+|-------|---------------|
+| Bus Voltage Envelope | All 33 buses — the dead-zone collapse to 0 pu and post-restoration recovery |
+| Dead-Zone Bus Voltages (8–17) | Zoomed-in view of the 10 de-energised buses during isolation |
+| OLTC Tap Position | Tap pinned at −2 during isolation; OLTC resumes in restored block |
+| Served Load & Slack Feed-in | 3.29 → 2.69 MW drop during isolation, recovery to 3.29 MW |
+| Dead-Bus Count | 0 → 10 → 0 pulse shape over the three blocks |
+| Restored Min-Voltage (stat) | ~0.997 pu (green threshold); scoped to the restored block only |
+| Phase / Event Marker | `pre_fault` → `faulted_isolated` → `restored` timeline |
+| Topology Event Table | Per-step ground truth: `faulted_line_id`, `tie_closed`, `tie_id`, `n_dead_buses` |
+
+The `fault_event` InfluxDB bucket holds the 40-snapshot series
+(`bus`, `line`, `sgen`, `system`, `event` measurements). The `profiles` and `state`
+buckets from the 96-step-day simulation are untouched.
+
+### Qualitative comparison to the article
+
+Replicates Meteab/Tousi/Omran (2025) Section-8 fault → isolate → tie-restore qualitatively.
+No numerical match is expected: our DG placement (buses 18/22/25/33, ±5% OLTC) differs from
+the paper's PSO-optimised DGs at buses 6 & 32. Restoration succeeds and losses/voltages move
+in the directions the paper reports (the de-energised zone collapses on isolation and is
+restored to a near-nominal in-band operating point when the tie closes).
