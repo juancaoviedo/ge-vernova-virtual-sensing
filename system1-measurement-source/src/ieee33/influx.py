@@ -336,3 +336,186 @@ def write_state_step(
         org=config.INFLUXDB_ORG,
         record=points,
     )
+
+
+# ---------------------------------------------------------------------------
+# Fault-event write helper — Phase 8.1 forward contract
+# ---------------------------------------------------------------------------
+
+def write_fault_step(
+    write_api,
+    timestamp,
+    res_bus,
+    res_line,
+    res_sgen,
+    res_ext_grid,
+    res_trafo,
+    tap_pos,
+    shift_degree,
+    system_dict,
+    phase_label,
+    dead_bus_ids,
+    dead_line_ids,
+    dead_sgen_ids,
+    tie_is_closed,
+) -> None:
+    """Write one fault/reconfiguration snapshot to FAULT_EVENT_BUCKET.
+
+    Mirrors write_state_step's schema byte-identically (same measurement names,
+    same tags, same field names — forward contract for System 2) and extends it:
+
+    Extended schema vs write_state_step:
+      measurement "bus"    adds tag energised ("1" for live, "0" for dead-zone)
+                           dead buses from dead_bus_ids are zero-filled
+                           (vm_pu=0.0, va_degree=0.0, energised="0")
+      measurement "line"   adds tag energised ("1" / "0")
+                           dead lines from dead_line_ids are zero-filled
+                           (all 7 fields = 0.0, energised="0")
+      measurement "sgen"   dead-zone sgens from dead_sgen_ids are zero-filled
+                           (p_mw=0.0, q_mvar=0.0) for series continuity
+      measurement "system" identical to write_state_step (all 9 fields)
+      measurement "event"  NEW — tag phase; fields faulted_line_id, tie_closed,
+                           tie_id (int, -1 when open), n_dead_buses, dead_buses
+                           (comma-joined sorted bus ids as string)
+
+    All points are written to config.FAULT_EVENT_BUCKET (not STATE_BUCKET).
+
+    Note: tie_id is ALWAYS written as an int (-1 when tie is open) so InfluxDB
+    never sees mixed int/float types across snapshots.
+
+    Args:
+        write_api:     SYNCHRONOUS write_api.
+        timestamp:     datetime (UTC-aware) for this step.
+        res_bus:       net.res_bus DataFrame — contains only energised buses
+                       (pandapower excludes in_service=False buses from results).
+        res_line:      net.res_line DataFrame — contains only in-service lines.
+        res_sgen:      net.res_sgen DataFrame — contains only in-service sgens.
+        res_ext_grid:  net.res_ext_grid DataFrame.
+        res_trafo:     net.res_trafo DataFrame (kept for API consistency).
+        tap_pos:       int — feeder transformer tap position.
+        shift_degree:  float — scheduled phase-shift angle.
+        system_dict:   dict with keys: total_load_mw, total_gen_mw,
+                       total_loss_mw, vmin_pu, vmax_pu, slack_p_mw, slack_q_mvar.
+        phase_label:   str — one of FAULT_PHASE_PRE, FAULT_PHASE_ISO, FAULT_PHASE_RST.
+        dead_bus_ids:  iterable of pandapower bus indices that are de-energised.
+        dead_line_ids: iterable of pandapower line indices that are de-energised
+                       (faulted line + in-zone lines).
+        dead_sgen_ids: iterable of pandapower sgen indices whose host bus is dead.
+        tie_is_closed: bool — True if the restore tie-line is in service.
+    """
+    points = []
+
+    # ---- bus measurement: energised buses (from res_bus) ----
+    for idx, row in res_bus.iterrows():
+        points.append(
+            Point("bus")
+            .tag("bus_id", str(idx))
+            .tag("energised", "1")
+            .field("vm_pu",     float(row["vm_pu"]))
+            .field("va_degree", float(row["va_degree"]))
+            .time(timestamp)
+        )
+
+    # ---- bus measurement: dead-zone zero-fill (D-05, D-06) ----
+    for dead_idx in dead_bus_ids:
+        points.append(
+            Point("bus")
+            .tag("bus_id", str(dead_idx))
+            .tag("energised", "0")
+            .field("vm_pu",     0.0)
+            .field("va_degree", 0.0)
+            .time(timestamp)
+        )
+
+    # ---- line measurement: energised lines (from res_line, NaN guard) ----
+    for idx, row in res_line.iterrows():
+        # Skip NaN rows (out-of-service lines have NaN results)
+        if any(
+            (row[f] != row[f])  # NaN check without import
+            for f in ["p_from_mw", "q_from_mvar", "loading_percent"]
+        ):
+            continue
+        points.append(
+            Point("line")
+            .tag("line_id", str(idx))
+            .tag("energised", "1")
+            .field("p_from_mw",      float(row["p_from_mw"]))
+            .field("q_from_mvar",    float(row["q_from_mvar"]))
+            .field("p_to_mw",        float(row["p_to_mw"]))
+            .field("q_to_mvar",      float(row["q_to_mvar"]))
+            .field("loading_percent", float(row["loading_percent"]))
+            .field("pl_mw",          float(row["pl_mw"]))
+            .field("ql_mvar",        float(row["ql_mvar"]))
+            .time(timestamp)
+        )
+
+    # ---- line measurement: dead-zone zero-fill (D-05, D-06) ----
+    for dead_idx in dead_line_ids:
+        points.append(
+            Point("line")
+            .tag("line_id", str(dead_idx))
+            .tag("energised", "0")
+            .field("p_from_mw",      0.0)
+            .field("q_from_mvar",    0.0)
+            .field("p_to_mw",        0.0)
+            .field("q_to_mvar",      0.0)
+            .field("loading_percent", 0.0)
+            .field("pl_mw",          0.0)
+            .field("ql_mvar",        0.0)
+            .time(timestamp)
+        )
+
+    # ---- sgen measurement: energised sgens ----
+    for idx, row in res_sgen.iterrows():
+        points.append(
+            Point("sgen")
+            .tag("sgen_id", str(idx))
+            .field("p_mw",   float(row["p_mw"]))
+            .field("q_mvar", float(row["q_mvar"]))
+            .time(timestamp)
+        )
+
+    # ---- sgen measurement: dead-zone zero-fill for series continuity ----
+    for dead_sgen_idx in dead_sgen_ids:
+        points.append(
+            Point("sgen")
+            .tag("sgen_id", str(dead_sgen_idx))
+            .field("p_mw",   0.0)
+            .field("q_mvar", 0.0)
+            .time(timestamp)
+        )
+
+    # ---- system measurement: scalar aggregates + regulator state (identical to write_state_step) ----
+    slack_p = float(res_ext_grid["p_mw"].iloc[0]) if len(res_ext_grid) > 0 else 0.0
+    slack_q = float(res_ext_grid["q_mvar"].iloc[0]) if len(res_ext_grid) > 0 else 0.0
+    points.append(
+        Point("system")
+        .field("total_load_mw",  float(system_dict["total_load_mw"]))
+        .field("total_gen_mw",   float(system_dict["total_gen_mw"]))
+        .field("total_loss_mw",  float(system_dict["total_loss_mw"]))
+        .field("vmin_pu",        float(system_dict["vmin_pu"]))
+        .field("vmax_pu",        float(system_dict["vmax_pu"]))
+        .field("slack_p_mw",     slack_p)
+        .field("slack_q_mvar",   slack_q)
+        .field("tap_pos",        int(tap_pos))
+        .field("shift_degree",   float(shift_degree))
+        .time(timestamp)
+    )
+
+    # ---- event measurement (D-01, D-02, D-03) ----
+    points.append(
+        Point("event")
+        .tag("phase", phase_label)
+        .field("faulted_line_id", int(config.FAULT_LINE_IDX))
+        .field("tie_closed",      int(tie_is_closed))
+        .field("tie_id",          int(config.FAULT_TIE_IDX) if tie_is_closed else -1)
+        .field("n_dead_buses",    int(len(dead_bus_ids)))
+        .field("dead_buses",      ",".join(str(b) for b in sorted(dead_bus_ids)))
+        .time(timestamp)
+    )
+
+    write_api.write(
+        bucket=config.FAULT_EVENT_BUCKET,
+        org=config.INFLUXDB_ORG,
+        record=points,
+    )
