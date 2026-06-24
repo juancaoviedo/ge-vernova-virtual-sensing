@@ -465,11 +465,15 @@ def write_fault_step(
             .time(timestamp)
         )
 
-    # ---- sgen measurement: energised sgens ----
+    # ---- sgen measurement: energised sgens (skip dead-zone sgens handled below) ----
+    dead_sgen_set = set(dead_sgen_ids)
     for idx, row in res_sgen.iterrows():
+        if idx in dead_sgen_set:
+            continue          # dead-zone sgen handled by zero-fill loop below
         points.append(
             Point("sgen")
             .tag("sgen_id", str(idx))
+            .tag("energised", "1")
             .field("p_mw",   float(row["p_mw"]))
             .field("q_mvar", float(row["q_mvar"]))
             .time(timestamp)
@@ -480,6 +484,7 @@ def write_fault_step(
         points.append(
             Point("sgen")
             .tag("sgen_id", str(dead_sgen_idx))
+            .tag("energised", "0")
             .field("p_mw",   0.0)
             .field("q_mvar", 0.0)
             .time(timestamp)
