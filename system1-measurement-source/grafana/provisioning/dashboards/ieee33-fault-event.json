@@ -1,0 +1,412 @@
+{
+  "__inputs": [],
+  "__requires": [
+    {
+      "type": "grafana",
+      "id": "grafana",
+      "name": "Grafana",
+      "version": "11.0.0"
+    },
+    {
+      "type": "datasource",
+      "id": "influxdb",
+      "name": "InfluxDB",
+      "version": "1.0.0"
+    },
+    {
+      "type": "panel",
+      "id": "timeseries",
+      "name": "Time series",
+      "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "stat",
+      "name": "Stat",
+      "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "table",
+      "name": "Table",
+      "version": ""
+    }
+  ],
+  "annotations": {
+    "list": []
+  },
+  "description": "IEEE 33-Bus fault and reconfiguration scenario: 40-step quasi-static simulation anchored at 2017-06-07 18:00 UTC (evening peak). Three-phase event: 13 pre_fault snapshots (nominal) → 7 faulted_isolated snapshots (Section-8 fault, buses 8-17 dead zone) → 20 restored snapshots (tie-line 34 closed, topology reconfigured). Visual proof of voltage collapse and recovery. Supports System 2 state-estimator stress-testing.",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "ieee33-influxdb"
+      },
+      "description": "Bus voltage magnitudes (pu) for ALL 33 buses across the 40-step event. The dead-zone buses (8-17) collapse to 0 pu during the faulted_isolated block (steps 13-19) and recover on tie-line restoration. Healthy buses remain near 0.99 pu throughout. Threshold markers at 0.95 and 1.05 pu.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 5,
+            "showPoints": "never",
+            "spanNulls": false
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red",   "value": null },
+              { "color": "green", "value": 0.95 },
+              { "color": "red",   "value": 1.05 }
+            ]
+          },
+          "unit": "short",
+          "decimals": 4,
+          "min": 0.90,
+          "max": 1.10
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 0 },
+      "id": 1,
+      "options": {
+        "legend": { "calcs": ["min", "max", "mean"], "displayMode": "table", "placement": "bottom" },
+        "tooltip": { "mode": "multi", "sort": "none" },
+        "thresholds": {
+          "mode": "line",
+          "thresholds": [
+            { "color": "red", "value": 0.95 },
+            { "color": "red", "value": 1.05 }
+          ]
+        }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "influxdb", "uid": "ieee33-influxdb" },
+          "query": "from(bucket: \"fault_event\")\n  |> range(start: 2017-06-07T17:59:00Z, stop: 2017-06-07T18:03:00Z)\n  |> filter(fn: (r) => r._measurement == \"bus\")\n  |> filter(fn: (r) => r._field == \"vm_pu\")\n  |> sort(columns: [\"_time\"])",
+          "refId": "A"
+        }
+      ],
+      "title": "Bus Voltage Profile / Envelope (pu)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "ieee33-influxdb"
+      },
+      "description": "OLTC feeder transformer tap position (integer steps, -5 to +5). During the faulted_isolated block, the OLTC reference bus 17 is inside the dead zone, so the tap is pinned at the evening-peak value (-2 BOOST) with run_control=False. On restoration, OLTC control resumes and the tap remains at -2 as the restored vmin is already 0.9971 pu.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "purple"
+          },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 0,
+            "showPoints": "always",
+            "pointSize": 4,
+            "spanNulls": false,
+            "drawStyle": "line",
+            "lineInterpolation": "stepAfter"
+          },
+          "unit": "short",
+          "displayName": "Tap Position",
+          "decimals": 0,
+          "min": -6,
+          "max": 6,
+          "noValue": "0"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 9, "w": 12, "x": 12, "y": 0 },
+      "id": 2,
+      "options": {
+        "legend": { "calcs": ["min", "max", "last"], "displayMode": "list", "placement": "bottom" },
+        "tooltip": { "mode": "single", "sort": "none" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "influxdb", "uid": "ieee33-influxdb" },
+          "query": "from(bucket: \"fault_event\")\n  |> range(start: 2017-06-07T17:59:00Z, stop: 2017-06-07T18:03:00Z)\n  |> filter(fn: (r) => r._measurement == \"system\")\n  |> filter(fn: (r) => r._field == \"tap_pos\")\n  |> sort(columns: [\"_time\"])",
+          "refId": "A"
+        }
+      ],
+      "title": "OLTC Tap Position (integer steps, -5 to +5)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "ieee33-influxdb"
+      },
+      "description": "Total served load (MW) and slack/substation feed-in (MW) across all 40 steps. Drop visible in the faulted_isolated block (~2.69 MW served vs ~3.29 MW in pre_fault) when buses 8-17 are isolated. Full recovery in the restored block as tie-line 34 re-energises the dead zone.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 5,
+            "showPoints": "never",
+            "spanNulls": false
+          },
+          "unit": "MW",
+          "decimals": 4
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 9 },
+      "id": 3,
+      "options": {
+        "legend": { "calcs": ["min", "max", "mean"], "displayMode": "table", "placement": "bottom" },
+        "tooltip": { "mode": "multi", "sort": "none" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "influxdb", "uid": "ieee33-influxdb" },
+          "query": "from(bucket: \"fault_event\")\n  |> range(start: 2017-06-07T17:59:00Z, stop: 2017-06-07T18:03:00Z)\n  |> filter(fn: (r) => r._measurement == \"system\")\n  |> filter(fn: (r) => r._field == \"total_load_mw\" or r._field == \"slack_p_mw\")\n  |> sort(columns: [\"_time\"])",
+          "refId": "A"
+        }
+      ],
+      "title": "Served Load & Slack Feed-in (MW)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "ieee33-influxdb"
+      },
+      "description": "Dead-bus count from the event measurement's n_dead_buses field: 0 in pre_fault, 10 during faulted_isolated (buses 8-17), 0 again in restored. The phase tag labels each block. This is the SPEC-8 three-phase visual marker — a 0→N→0 pulse aligned exactly to the three event blocks.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 5,
+            "showPoints": "always",
+            "pointSize": 4,
+            "spanNulls": false
+          },
+          "unit": "short",
+          "decimals": 0,
+          "min": 0
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 9 },
+      "id": 4,
+      "options": {
+        "legend": { "calcs": ["min", "max", "last"], "displayMode": "table", "placement": "bottom" },
+        "tooltip": { "mode": "multi", "sort": "none" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "influxdb", "uid": "ieee33-influxdb" },
+          "query": "from(bucket: \"fault_event\")\n  |> range(start: 2017-06-07T17:59:00Z, stop: 2017-06-07T18:03:00Z)\n  |> filter(fn: (r) => r._measurement == \"event\")\n  |> filter(fn: (r) => r._field == \"n_dead_buses\")\n  |> sort(columns: [\"_time\"])",
+          "refId": "A"
+        }
+      ],
+      "title": "Event Phase / Dead-bus Pulse (phase-tag marker)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "ieee33-influxdb"
+      },
+      "description": "Bus voltage magnitudes (pu) for the dead-zone buses only (bus_id 8-17 = article buses 9-18). These buses collapse to 0 pu when isolated (steps 13-19, faulted_isolated block) and recover to ~0.997 pu on tie-line restoration (restored block, steps 20-39). min=0 is intentional to make the collapse explicit.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "spanNulls": false
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red",   "value": null },
+              { "color": "green", "value": 0.95 },
+              { "color": "red",   "value": 1.05 }
+            ]
+          },
+          "unit": "short",
+          "decimals": 4,
+          "min": 0,
+          "max": 1.10
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 17 },
+      "id": 5,
+      "options": {
+        "legend": { "calcs": ["min", "max", "mean"], "displayMode": "table", "placement": "bottom" },
+        "tooltip": { "mode": "multi", "sort": "none" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "influxdb", "uid": "ieee33-influxdb" },
+          "query": "from(bucket: \"fault_event\")\n  |> range(start: 2017-06-07T17:59:00Z, stop: 2017-06-07T18:03:00Z)\n  |> filter(fn: (r) => r._measurement == \"bus\")\n  |> filter(fn: (r) => r._field == \"vm_pu\")\n  |> filter(fn: (r) => r.bus_id == \"8\" or r.bus_id == \"9\" or r.bus_id == \"10\" or r.bus_id == \"11\" or r.bus_id == \"12\" or r.bus_id == \"13\" or r.bus_id == \"14\" or r.bus_id == \"15\" or r.bus_id == \"16\" or r.bus_id == \"17\")\n  |> sort(columns: [\"_time\"])",
+          "refId": "A"
+        }
+      ],
+      "title": "Dead-Zone Bus Voltage (buses 8-17) — collapse to 0 → recovery",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "ieee33-influxdb"
+      },
+      "description": "Count of dead (unenergised) buses from the event measurement's n_dead_buses field. 0 in pre_fault, 10 during faulted_isolated, 0 in restored. Threshold: any value above 0 is red (outage in progress).",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 5,
+            "showPoints": "always",
+            "pointSize": 4,
+            "spanNulls": false
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red",   "value": 1 }
+            ]
+          },
+          "unit": "short",
+          "decimals": 0,
+          "min": 0
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 6, "x": 12, "y": 17 },
+      "id": 6,
+      "options": {
+        "legend": { "calcs": ["min", "max", "last"], "displayMode": "list", "placement": "bottom" },
+        "tooltip": { "mode": "single", "sort": "none" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "influxdb", "uid": "ieee33-influxdb" },
+          "query": "from(bucket: \"fault_event\")\n  |> range(start: 2017-06-07T17:59:00Z, stop: 2017-06-07T18:03:00Z)\n  |> filter(fn: (r) => r._measurement == \"event\")\n  |> filter(fn: (r) => r._field == \"n_dead_buses\")\n  |> sort(columns: [\"_time\"])",
+          "refId": "A"
+        }
+      ],
+      "title": "Dead-Bus Count",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "ieee33-influxdb"
+      },
+      "description": "Minimum bus voltage (pu) across energised buses only in the restored block (steps 20-39, 2017-06-07T18:01:00Z to 18:03:00Z). The energised==1 filter excludes zero-fills so dead buses during earlier phases do not corrupt the stat. Expected restored min ~0.9971 pu (clean, above 0.95 green threshold). Colour thresholds: green >= 0.95, orange >= 0.94, red below 0.94.",
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red",    "value": null },
+              { "color": "orange", "value": 0.94 },
+              { "color": "green",  "value": 0.95 }
+            ]
+          },
+          "unit": "short",
+          "decimals": 4,
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 6, "x": 18, "y": 17 },
+      "id": 7,
+      "options": {
+        "reduceOptions": {
+          "calcs": ["min"],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": { "type": "influxdb", "uid": "ieee33-influxdb" },
+          "query": "from(bucket: \"fault_event\")\n  |> range(start: 2017-06-07T18:01:00Z, stop: 2017-06-07T18:03:00Z)\n  |> filter(fn: (r) => r._measurement == \"bus\")\n  |> filter(fn: (r) => r._field == \"vm_pu\")\n  |> filter(fn: (r) => r.energised == \"1\")\n  |> sort(columns: [\"_time\"])",
+          "refId": "A"
+        }
+      ],
+      "title": "Restored Block — Min Bus Voltage (pu)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "ieee33-influxdb"
+      },
+      "description": "Per-snapshot topology and event state from the event measurement. Columns: _time, faulted_line_id (7), tie_closed (0/1), tie_id (-1 if open, 34 when restored), n_dead_buses (0→10→0), dead_buses (csv of bus indices). The phase tag distinguishes the three blocks. This table is the ground-truth topology log for System 2 state-estimator integration.",
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "gridPos": { "h": 9, "w": 24, "x": 0, "y": 25 },
+      "id": 8,
+      "options": {
+        "footer": {
+          "show": false,
+          "reducer": ["sum"],
+          "fields": ""
+        },
+        "showHeader": true,
+        "sortBy": [
+          { "desc": false, "displayName": "_time" }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": { "type": "influxdb", "uid": "ieee33-influxdb" },
+          "query": "from(bucket: \"fault_event\")\n  |> range(start: 2017-06-07T17:59:00Z, stop: 2017-06-07T18:03:00Z)\n  |> filter(fn: (r) => r._measurement == \"event\")\n  |> pivot(rowKey: [\"_time\"], columnKey: [\"_field\"], valueColumn: \"_value\")\n  |> sort(columns: [\"_time\"])",
+          "refId": "A"
+        }
+      ],
+      "title": "Topology / Event State per Snapshot",
+      "type": "table"
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "tags": ["ieee33", "power-systems", "fault", "reconfiguration"],
+  "templating": { "list": [] },
+  "time": {
+    "from": "2017-06-07T17:59:00.000Z",
+    "to": "2017-06-07T18:03:00.000Z"
+  },
+  "timepicker": {},
+  "timezone": "utc",
+  "title": "IEEE 33-Bus — Fault & Reconfiguration",
+  "uid": "ieee33-fault-v1",
+  "version": 1
+}
