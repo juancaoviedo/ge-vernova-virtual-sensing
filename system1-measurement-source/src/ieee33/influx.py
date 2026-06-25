@@ -537,3 +537,365 @@ def write_fault_step(
         org=config.INFLUXDB_ORG,
         record=points,
     )
+
+
+# ---------------------------------------------------------------------------
+# Phase 9 readers — state bucket (read by measurement runner for source=day)
+# ---------------------------------------------------------------------------
+
+def read_state_bus(client: InfluxDBClient):
+    """Query all bus points from the state bucket for TARGET_DATE.
+
+    Mirrors read_profiles Flux pivot pattern.  Returns one row per
+    (timestamp, bus_id) with fields vm_pu and va_degree.
+
+    Note: the state bucket bus measurement contains ONLY vm_pu and va_degree
+    (no p_mw/q_mvar — Pitfall 6).  For P_inj derivation use profiles + scaling
+    or read the fault_event bus measurement (source=fault).
+
+    Args:
+        client: Active InfluxDBClient.
+
+    Returns:
+        pandas.DataFrame with columns _time, bus_id, vm_pu, va_degree.
+
+    Raises:
+        RuntimeError: If the state bucket is empty (run 'uv run sim' first).
+    """
+    from datetime import date as _date, timedelta as _td
+
+    start = f"{config.TARGET_DATE}T00:00:00Z"
+    next_day = (_date.fromisoformat(config.TARGET_DATE) + _td(days=1)).isoformat()
+    stop = f"{next_day}T00:00:00Z"
+
+    flux = (
+        f'from(bucket: "{config.STATE_BUCKET}")\n'
+        f'  |> range(start: {start}, stop: {stop})\n'
+        f'  |> filter(fn: (r) => r._measurement == "bus")\n'
+        f'  |> pivot(rowKey: ["_time", "bus_id"], columnKey: ["_field"], valueColumn: "_value")\n'
+        f'  |> sort(columns: ["_time", "bus_id"])'
+    )
+    df = client.query_api().query_data_frame(flux)
+    if df is None or (hasattr(df, "__len__") and len(df) == 0):
+        raise RuntimeError(
+            "read_state_bus: state bucket is empty. "
+            "Run 'uv run sim' first to populate the state bucket."
+        )
+    return df
+
+
+def read_state_sgen(client: InfluxDBClient):
+    """Query all sgen points from the state bucket for TARGET_DATE.
+
+    Mirrors read_state_bus pivot pattern for sgen measurement.
+
+    Args:
+        client: Active InfluxDBClient.
+
+    Returns:
+        pandas.DataFrame with columns _time, sgen_id, p_mw, q_mvar.
+
+    Raises:
+        RuntimeError: If the state bucket is empty (run 'uv run sim' first).
+    """
+    from datetime import date as _date, timedelta as _td
+
+    start = f"{config.TARGET_DATE}T00:00:00Z"
+    next_day = (_date.fromisoformat(config.TARGET_DATE) + _td(days=1)).isoformat()
+    stop = f"{next_day}T00:00:00Z"
+
+    flux = (
+        f'from(bucket: "{config.STATE_BUCKET}")\n'
+        f'  |> range(start: {start}, stop: {stop})\n'
+        f'  |> filter(fn: (r) => r._measurement == "sgen")\n'
+        f'  |> pivot(rowKey: ["_time", "sgen_id"], columnKey: ["_field"], valueColumn: "_value")\n'
+        f'  |> sort(columns: ["_time", "sgen_id"])'
+    )
+    df = client.query_api().query_data_frame(flux)
+    if df is None or (hasattr(df, "__len__") and len(df) == 0):
+        raise RuntimeError(
+            "read_state_sgen: state bucket is empty. "
+            "Run 'uv run sim' first to populate the state bucket."
+        )
+    return df
+
+
+# ---------------------------------------------------------------------------
+# Phase 9 readers — fault_event bucket (read by measurement runner for source=fault)
+# ---------------------------------------------------------------------------
+
+def read_fault_bus(client: InfluxDBClient):
+    """Query all bus points from the fault_event bucket for TARGET_DATE.
+
+    CRITICAL — energised is an InfluxDB TAG (not a field) on fault_event bus
+    points.  It MUST appear in the pivot rowKey so it surfaces as a string
+    column in the result DataFrame.  Compare energised == '1' as a STRING.
+
+    Args:
+        client: Active InfluxDBClient.
+
+    Returns:
+        pandas.DataFrame with columns _time, bus_id, energised, vm_pu,
+        va_degree, p_mw, q_mvar.  energised is a STRING column ('1'/'0').
+
+    Raises:
+        RuntimeError: If the fault_event bucket is empty (run 'uv run fault-sim' first).
+    """
+    from datetime import date as _date, timedelta as _td
+
+    start = f"{config.TARGET_DATE}T00:00:00Z"
+    next_day = (_date.fromisoformat(config.TARGET_DATE) + _td(days=1)).isoformat()
+    stop = f"{next_day}T00:00:00Z"
+
+    # CRITICAL: energised MUST be in rowKey (it is a TAG, not a field — Pitfall 1).
+    # Including it in rowKey causes Flux to surface it as a string column.
+    # Dead-bus gate downstream: snap[snap["energised"] == "1"]  (string, not int).
+    flux = (
+        f'from(bucket: "{config.FAULT_EVENT_BUCKET}")\n'
+        f'  |> range(start: {start}, stop: {stop})\n'
+        f'  |> filter(fn: (r) => r._measurement == "bus")\n'
+        f'  |> pivot(rowKey: ["_time", "bus_id", "energised"], '
+        f'columnKey: ["_field"], valueColumn: "_value")\n'
+        f'  |> sort(columns: ["_time", "bus_id"])'
+    )
+    df = client.query_api().query_data_frame(flux)
+    if df is None or (hasattr(df, "__len__") and len(df) == 0):
+        raise RuntimeError(
+            "read_fault_bus: fault_event bucket is empty. "
+            "Run 'uv run fault-sim' first to populate the fault_event bucket."
+        )
+    return df
+
+
+def read_fault_sgen(client: InfluxDBClient):
+    """Query all sgen points from the fault_event bucket for TARGET_DATE.
+
+    energised is a TAG on fault_event sgen points — placed in rowKey so it
+    surfaces as a string column.  Compare energised == '1' as a STRING.
+
+    Args:
+        client: Active InfluxDBClient.
+
+    Returns:
+        pandas.DataFrame with columns _time, sgen_id, energised, p_mw, q_mvar.
+
+    Raises:
+        RuntimeError: If the fault_event bucket is empty (run 'uv run fault-sim' first).
+    """
+    from datetime import date as _date, timedelta as _td
+
+    start = f"{config.TARGET_DATE}T00:00:00Z"
+    next_day = (_date.fromisoformat(config.TARGET_DATE) + _td(days=1)).isoformat()
+    stop = f"{next_day}T00:00:00Z"
+
+    # energised in rowKey — same Pitfall 1 guard as read_fault_bus.
+    flux = (
+        f'from(bucket: "{config.FAULT_EVENT_BUCKET}")\n'
+        f'  |> range(start: {start}, stop: {stop})\n'
+        f'  |> filter(fn: (r) => r._measurement == "sgen")\n'
+        f'  |> pivot(rowKey: ["_time", "sgen_id", "energised"], '
+        f'columnKey: ["_field"], valueColumn: "_value")\n'
+        f'  |> sort(columns: ["_time", "sgen_id"])'
+    )
+    df = client.query_api().query_data_frame(flux)
+    if df is None or (hasattr(df, "__len__") and len(df) == 0):
+        raise RuntimeError(
+            "read_fault_sgen: fault_event bucket is empty. "
+            "Run 'uv run fault-sim' first to populate the fault_event bucket."
+        )
+    return df
+
+
+def read_fault_event(client: InfluxDBClient):
+    """Query all event points from the fault_event bucket for TARGET_DATE.
+
+    The event measurement has tag 'phase' (pre_fault / faulted_isolated /
+    restored) and fields faulted_line_id, tie_closed, tie_id (int, -1 when
+    open), n_dead_buses, dead_buses (comma-joined sorted bus string).
+
+    Args:
+        client: Active InfluxDBClient.
+
+    Returns:
+        pandas.DataFrame with columns _time, phase, faulted_line_id,
+        tie_closed, tie_id, n_dead_buses, dead_buses.
+
+    Raises:
+        RuntimeError: If the fault_event bucket is empty (run 'uv run fault-sim' first).
+    """
+    from datetime import date as _date, timedelta as _td
+
+    start = f"{config.TARGET_DATE}T00:00:00Z"
+    next_day = (_date.fromisoformat(config.TARGET_DATE) + _td(days=1)).isoformat()
+    stop = f"{next_day}T00:00:00Z"
+
+    # phase is a TAG on event points — place in rowKey so it appears as a column.
+    flux = (
+        f'from(bucket: "{config.FAULT_EVENT_BUCKET}")\n'
+        f'  |> range(start: {start}, stop: {stop})\n'
+        f'  |> filter(fn: (r) => r._measurement == "event")\n'
+        f'  |> pivot(rowKey: ["_time", "phase"], columnKey: ["_field"], valueColumn: "_value")\n'
+        f'  |> sort(columns: ["_time"])'
+    )
+    df = client.query_api().query_data_frame(flux)
+    if df is None or (hasattr(df, "__len__") and len(df) == 0):
+        raise RuntimeError(
+            "read_fault_event: fault_event bucket is empty. "
+            "Run 'uv run fault-sim' first to populate the fault_event bucket."
+        )
+    return df
+
+
+# ---------------------------------------------------------------------------
+# Phase 9 writers — measurements bucket (D-06 meas + D-07 event re-publish)
+# ---------------------------------------------------------------------------
+
+def build_meas_point(
+    cls: str,
+    quantity: str,
+    location,
+    scenario: str,
+    experiment: str,
+    value: float,
+    assumed_sigma: float,
+    ts,
+    phase: str | None = None,
+):
+    """Build one Point("meas") for the measurements bucket (D-06 schema).
+
+    NO true_value field — scoring oracle stays separate (SPEC R9 / D-06).
+    The true (ground-truth) value lives only in the state / fault_event
+    buckets owned by System 1.  System 2 must not be able to peek at truth.
+
+    Tags set:
+        class      — measurement class (scada / pmu / ami / der / pseudo / zero_inj)
+        quantity   — measured quantity (vm_pu / va_degree / p_inj_mw / q_inj_mvar /
+                     p_mw / q_mvar)
+        location   — bus or line id (str)
+        scenario   — sensor-placement scenario (well_observed / realistic_sparse)
+        experiment — data source (day / fault)
+        phase      — fault phase ONLY; omitted when phase is None (day experiment)
+
+    Fields set:
+        value         — noisy sensor reading (the observable z)
+        assumed_sigma — σ value the estimator should use for this reading
+
+    Overwrite-in-place keying: (measurement="meas", all tags, timestamp) forms
+    the unique InfluxDB key — identical runs produce identical points.
+
+    Args:
+        cls:           Measurement class string.
+        quantity:      Quantity string.
+        location:      Bus or sgen id (converted to str).
+        scenario:      Scenario name.
+        experiment:    "day" or "fault".
+        value:         Noisy observed value (float).
+        assumed_sigma: Noise standard deviation the estimator uses (float).
+        ts:            UTC-aware datetime or nanosecond integer timestamp.
+        phase:         Fault phase string; None for day experiment.
+
+    Returns:
+        influxdb_client.Point ready for write_api.write().
+    """
+    p = (
+        Point("meas")
+        .tag("class",      cls)
+        .tag("quantity",   quantity)
+        .tag("location",   str(location))
+        .tag("scenario",   scenario)
+        .tag("experiment", experiment)
+        .field("value",         float(value))
+        .field("assumed_sigma", float(assumed_sigma))
+        .time(ts)
+    )
+    if phase is not None:
+        p = p.tag("phase", phase)
+    return p
+
+
+def build_event_point(
+    scenario: str,
+    experiment: str,
+    phase: str,
+    faulted_line_id: int,
+    tie_closed: int,
+    tie_id: int,
+    n_dead_buses: int,
+    dead_buses,
+    ts,
+):
+    """Build one Point("event") for the measurements bucket (D-07 re-publish).
+
+    Re-publishes fault topology metadata into the measurements bucket so
+    System 2 can read both sensor readings (meas) and topology context (event)
+    from one bucket.
+
+    Tags: phase, scenario, experiment.
+    Fields: faulted_line_id, tie_closed, tie_id (ALWAYS int — Pitfall 2),
+            n_dead_buses, dead_buses (comma-joined sorted string).
+
+    CRITICAL: tie_id is ALWAYS cast int() to avoid InfluxDB type conflicts
+    across snapshots (mirrors write_fault_step:529 — Pitfall 2).
+
+    For experiment="day": faulted_line_id=-1, tie_closed=0, tie_id=-1,
+    n_dead_buses=0, dead_buses="" (fixed topology, no fault).
+
+    Determinism: same (measurement="event", all tags, timestamp) key overwrites
+    on re-run — no duplicates (SPEC R10).
+
+    Args:
+        scenario:        Scenario name.
+        experiment:      "day" or "fault".
+        phase:           Phase label (fault: pre_fault/faulted_isolated/restored;
+                         day: "steady_state").
+        faulted_line_id: Pandapower line index of the faulted line (-1 if none).
+        tie_closed:      1 if restore tie is closed, 0 otherwise.
+        tie_id:          Pandapower line index of the tie (-1 if open).
+        n_dead_buses:    Number of de-energised buses.
+        dead_buses:      Iterable of dead bus ids, or a pre-formatted string.
+        ts:              UTC-aware datetime or nanosecond integer timestamp.
+
+    Returns:
+        influxdb_client.Point ready for write_api.write().
+    """
+    # Format dead_buses as a comma-joined sorted string if it is an iterable
+    if isinstance(dead_buses, str):
+        dead_buses_str = dead_buses
+    else:
+        dead_buses_str = ",".join(str(b) for b in sorted(dead_buses))
+
+    return (
+        Point("event")
+        .tag("phase",      phase)
+        .tag("scenario",   scenario)
+        .tag("experiment", experiment)
+        .field("faulted_line_id", int(faulted_line_id))
+        .field("tie_closed",      int(tie_closed))
+        .field("tie_id",          int(tie_id))   # ALWAYS int — Pitfall 2 (mirrors write_fault_step:529)
+        .field("n_dead_buses",    int(n_dead_buses))
+        .field("dead_buses",      dead_buses_str)
+        .time(ts)
+    )
+
+
+def write_meas_points(write_api, points: list, bucket: str = "measurements") -> None:
+    """Write a batch of pre-built meas/event Points to the measurements bucket.
+
+    Called by measure.py after building all Point objects for a single snapshot.
+    Points must be fully constructed (all tags + fields + timestamp set) before
+    this call.  SYNCHRONOUS write; overwrites existing points at same tag+ts key.
+
+    The bucket name defaults to "measurements" (the D-06 target bucket) but is
+    explicitly passable so callers can route to a different bucket in tests.
+    This function stays independent of measure_config — no import of that module.
+
+    Args:
+        write_api: SYNCHRONOUS write_api from client.write_api(SYNCHRONOUS).
+        points:    List of influxdb_client.Point objects (meas + event).
+        bucket:    Target bucket name (default "measurements").
+    """
+    write_api.write(
+        bucket=bucket,
+        org=config.INFLUXDB_ORG,
+        record=points,
+    )
