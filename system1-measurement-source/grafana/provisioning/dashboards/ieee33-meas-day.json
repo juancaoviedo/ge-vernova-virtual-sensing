@@ -1,0 +1,258 @@
+{
+  "__inputs": [],
+  "__requires": [
+    {
+      "type": "grafana",
+      "id": "grafana",
+      "name": "Grafana",
+      "version": "11.0.0"
+    },
+    {
+      "type": "datasource",
+      "id": "influxdb",
+      "name": "InfluxDB",
+      "version": "1.0.0"
+    },
+    {
+      "type": "panel",
+      "id": "timeseries",
+      "name": "Time series",
+      "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "stat",
+      "name": "Stat",
+      "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "barchart",
+      "name": "Bar chart",
+      "version": ""
+    }
+  ],
+  "annotations": {
+    "list": []
+  },
+  "description": "IEEE 33-Bus Observed Measurements — Day: 96-step (15-min) observed sensor readings from the measurements bucket (scenario realistic_sparse | well_observed, experiment=day). Panels: observed bus voltages with true state overlay, observed power injections by class, per-class measurement counts (stat), and observed-vs-pseudo footprint by location. This layer is ADDITIVE — existing state/fault_event buckets and dashboards are untouched.",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "ieee33-influxdb"
+      },
+      "description": "Observed bus voltage magnitudes (pu) from the measurements bucket (class=scada, pmu — quantity=vm_pu). Target A = measured values (noisy sensor readings). Target B = true ground-truth state series from the state bucket (overlay for visual calibration). The gap between the two series shows the noise level. Realistic_sparse: 1 SCADA (bus 0) + 3 PMU (buses 17, 24, 30). Bus 17 is a μPMU candidate that goes dark during fault isolation.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 5,
+            "showPoints": "never",
+            "spanNulls": false
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red",   "value": null },
+              { "color": "green", "value": 0.95 },
+              { "color": "red",   "value": 1.05 }
+            ]
+          },
+          "unit": "short",
+          "decimals": 4,
+          "min": 0.90,
+          "max": 1.10
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 0 },
+      "id": 1,
+      "options": {
+        "legend": { "calcs": ["min", "max", "mean"], "displayMode": "table", "placement": "bottom" },
+        "tooltip": { "mode": "multi", "sort": "none" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "influxdb", "uid": "ieee33-influxdb" },
+          "query": "from(bucket: \"measurements\")\n  |> range(start: 2017-06-07T00:00:00Z, stop: 2017-06-07T23:59:59Z)\n  |> filter(fn: (r) => r._measurement == \"meas\")\n  |> filter(fn: (r) => r._field == \"value\")\n  |> filter(fn: (r) => r.quantity == \"vm_pu\")\n  |> filter(fn: (r) => r.experiment == \"day\")\n  |> sort(columns: [\"_time\"])",
+          "refId": "A"
+        },
+        {
+          "datasource": { "type": "influxdb", "uid": "ieee33-influxdb" },
+          "query": "from(bucket: \"state\")\n  |> range(start: 2017-06-07T00:00:00Z, stop: 2017-06-07T23:59:59Z)\n  |> filter(fn: (r) => r._measurement == \"bus\")\n  |> filter(fn: (r) => r._field == \"vm_pu\")\n  |> sort(columns: [\"_time\"])",
+          "refId": "B"
+        }
+      ],
+      "title": "Observed Bus Voltages (pu) — Measured vs True Overlay",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "ieee33-influxdb"
+      },
+      "description": "Observed active power injections (p_inj_mw) from the measurements bucket — all classes that emit P_inj (scada, ami, pseudo). Shows the spread of power injection measurements across the 96-step day. The pseudo class (large σ=30% of P) appears with wide variability vs the SCADA/AMI readings.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 0,
+            "showPoints": "never",
+            "spanNulls": false
+          },
+          "unit": "MW",
+          "decimals": 3
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 9, "w": 12, "x": 12, "y": 0 },
+      "id": 2,
+      "options": {
+        "legend": { "calcs": ["min", "max", "mean"], "displayMode": "table", "placement": "bottom" },
+        "tooltip": { "mode": "multi", "sort": "none" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "influxdb", "uid": "ieee33-influxdb" },
+          "query": "from(bucket: \"measurements\")\n  |> range(start: 2017-06-07T00:00:00Z, stop: 2017-06-07T23:59:59Z)\n  |> filter(fn: (r) => r._measurement == \"meas\")\n  |> filter(fn: (r) => r._field == \"value\")\n  |> filter(fn: (r) => r.quantity == \"p_inj_mw\")\n  |> filter(fn: (r) => r.experiment == \"day\")\n  |> sort(columns: [\"_time\"])",
+          "refId": "A"
+        }
+      ],
+      "title": "Observed Power Injections — P_inj_mw (all classes)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "ieee33-influxdb"
+      },
+      "description": "Total measurement count per class across the full day run. Shows the relative contribution of each sensor class (scada/pmu/ami/der/pseudo) to the measurement set. In realistic_sparse: pseudo dominates (under-observable without pseudo). In well_observed: real-sensor count exceeds 2*(N-1)=64 states without pseudo.",
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "blue", "value": null },
+              { "color": "green", "value": 100 }
+            ]
+          },
+          "unit": "short",
+          "decimals": 0,
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 9 },
+      "id": 3,
+      "options": {
+        "reduceOptions": {
+          "calcs": ["count"],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": { "type": "influxdb", "uid": "ieee33-influxdb" },
+          "query": "from(bucket: \"measurements\")\n  |> range(start: 2017-06-07T00:00:00Z, stop: 2017-06-07T23:59:59Z)\n  |> filter(fn: (r) => r._measurement == \"meas\")\n  |> filter(fn: (r) => r._field == \"value\")\n  |> filter(fn: (r) => r.experiment == \"day\")\n  |> filter(fn: (r) => r.class == \"scada\")\n  |> count()",
+          "refId": "scada"
+        },
+        {
+          "datasource": { "type": "influxdb", "uid": "ieee33-influxdb" },
+          "query": "from(bucket: \"measurements\")\n  |> range(start: 2017-06-07T00:00:00Z, stop: 2017-06-07T23:59:59Z)\n  |> filter(fn: (r) => r._measurement == \"meas\")\n  |> filter(fn: (r) => r._field == \"value\")\n  |> filter(fn: (r) => r.experiment == \"day\")\n  |> filter(fn: (r) => r.class == \"pmu\")\n  |> count()",
+          "refId": "pmu"
+        },
+        {
+          "datasource": { "type": "influxdb", "uid": "ieee33-influxdb" },
+          "query": "from(bucket: \"measurements\")\n  |> range(start: 2017-06-07T00:00:00Z, stop: 2017-06-07T23:59:59Z)\n  |> filter(fn: (r) => r._measurement == \"meas\")\n  |> filter(fn: (r) => r._field == \"value\")\n  |> filter(fn: (r) => r.experiment == \"day\")\n  |> filter(fn: (r) => r.class == \"ami\")\n  |> count()",
+          "refId": "ami"
+        },
+        {
+          "datasource": { "type": "influxdb", "uid": "ieee33-influxdb" },
+          "query": "from(bucket: \"measurements\")\n  |> range(start: 2017-06-07T00:00:00Z, stop: 2017-06-07T23:59:59Z)\n  |> filter(fn: (r) => r._measurement == \"meas\")\n  |> filter(fn: (r) => r._field == \"value\")\n  |> filter(fn: (r) => r.experiment == \"day\")\n  |> filter(fn: (r) => r.class == \"der\")\n  |> count()",
+          "refId": "der"
+        },
+        {
+          "datasource": { "type": "influxdb", "uid": "ieee33-influxdb" },
+          "query": "from(bucket: \"measurements\")\n  |> range(start: 2017-06-07T00:00:00Z, stop: 2017-06-07T23:59:59Z)\n  |> filter(fn: (r) => r._measurement == \"meas\")\n  |> filter(fn: (r) => r._field == \"value\")\n  |> filter(fn: (r) => r.experiment == \"day\")\n  |> filter(fn: (r) => r.class == \"pseudo\")\n  |> count()",
+          "refId": "pseudo"
+        }
+      ],
+      "title": "Per-Class Measurement Count — Day",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "ieee33-influxdb"
+      },
+      "description": "Observed-vs-pseudo footprint: timeseries of measurement counts per location (bus id) coloured by class. Buses with only pseudo measurements are under-observed (realistic_sparse). Buses with scada/pmu/ami/der are real-sensor covered. This panel visualises the observability gap — which buses are dark to the real sensor network and rely on load-forecast pseudo-measurements.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 5,
+            "showPoints": "auto",
+            "spanNulls": false
+          },
+          "unit": "short",
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 9, "w": 12, "x": 12, "y": 9 },
+      "id": 4,
+      "options": {
+        "legend": { "calcs": ["count"], "displayMode": "table", "placement": "bottom" },
+        "tooltip": { "mode": "multi", "sort": "none" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "influxdb", "uid": "ieee33-influxdb" },
+          "query": "from(bucket: \"measurements\")\n  |> range(start: 2017-06-07T00:00:00Z, stop: 2017-06-07T23:59:59Z)\n  |> filter(fn: (r) => r._measurement == \"meas\")\n  |> filter(fn: (r) => r._field == \"value\")\n  |> filter(fn: (r) => r.experiment == \"day\")\n  |> filter(fn: (r) => r.class != \"pseudo\")\n  |> group(columns: [\"location\", \"class\"])\n  |> count()\n  |> group()",
+          "refId": "real"
+        },
+        {
+          "datasource": { "type": "influxdb", "uid": "ieee33-influxdb" },
+          "query": "from(bucket: \"measurements\")\n  |> range(start: 2017-06-07T00:00:00Z, stop: 2017-06-07T23:59:59Z)\n  |> filter(fn: (r) => r._measurement == \"meas\")\n  |> filter(fn: (r) => r._field == \"value\")\n  |> filter(fn: (r) => r.experiment == \"day\")\n  |> filter(fn: (r) => r.class == \"pseudo\")\n  |> group(columns: [\"location\"])\n  |> count()\n  |> group()",
+          "refId": "pseudo"
+        }
+      ],
+      "title": "Observed-vs-Pseudo Footprint by Bus Location",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "tags": ["measurements", "ieee33", "observability"],
+  "templating": { "list": [] },
+  "time": {
+    "from": "2017-06-07T00:00:00.000Z",
+    "to": "2017-06-07T23:59:59.000Z"
+  },
+  "timepicker": {},
+  "timezone": "utc",
+  "title": "IEEE 33-Bus Observed Measurements — Day",
+  "uid": "ieee33-meas-day",
+  "version": 1
+}

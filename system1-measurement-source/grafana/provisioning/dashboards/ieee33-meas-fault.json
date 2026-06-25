@@ -1,0 +1,311 @@
+{
+  "__inputs": [],
+  "__requires": [
+    {
+      "type": "grafana",
+      "id": "grafana",
+      "name": "Grafana",
+      "version": "11.0.0"
+    },
+    {
+      "type": "datasource",
+      "id": "influxdb",
+      "name": "InfluxDB",
+      "version": "1.0.0"
+    },
+    {
+      "type": "panel",
+      "id": "timeseries",
+      "name": "Time series",
+      "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "stat",
+      "name": "Stat",
+      "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "barchart",
+      "name": "Bar chart",
+      "version": ""
+    }
+  ],
+  "annotations": {
+    "list": []
+  },
+  "description": "IEEE 33-Bus Observed Measurements — Fault: 40-step quasi-static fault/reconfiguration scenario (pre_fault → faulted_isolated → restored, 3-s spacing, 2017-06-07 18:00 UTC). Panels: observed bus voltages with fault_event true overlay (μPMU bus 17 goes dark during isolation), dead-bus count from the re-published event measurement, phase marker, and per-class measurement counts. Queries the measurements bucket — this layer is ADDITIVE and does NOT modify the fault_event or state buckets.",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "ieee33-influxdb"
+      },
+      "description": "Observed bus voltage magnitudes (pu) from the measurements bucket across the 40-step fault event. Target A = measured values (measurements bucket, experiment=fault). Target B = true ground-truth from the fault_event bucket (overlay). Key physics: μPMU at bus 17 goes dark during faulted_isolated (bus 17 is inside the dead zone, energised=0). The gap shows measurement loss: System 2 must reconstruct bus 17 voltage with no sensor during isolation.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 0,
+            "showPoints": "never",
+            "spanNulls": false,
+            "drawStyle": "line"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red",   "value": null },
+              { "color": "green", "value": 0.95 },
+              { "color": "red",   "value": 1.05 }
+            ]
+          },
+          "unit": "short",
+          "decimals": 4,
+          "min": 0.90,
+          "max": 1.10
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 0 },
+      "id": 1,
+      "options": {
+        "legend": { "calcs": ["min", "max", "mean"], "displayMode": "table", "placement": "bottom" },
+        "tooltip": { "mode": "multi", "sort": "none" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "influxdb", "uid": "ieee33-influxdb" },
+          "query": "from(bucket: \"measurements\")\n  |> range(start: 2017-06-07T17:59:00Z, stop: 2017-06-07T18:03:00Z)\n  |> filter(fn: (r) => r._measurement == \"meas\")\n  |> filter(fn: (r) => r._field == \"value\")\n  |> filter(fn: (r) => r.quantity == \"vm_pu\")\n  |> filter(fn: (r) => r.experiment == \"fault\")\n  |> sort(columns: [\"_time\"])",
+          "refId": "A"
+        },
+        {
+          "datasource": { "type": "influxdb", "uid": "ieee33-influxdb" },
+          "query": "from(bucket: \"fault_event\")\n  |> range(start: 2017-06-07T17:59:00Z, stop: 2017-06-07T18:03:00Z)\n  |> filter(fn: (r) => r._measurement == \"bus\")\n  |> filter(fn: (r) => r._field == \"vm_pu\")\n  |> sort(columns: [\"_time\"])",
+          "refId": "B"
+        }
+      ],
+      "title": "Observed Bus Voltages (pu) — Fault 40 Steps, Measured vs True",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "ieee33-influxdb"
+      },
+      "description": "Dead-bus count from the re-published event measurement in the measurements bucket (D-07). The n_dead_buses field follows the 0→10→0 pattern: 0 in pre_fault (13 steps), 10 during faulted_isolated (7 steps, buses 8-17 de-energised), 0 again in restored (20 steps). This is the measurement-layer view of the event — querying measurements bucket not fault_event bucket.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "red"
+          },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "always",
+            "pointSize": 4,
+            "spanNulls": false
+          },
+          "unit": "short",
+          "decimals": 0,
+          "min": 0
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 9, "w": 12, "x": 12, "y": 0 },
+      "id": 2,
+      "options": {
+        "legend": { "calcs": ["min", "max", "last"], "displayMode": "table", "placement": "bottom" },
+        "tooltip": { "mode": "single", "sort": "none" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "influxdb", "uid": "ieee33-influxdb" },
+          "query": "from(bucket: \"measurements\")\n  |> range(start: 2017-06-07T17:59:00Z, stop: 2017-06-07T18:03:00Z)\n  |> filter(fn: (r) => r._measurement == \"event\")\n  |> filter(fn: (r) => r._field == \"n_dead_buses\")\n  |> filter(fn: (r) => r.experiment == \"fault\")\n  |> sort(columns: [\"_time\"])",
+          "refId": "A"
+        }
+      ],
+      "title": "Dead-Bus Count Over Time (measurements bucket event)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "ieee33-influxdb"
+      },
+      "description": "Phase marker showing the current fault-scenario phase (pre_fault / faulted_isolated / restored) from the re-published event measurement in the measurements bucket. The n_dead_buses field is used as a numeric phase proxy: 0=normal, 10=isolated. Phase tag labels each block. Used to confirm the three-block event structure is correctly re-published into the measurements bucket (D-07).",
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green",  "value": null },
+              { "color": "red",    "value": 1 },
+              { "color": "green",  "value": 0 }
+            ]
+          },
+          "unit": "short",
+          "decimals": 0,
+          "mappings": [
+            { "type": "value", "options": { "0": { "text": "normal", "color": "green" } } },
+            { "type": "range", "options": { "from": 1, "to": 20, "result": { "text": "isolated/fault", "color": "red" } } }
+          ]
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 6, "x": 0, "y": 9 },
+      "id": 3,
+      "options": {
+        "reduceOptions": {
+          "calcs": ["max"],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": { "type": "influxdb", "uid": "ieee33-influxdb" },
+          "query": "from(bucket: \"measurements\")\n  |> range(start: 2017-06-07T17:59:00Z, stop: 2017-06-07T18:03:00Z)\n  |> filter(fn: (r) => r._measurement == \"event\")\n  |> filter(fn: (r) => r._field == \"n_dead_buses\")\n  |> filter(fn: (r) => r.experiment == \"fault\")\n  |> sort(columns: [\"_time\"])",
+          "refId": "A"
+        }
+      ],
+      "title": "Phase Marker — Peak Dead-Bus Count",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "ieee33-influxdb"
+      },
+      "description": "Per-class measurement count across the full 40-step fault scenario. Shows the relative size of each sensor class. In realistic_sparse: μPMU count drops by 2 readings per step during faulted_isolated (bus 17 dark — D-03 gate). AMI count is much lower than snapshot (cadence=10 means AMI is essentially blind during the 2-min fault event). Pseudo count adapts to dead bus exclusion.",
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "blue", "value": null },
+              { "color": "green", "value": 10 }
+            ]
+          },
+          "unit": "short",
+          "decimals": 0,
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 18, "x": 6, "y": 9 },
+      "id": 4,
+      "options": {
+        "reduceOptions": {
+          "calcs": ["count"],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "horizontal",
+        "textMode": "auto",
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": { "type": "influxdb", "uid": "ieee33-influxdb" },
+          "query": "from(bucket: \"measurements\")\n  |> range(start: 2017-06-07T17:59:00Z, stop: 2017-06-07T18:03:00Z)\n  |> filter(fn: (r) => r._measurement == \"meas\")\n  |> filter(fn: (r) => r._field == \"value\")\n  |> filter(fn: (r) => r.experiment == \"fault\")\n  |> filter(fn: (r) => r.class == \"pmu\")\n  |> count()",
+          "refId": "pmu"
+        },
+        {
+          "datasource": { "type": "influxdb", "uid": "ieee33-influxdb" },
+          "query": "from(bucket: \"measurements\")\n  |> range(start: 2017-06-07T17:59:00Z, stop: 2017-06-07T18:03:00Z)\n  |> filter(fn: (r) => r._measurement == \"meas\")\n  |> filter(fn: (r) => r._field == \"value\")\n  |> filter(fn: (r) => r.experiment == \"fault\")\n  |> filter(fn: (r) => r.class == \"scada\")\n  |> count()",
+          "refId": "scada"
+        },
+        {
+          "datasource": { "type": "influxdb", "uid": "ieee33-influxdb" },
+          "query": "from(bucket: \"measurements\")\n  |> range(start: 2017-06-07T17:59:00Z, stop: 2017-06-07T18:03:00Z)\n  |> filter(fn: (r) => r._measurement == \"meas\")\n  |> filter(fn: (r) => r._field == \"value\")\n  |> filter(fn: (r) => r.experiment == \"fault\")\n  |> filter(fn: (r) => r.class == \"ami\")\n  |> count()",
+          "refId": "ami"
+        },
+        {
+          "datasource": { "type": "influxdb", "uid": "ieee33-influxdb" },
+          "query": "from(bucket: \"measurements\")\n  |> range(start: 2017-06-07T17:59:00Z, stop: 2017-06-07T18:03:00Z)\n  |> filter(fn: (r) => r._measurement == \"meas\")\n  |> filter(fn: (r) => r._field == \"value\")\n  |> filter(fn: (r) => r.experiment == \"fault\")\n  |> filter(fn: (r) => r.class == \"der\")\n  |> count()",
+          "refId": "der"
+        },
+        {
+          "datasource": { "type": "influxdb", "uid": "ieee33-influxdb" },
+          "query": "from(bucket: \"measurements\")\n  |> range(start: 2017-06-07T17:59:00Z, stop: 2017-06-07T18:03:00Z)\n  |> filter(fn: (r) => r._measurement == \"meas\")\n  |> filter(fn: (r) => r._field == \"value\")\n  |> filter(fn: (r) => r.experiment == \"fault\")\n  |> filter(fn: (r) => r.class == \"pseudo\")\n  |> count()",
+          "refId": "pseudo"
+        }
+      ],
+      "title": "Per-Class Measurement Count — Fault",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "ieee33-influxdb"
+      },
+      "description": "Observed-vs-pseudo footprint during the fault scenario: measurement counts per bus location across the 40 steps. During faulted_isolated, buses 8-17 are dark (energised=0, D-03 gate): NO real or pseudo measurements appear for location 8-17. Bus 17 specifically loses its μPMU + DER readings. The footprint changes at each phase transition. Compare with the day footprint to see the reduced-observability challenge for System 2.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 5,
+            "showPoints": "auto",
+            "spanNulls": false
+          },
+          "unit": "short",
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 9, "w": 24, "x": 0, "y": 17 },
+      "id": 5,
+      "options": {
+        "legend": { "calcs": ["count"], "displayMode": "table", "placement": "bottom" },
+        "tooltip": { "mode": "multi", "sort": "none" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "influxdb", "uid": "ieee33-influxdb" },
+          "query": "from(bucket: \"measurements\")\n  |> range(start: 2017-06-07T17:59:00Z, stop: 2017-06-07T18:03:00Z)\n  |> filter(fn: (r) => r._measurement == \"meas\")\n  |> filter(fn: (r) => r._field == \"value\")\n  |> filter(fn: (r) => r.experiment == \"fault\")\n  |> filter(fn: (r) => r.class != \"pseudo\")\n  |> group(columns: [\"location\", \"class\"])\n  |> count()\n  |> group()",
+          "refId": "real"
+        },
+        {
+          "datasource": { "type": "influxdb", "uid": "ieee33-influxdb" },
+          "query": "from(bucket: \"measurements\")\n  |> range(start: 2017-06-07T17:59:00Z, stop: 2017-06-07T18:03:00Z)\n  |> filter(fn: (r) => r._measurement == \"meas\")\n  |> filter(fn: (r) => r._field == \"value\")\n  |> filter(fn: (r) => r.experiment == \"fault\")\n  |> filter(fn: (r) => r.class == \"pseudo\")\n  |> group(columns: [\"location\"])\n  |> count()\n  |> group()",
+          "refId": "pseudo"
+        }
+      ],
+      "title": "Observed-vs-Pseudo Footprint by Bus — Fault (changes at isolation)",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "tags": ["measurements", "ieee33", "fault", "observability"],
+  "templating": { "list": [] },
+  "time": {
+    "from": "2017-06-07T17:59:00.000Z",
+    "to": "2017-06-07T18:03:00.000Z"
+  },
+  "timepicker": {},
+  "timezone": "utc",
+  "title": "IEEE 33-Bus Observed Measurements — Fault",
+  "uid": "ieee33-meas-fault",
+  "version": 1
+}
