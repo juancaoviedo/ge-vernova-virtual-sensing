@@ -275,3 +275,187 @@ No numerical match is expected: our DG placement (buses 18/22/25/33, ±5% OLTC) 
 the paper's PSO-optimised DGs at buses 6 & 32. Restoration succeeds and losses/voltages move
 in the directions the paper reports (the de-energised zone collapses on isolation and is
 restored to a near-nominal in-band operating point when the tie closes).
+
+---
+
+## Measurement Layer (System 1 → System 2 inputs)
+
+The **measurement layer** (Phase 9) is a config-driven module that reads System 1's ground-truth
+state from InfluxDB, applies a configurable sensor model (placement, class, noise, cadence), and
+writes **observed measurements** (`z` + assumed σ) to a new `measurements` InfluxDB bucket.  This
+layer **manufactures realistic under-observability** — the noisy, sparse inputs that System 2 (the
+Distribution State Estimator) must reconstruct from.
+
+This layer is **strictly additive**: it reads from the `state` and `fault_event` buckets but never
+modifies them. The existing System 1 / 8.1 dashboards are untouched.
+
+### Prerequisites
+
+The `measurements` bucket requires the source buckets to be populated first:
+
+```bash
+docker compose up -d         # start InfluxDB + Grafana
+uv run ingest                # one-time OPSD fetch (profiles bucket)
+uv run sim                   # populate state bucket (96-step day)
+uv run fault-sim             # populate fault_event bucket (40-step fault)
+```
+
+### Running the measurement layer
+
+```bash
+uv run measure
+```
+
+Uses the **ACTIVE block** in `src/ieee33/measure_config.py` as the primary configuration switch
+(scenario / source / sampling / noise / seed). Reads the selected ground-truth source, applies
+the sensor model and noise, writes `meas` + topology `event` points to the `measurements` bucket,
+and prints a per-run footprint report.
+
+### ACTIVE block — primary config switch
+
+Edit `src/ieee33/measure_config.py` → `ACTIVE` dict to switch experiment knobs without touching
+any runner code (D-09):
+
+```python
+ACTIVE: dict = {
+    "scenario": "realistic_sparse",   # "well_observed" | "realistic_sparse"
+    "source":   "day",                # "day" (96-step state) | "fault" (40-step fault_event)
+    "sampling": "snapshot",           # "snapshot" | "multirate_async"
+    "noise":    "gaussian",           # "gaussian" | "gaussian_outliers" | "instrument"
+    "seed":     42,                   # RNG seed for deterministic noise
+    "assumed_sigma_scale": 1.0,       # 1.0 = unbiased; >1 over-cautious; <1 over-confident
+}
+```
+
+### CLI overrides — sweep mode
+
+Use CLI flags to override individual ACTIVE-block values for experiment sweeps **without editing
+the file** (CLI overrides ACTIVE; ACTIVE is the fallback):
+
+```bash
+# Run realistic_sparse day scenario (ACTIVE defaults)
+uv run measure
+
+# Override scenario and source only — other knobs from ACTIVE
+uv run measure --scenario well_observed --source day
+
+# Full override for a sweep
+uv run measure --scenario realistic_sparse --source fault --sampling snapshot --noise gaussian
+
+# Sweep all three noise models
+uv run measure --noise gaussian
+uv run measure --noise gaussian_outliers
+uv run measure --noise instrument
+```
+
+Available CLI flags: `--scenario`, `--source`, `--sampling`, `--noise`, `--seed`.
+
+### Footprint report
+
+Each run prints a **per-class measurement count** and **redundancy** summary after completion:
+
+```
+Measurement Footprint Report
+============================
+Scenario : realistic_sparse
+Source   : day
+...
+Class        | Count  | Buses
+scada        |    288 |     1
+pmu          |    576 |     3
+...
+Real-only redundancy       : 0.405   ← < 1.0 means under-observable without pseudo
+With-pseudo redundancy     : 1.215   ← ≥ 1.0 with pseudo padding
+```
+
+Expected values (snapshot mode, day source):
+
+| Scenario | Real-only redundancy | With-pseudo redundancy |
+|----------|---------------------|----------------------|
+| `realistic_sparse` | < 1.0 (under-observable) | ≥ 1.0 (observable with pseudo) |
+| `well_observed` | > 1.0 (observable without pseudo) | > 1.0 |
+
+### Scenario definitions
+
+| Class | `realistic_sparse` | `well_observed` |
+|-------|-------------------|-----------------|
+| SCADA (|V|, P, Q) | Bus 0 | Bus 0 |
+| μPMU (|V|, angle) | Buses {17, 24, 30} | Buses {0, 4, 8, 13, 17, 21, 24, 28, 32} |
+| DER telemetry (P, Q) | Buses {17, 21, 24, 32} | Buses {17, 21, 24, 32} |
+| AMI (P_inj) | Buses {3, 6, 9, 12, 15, 18, 21, 24, 28, 31} | ~80% of load buses |
+| Zero-injection | None | Buses {2, 19} |
+| Pseudo (derived) | All uncovered load buses | Few or none |
+
+**Key fault behaviour:** Bus 17 is inside the dead zone during `faulted_isolated` (buses 8–17,
+`energised=0`). The D-03 gate suppresses ALL measurements for bus 17 during isolation — the μPMU
+and DER readings go dark, deliberately stressing System 2.
+
+### Opening the Observed Measurements dashboards
+
+Two dashboards are auto-provisioned for the `measurements` bucket (auto-loaded from
+`grafana/provisioning/dashboards/`):
+
+| Dashboard | URL | What it shows |
+|-----------|-----|---------------|
+| **IEEE 33-Bus Observed Measurements — Day** | http://localhost:3000 (select from list) | 96-step observed voltages vs true overlay; power injections; per-class counts; observed-vs-pseudo footprint |
+| **IEEE 33-Bus Observed Measurements — Fault** | http://localhost:3000 (select from list) | 40-step fault observed voltages vs true overlay; dead-bus count; phase marker; per-class counts; footprint changes at isolation |
+
+Open Grafana at **http://localhost:3000** after running `uv run measure`. All four dashboards
+(original two + the two new ones) are listed in the Grafana home screen. No manual import is required.
+
+### Noise models
+
+| Model | Description | Use case |
+|-------|-------------|----------|
+| `gaussian` | Additive white Gaussian noise, zero mean | Baseline; determinism test |
+| `gaussian_outliers` | Gaussian base + 3% gross errors at ±15σ | Bad-data detection / χ² test (System 2) |
+| `instrument` | Per-sensor systematic bias + AR(1) temporal correlation + quantization | Graceful degradation study |
+
+### Sampling modes
+
+| Mode | μPMU/DER/SCADA | AMI (day) | AMI (fault) |
+|------|----------------|-----------|-------------|
+| `snapshot` | Every step | Every step | Every step |
+| `multirate_async` | Every step | Every 4th step (hourly) | Every 10th step (blind) |
+
+### Measurements bucket schema (D-06 forward contract for System 2)
+
+```
+measurement: "meas"
+tags:   class ∈ {scada, pmu, ami, der, pseudo, zero_inj}
+        quantity ∈ {vm_pu, va_degree, p_inj_mw, q_inj_mvar, p_mw, q_mvar}
+        location (bus_id string)
+        scenario ∈ {well_observed, realistic_sparse}
+        experiment ∈ {day, fault}
+        phase (fault only: pre_fault | faulted_isolated | restored)
+fields: value (float — noisy measurement z)
+        assumed_sigma (float — σ the estimator should use)
+```
+
+**No `true_value` field** — the oracle stays in `state`/`fault_event` buckets (SPEC R9).
+
+Topology events are also re-published per snapshot into the `measurements` bucket as the `event`
+measurement (same schema as the `fault_event` bucket's `event` measurement, with added
+`scenario`/`experiment` tags) so System 2 can read both `z` and topology from a single bucket.
+
+### Automated tests
+
+```bash
+# Static tests only (no Docker required)
+uv run python -m pytest tests/test_measure_determinism.py::test_no_unseeded_randomness \
+    tests/test_measure_determinism.py::test_no_true_value_field \
+    tests/test_measure_determinism.py::test_meas_schema_vocab -v
+
+# Full suite including integration tests (requires Docker + populated buckets)
+uv run python -m pytest tests/test_measure_determinism.py -v
+```
+
+Static tests verify:
+- **Determinism contract** (`test_no_unseeded_randomness`): no wall-clock or legacy RNG in measure.py
+- **Oracle separation** (`test_no_true_value_field`): no `true_value` field in measurement code
+- **Schema vocabulary** (`test_meas_schema_vocab`): locked D-04/D-05/D-11 constants correct
+
+Integration tests (Docker-guarded — skip cleanly if InfluxDB is unreachable):
+- **Byte-identical runs** (`test_determinism`): same config → same meas values (SPEC R10)
+- **Multirate cadence** (`test_multirate_cadence`): AMI at 24 timestamps in multirate_async (D-14)
+- **Dead-bus gate** (`test_dead_bus_gate`): zero meas for bus 17 in faulted_isolated (D-03)
