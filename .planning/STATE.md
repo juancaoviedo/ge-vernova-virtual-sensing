@@ -2,9 +2,9 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-stopped_at: Phase 9 context gathered
-last_updated: "2026-06-25T07:31:12.257Z"
+status: verifying
+stopped_at: Completed Phase 09 Plan 05 — observability+verification layer complete
+last_updated: "2026-06-25T07:41:13.485Z"
 last_activity: 2026-06-25
 progress:
   total_phases: 11
@@ -27,10 +27,10 @@ See: .planning/PROJECT.md (updated 2026-06-13)
 
 Phase: 9 (Measurement System (Observability Layer)) — EXECUTING
 Plan: 5 of 5
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-06-25
 
-Progress: [██████████] 97%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -80,6 +80,7 @@ Progress: [██████████] 97%
 | Phase 08.1 P02 | 7 | 2 tasks | 1 files |
 | Phase 09 P01 | 2 | 2 tasks | 2 files |
 | Phase 09 P02 | 3 | 2 tasks | 2 files |
+| Phase 09 P05 | 12 | 3 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -119,6 +120,8 @@ Recent decisions affecting current work:
 - [Phase ?]: Combined Tasks 1+2 into single commit (same file, atomic write); T-01–T-13 situational Qs indexed in tracker; drill ~5 min target added per 06-RESEARCH
 - [Phase ?]: TARGET_DATE=2017-06-07: DE summer day selected by live OPSD inspection (solar_max=0.474, wind_mean=0.708, 96 non-null rows, zero NaN)
 - [Phase ?]: DG_SCALE_FACTOR=2.8: scales 200 kW article nameplate to 560 kW effective per unit (D-04 deliberate deviation for visible midday voltage rise and OLTC tapping)
+- [Phase ?]: D-16 honored: four distinct Grafana dashboard uids — uid-collision threat T-09-13 mitigated
+- [Phase ?]: Per-snapshot redundancy fix: realistic_sparse real-only 0.578 (<1.0), with-pseudo 1.172 (>=1.0) — SPEC R3 confirmed by programmatic verification
 
 ### Roadmap Evolution
 
@@ -156,6 +159,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-06-25T07:31:12.239Z
-Stopped at: Phase 9 context gathered
+Last session: 2026-06-25T07:41:13.468Z
+Stopped at: Completed Phase 09 Plan 05 — observability+verification layer complete
 Resume file: None
