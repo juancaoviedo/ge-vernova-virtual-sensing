@@ -18,6 +18,7 @@ ingest   = "ieee33.ingest:main"
 sim      = "ieee33.sim:main"
 validate = "ieee33.validate:main"
 fault-sim = "ieee33.fault_sim:main"
+measure   = "ieee33.measure:main"
 
 [build-system]
 requires = ["hatchling"]
