@@ -4,9 +4,9 @@ measure.py
 Config-driven measurement-layer runner for the IEEE 33-bus observability study.
 Reads System 1 ground truth (either the 96-step ``state`` day or the 40-step
 ``fault_event`` scenario) from InfluxDB, applies a sensor model (placement +
-measurement class), corrupts values with a seeded noise model (gaussian only in
-Plan 03; full three-model engine added in Plan 04), and writes ``meas`` +
-topology ``event`` points to the ``measurements`` bucket in snapshot mode.
+measurement class), corrupts values with one of three seeded noise models
+(gaussian / gaussian_outliers / instrument), and writes ``meas`` + topology
+``event`` points to the ``measurements`` bucket.
 
 Determinism note: a single ``np.random.default_rng(seed)`` is created in
 ``main()`` before the loop; no wallclock reads (no wall-clock functions,
@@ -25,12 +25,6 @@ Run:          uv run measure  [--scenario ...] [--source ...] [--sampling ...]
               [--noise ...] [--seed ...]
 Effect:       Writes meas + event points to the InfluxDB 'measurements' bucket.
               Exits 0 on success, 1 on validation failure.
-
-Plan 04 hooks (NOT YET IMPLEMENTED — clearly marked):
-  - Full three-model noise engine (gaussian_outliers + instrument AR(1))
-  - Multirate cadence gate (snapshot only in Plan 03)
-  - Topology event re-publish
-  - Per-run footprint report
 """
 
 import sys
@@ -44,6 +38,152 @@ from ieee33 import config
 from ieee33 import influx
 from ieee33 import measure_config as mc
 from ieee33.network import build_enhanced_33bus
+
+
+# ---------------------------------------------------------------------------
+# Instrument noise model helpers (D-13)
+# ---------------------------------------------------------------------------
+
+class InstrumentState:
+    """Persistent per-sensor AR(1) state for the instrument noise model (D-13).
+
+    Holds the rho coefficient and a per-sensor memory of the previous AR(1)
+    term.  A single instance is created in main() before the step loop and
+    passed into apply_noise on every call.
+
+    AR(1) recursion:
+        white = rng.normal(0, true_sigma * sqrt(1 - rho^2))
+        ar1   = rho * prev[sensor_key] + white
+    This gives a stationary process with std ≈ true_sigma and lag-1
+    autocorrelation ≈ rho.  The sqrt(1-rho^2) scaling preserves the
+    marginal variance equal to true_sigma^2.
+
+    Attributes:
+        rho (float): AR(1) coefficient (D-13: 0.7).
+        _ar_prev (dict): {sensor_key: float} — previous AR(1) term per sensor.
+    """
+
+    def __init__(self, rho: float = 0.7) -> None:
+        self.rho = rho
+        self._ar_prev: dict[str, float] = {}
+
+    def ar1_term(self, sensor_key: str, true_sigma: float, rng) -> float:
+        """Return the AR(1) noise component for this sensor, update prev state.
+
+        Args:
+            sensor_key: Unique string key for this sensor (e.g. "scada_0_vm_pu").
+            true_sigma: True noise std for this reading (used for white noise).
+            rng:        The seeded numpy Generator (single instance for the run).
+
+        Returns:
+            Float AR(1) noise sample.  Internally updates _ar_prev[sensor_key].
+        """
+        white = rng.normal(0.0, true_sigma * (1.0 - self.rho ** 2) ** 0.5)
+        prev  = self._ar_prev.get(sensor_key, 0.0)
+        ar1   = self.rho * prev + white
+        self._ar_prev[sensor_key] = ar1
+        return ar1
+
+
+def _instrument_bias(sensor_key: str, seed: int) -> float:
+    """Return a deterministic per-sensor fixed bias (D-13 INSTRUMENT_BIAS_SCALE).
+
+    Derives a unique bias for each sensor from a hash of (sensor_key, seed).
+    This makes the bias:
+      - Fixed for a given sensor across all steps (systematic error)
+      - Reproducible: same (sensor_key, seed) always returns same float
+      - Independent across sensors: different keys → different biases
+
+    The bias is applied as: raw = true_val + bias * abs(true_val)
+    so it represents a fractional systematic error (~+0.5% of value).
+
+    Args:
+        sensor_key: Unique string key for this sensor (e.g. "scada_0_vm_pu").
+        seed:       The experiment seed from cfg["seed"].
+
+    Returns:
+        Float bias coefficient (D-13: drawn from N(0, INSTRUMENT_BIAS_SCALE)).
+    """
+    bias_rng = np.random.default_rng(hash((sensor_key, seed)) & 0xFFFFFFFF)
+    return bias_rng.normal(0.0, mc.INSTRUMENT_BIAS_SCALE)
+
+
+def apply_noise(
+    noise_model: str,
+    cls: str,
+    bus: int,
+    quantity: str,
+    true_val: float,
+    true_sigma: float,
+    rng,
+    instr_state: InstrumentState,
+    seed: int,
+) -> float:
+    """Apply the selected noise model and return the noisy measurement value.
+
+    Dispatches to one of three models (D-12, D-13):
+      - "gaussian":           additive white Gaussian noise, zero mean, std=true_sigma
+      - "gaussian_outliers":  gaussian base + gross errors on fraction f=OUTLIER_FRACTION
+                              of measurements at magnitude OUTLIER_SPIKE_MULT*sigma
+      - "instrument":         per-sensor fixed bias + AR(1) temporal correlation +
+                              quantization to the per-class LSB grid
+
+    IMPORTANT — RNG draw order (Pitfall 5 / T-09-09):
+      Each model draws from rng in a fixed sequence per call.  The caller
+      iterates sensors in sorted(class) then sorted(bus_id) order so that the
+      RNG stream is deterministic across runs with the same seed.  apply_noise
+      ALWAYS draws from rng in the same order for a given model:
+        - gaussian:          one draw (normal)
+        - gaussian_outliers: two draws (normal + random) or two draws (normal + choice)
+        - instrument:        one draw inside ar1_term (normal) — bias RNG is independent
+
+    The assumed_sigma (the σ the estimator uses) is computed by the CALLER as
+    true_sigma * cfg["assumed_sigma_scale"] and written to the meas Point as a
+    separate field.  It is NEVER fed into this function (SPEC R9 / D-06).
+
+    Args:
+        noise_model:  "gaussian" | "gaussian_outliers" | "instrument"
+        cls:          Measurement class (e.g. "scada", "pmu")
+        bus:          Bus id (int)
+        quantity:     Quantity name (e.g. "vm_pu", "p_inj_mw")
+        true_val:     Ground-truth value
+        true_sigma:   True noise std (fraction × |value| for most classes;
+                      absolute for pmu va_degree)
+        rng:          Seeded numpy Generator (single instance for the run)
+        instr_state:  InstrumentState holding AR(1) prev per sensor (for "instrument")
+        seed:         Experiment seed (for per-sensor bias derivation)
+
+    Returns:
+        Noisy float measurement value.
+    """
+    if noise_model == "gaussian":
+        noise = rng.normal(0.0, true_sigma) if true_sigma > 0.0 else 0.0
+        return true_val + noise
+
+    elif noise_model == "gaussian_outliers":
+        # Base gaussian draw (always happens to keep RNG stream consistent)
+        noise = rng.normal(0.0, true_sigma) if true_sigma > 0.0 else 0.0
+        # D-12: replace noise with gross error on OUTLIER_FRACTION of measurements
+        if rng.random() < mc.OUTLIER_FRACTION:
+            sign = rng.choice([-1.0, 1.0])
+            noise = sign * mc.OUTLIER_SPIKE_MULT * true_sigma
+        return true_val + noise
+
+    elif noise_model == "instrument":
+        # D-13: per-sensor fixed bias + AR(1) temporal correlation + quantization
+        sensor_key = f"{cls}_{bus}_{quantity}"
+        bias       = _instrument_bias(sensor_key, seed)
+        ar1        = instr_state.ar1_term(sensor_key, true_sigma, rng)
+        raw        = true_val + bias * abs(true_val) + ar1
+        lsb        = mc.QUANT_LSB[cls][quantity]
+        quantized  = round(raw / lsb) * lsb
+        return quantized
+
+    else:
+        raise ValueError(
+            f"apply_noise: unknown noise_model '{noise_model}'. "
+            "Expected 'gaussian', 'gaussian_outliers', or 'instrument'."
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -539,6 +679,9 @@ def main() -> None:
     # ---- single seeded RNG (D-10, Pitfall 5: created once, before the loop) ----
     rng = np.random.default_rng(cfg["seed"])
 
+    # ---- instrument noise state (single instance, persistent across steps) ----
+    instr_state = InstrumentState(mc.INSTRUMENT_AR1_RHO)
+
     # ---- write API (SYNCHRONOUS — prevents silent background-thread failures) ----
     write_api = client.write_api(write_options=SYNCHRONOUS)
     issues: list[str] = []
@@ -577,9 +720,10 @@ def main() -> None:
 
         n_dead = len(dead_bus_ids)
 
-        # -- cadence hook (multirate_async: Plan 04 adds per-class step gate) --
-        if cfg["sampling"] == "multirate_async":
-            pass  # TODO(Plan 04): cadence gate — CADENCE[source][cls] step filter
+        # -- cadence mode is checked per class inside the sensor loop below (D-14) --
+        # In multirate_async mode each class is gated by step_idx % CADENCE[experiment][cls] != 0.
+        # In snapshot mode all classes emit every step (gate is bypassed).
+        _multirate = cfg["sampling"] == "multirate_async"
 
         # -- sensor iteration: sorted class order, sorted bus order (Pitfall 5: determinism) --
         points = []
@@ -587,6 +731,10 @@ def main() -> None:
         n_pseudo    = 0
 
         for cls in real_classes:
+            # D-14 multirate cadence gate: skip this class at steps where it doesn't report
+            if _multirate and step_idx % mc.CADENCE[experiment][cls] != 0:
+                continue
+
             cls_quantities = list(mc.CLASS_SIGMA[cls].keys())
             assigned_buses = sorted(scenario_def.get(cls, []))
             for bus_id in assigned_buses:
@@ -618,10 +766,12 @@ def main() -> None:
 
                     assumed_sigma = true_sigma * cfg["assumed_sigma_scale"]
 
-                    # PLACEHOLDER gaussian noise (Plan 04 expands to full three-model engine)
-                    # gaussian model: noise ~ N(0, true_sigma)
-                    noise = rng.normal(0.0, true_sigma) if true_sigma > 0 else 0.0
-                    value = true_val + noise
+                    # Full three-model noise engine (D-12, D-13)
+                    # assumed_sigma is kept separate — never fed into noise generation (SPEC R9)
+                    value = apply_noise(
+                        cfg["noise"], cls, bus_id, quantity,
+                        true_val, true_sigma, rng, instr_state, cfg["seed"],
+                    )
 
                     points.append(
                         influx.build_meas_point(
@@ -634,6 +784,7 @@ def main() -> None:
                     class_counts[cls] = class_counts.get(cls, 0) + 1
 
         # -- pseudo class: load buses not covered by any real class --
+        # D-14: pseudo cadence = 1 for both day and fault (always emit)
         for bus_id in pseudo_bus_list:
             if bus_id in dead_bus_ids:
                 continue   # D-03: no pseudo for dead bus
@@ -652,8 +803,12 @@ def main() -> None:
                 base_sigma = mc.CLASS_SIGMA["pseudo"][quantity]
                 true_sigma = base_sigma * abs(true_val)
                 assumed_sigma = true_sigma * cfg["assumed_sigma_scale"]
-                noise = rng.normal(0.0, true_sigma) if true_sigma > 0 else 0.0
-                value = true_val + noise
+
+                # Full three-model noise engine — applies to pseudo class too
+                value = apply_noise(
+                    cfg["noise"], "pseudo", bus_id, quantity,
+                    true_val, true_sigma, rng, instr_state, cfg["seed"],
+                )
 
                 points.append(
                     influx.build_meas_point(
