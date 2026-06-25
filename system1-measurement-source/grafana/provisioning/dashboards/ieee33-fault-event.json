@@ -47,7 +47,7 @@
         "type": "influxdb",
         "uid": "ieee33-influxdb"
       },
-      "description": "Bus voltage magnitudes (pu) for ALL 33 buses across the 40-step event. The dead-zone buses (8-17) collapse to 0 pu during the faulted_isolated block (steps 13-19) and recover on tie-line restoration. Healthy buses remain near 0.99 pu throughout. Threshold markers at 0.95 and 1.05 pu.",
+      "description": "Bus voltage magnitudes (pu) for ALL 33 buses across the 40-step event, drawn as lines. The dead-zone buses (8-17) collapse to 0 pu during the faulted_isolated block (steps 13-19) and recover on tie-line restoration. Healthy buses remain near 0.99 pu throughout. Threshold markers at 0.95 and 1.05 pu.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -55,9 +55,10 @@
           },
           "custom": {
             "lineWidth": 2,
-            "fillOpacity": 5,
+            "fillOpacity": 0,
             "showPoints": "never",
-            "spanNulls": false
+            "spanNulls": false,
+            "drawStyle": "line"
           },
           "thresholds": {
             "mode": "absolute",
@@ -94,7 +95,7 @@
           "refId": "A"
         }
       ],
-      "title": "Bus Voltage Profile / Envelope (pu)",
+      "title": "Bus Voltage Profile (pu)",
       "type": "timeseries"
     },
     {
@@ -226,7 +227,7 @@
         "type": "influxdb",
         "uid": "ieee33-influxdb"
       },
-      "description": "Bus voltage magnitudes (pu) for the dead-zone buses only (bus_id 8-17 = article buses 9-18). These buses collapse to 0 pu when isolated (steps 13-19, faulted_isolated block) and recover to ~0.997 pu on tie-line restoration (restored block, steps 20-39). min=0 is intentional to make the collapse explicit.",
+      "description": "Bus voltage magnitudes (pu) for the dead-zone buses only (bus_id 8-17 = article buses 9-18), drawn as lines. These buses collapse to 0 pu when isolated (steps 13-19, faulted_isolated block) and recover to ~0.997 pu on tie-line restoration (restored block, steps 20-39). min=0 is intentional to make the collapse explicit.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -234,9 +235,10 @@
           },
           "custom": {
             "lineWidth": 2,
-            "fillOpacity": 10,
+            "fillOpacity": 0,
             "showPoints": "never",
-            "spanNulls": false
+            "spanNulls": false,
+            "drawStyle": "line"
           },
           "thresholds": {
             "mode": "absolute",
@@ -274,7 +276,7 @@
         "type": "influxdb",
         "uid": "ieee33-influxdb"
       },
-      "description": "Count of dead (unenergised) buses from the event measurement's n_dead_buses field. 0 in pre_fault, 10 during faulted_isolated, 0 in restored. Threshold: any value above 0 is red (outage in progress).",
+      "description": "Net active power (MW) at every bus from res_bus.p_mw (pandapower sign convention: positive = net consumption / load draw at the bus, negative = net injection). The dead-zone buses (8-17) drop to 0 MW during the faulted_isolated block and return on restoration — the per-bus load-shed-and-restore story that complements the voltage view. Slack bus 0 reads ~0.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -282,38 +284,31 @@
           },
           "custom": {
             "lineWidth": 2,
-            "fillOpacity": 5,
-            "showPoints": "always",
-            "pointSize": 4,
-            "spanNulls": false
+            "fillOpacity": 0,
+            "showPoints": "never",
+            "spanNulls": false,
+            "drawStyle": "line"
           },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              { "color": "green", "value": null },
-              { "color": "red",   "value": 1 }
-            ]
-          },
-          "unit": "short",
-          "decimals": 0,
+          "unit": "MW",
+          "decimals": 4,
           "min": 0
         },
         "overrides": []
       },
-      "gridPos": { "h": 8, "w": 6, "x": 12, "y": 17 },
-      "id": 6,
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 17 },
+      "id": 9,
       "options": {
-        "legend": { "calcs": ["min", "max", "last"], "displayMode": "list", "placement": "bottom" },
-        "tooltip": { "mode": "single", "sort": "none" }
+        "legend": { "calcs": ["min", "max", "mean"], "displayMode": "table", "placement": "bottom" },
+        "tooltip": { "mode": "multi", "sort": "none" }
       },
       "targets": [
         {
           "datasource": { "type": "influxdb", "uid": "ieee33-influxdb" },
-          "query": "from(bucket: \"fault_event\")\n  |> range(start: 2017-06-07T17:59:00Z, stop: 2017-06-07T18:03:00Z)\n  |> filter(fn: (r) => r._measurement == \"event\")\n  |> filter(fn: (r) => r._field == \"n_dead_buses\")\n  |> sort(columns: [\"_time\"])",
+          "query": "from(bucket: \"fault_event\")\n  |> range(start: 2017-06-07T17:59:00Z, stop: 2017-06-07T18:03:00Z)\n  |> filter(fn: (r) => r._measurement == \"bus\")\n  |> filter(fn: (r) => r._field == \"p_mw\")\n  |> sort(columns: [\"_time\"])",
           "refId": "A"
         }
       ],
-      "title": "Dead-Bus Count",
+      "title": "Bus Active Power (MW) — per-bus load shed & restore",
       "type": "timeseries"
     },
     {
@@ -338,7 +333,7 @@
         },
         "overrides": []
       },
-      "gridPos": { "h": 8, "w": 6, "x": 18, "y": 17 },
+      "gridPos": { "h": 8, "w": 6, "x": 0, "y": 25 },
       "id": 7,
       "options": {
         "reduceOptions": {
@@ -372,7 +367,7 @@
         "defaults": {},
         "overrides": []
       },
-      "gridPos": { "h": 9, "w": 24, "x": 0, "y": 25 },
+      "gridPos": { "h": 8, "w": 18, "x": 6, "y": 25 },
       "id": 8,
       "options": {
         "footer": {
@@ -408,5 +403,5 @@
   "timezone": "utc",
   "title": "IEEE 33-Bus — Fault & Reconfiguration",
   "uid": "ieee33-fault-v1",
-  "version": 1
+  "version": 2
 }

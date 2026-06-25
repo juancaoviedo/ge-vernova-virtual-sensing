@@ -255,11 +255,11 @@ Headline panels:
 
 | Panel | What it shows |
 |-------|---------------|
-| Bus Voltage Envelope | All 33 buses — the dead-zone collapse to 0 pu and post-restoration recovery |
+| Bus Voltage Profile | All 33 buses (line plot) — the dead-zone collapse to 0 pu and post-restoration recovery |
 | Dead-Zone Bus Voltages (8–17) | Zoomed-in view of the 10 de-energised buses during isolation |
+| Bus Active Power (MW) | Net per-bus power — the dead-zone buses shed to 0 MW during isolation and restore on reconfiguration |
 | OLTC Tap Position | Tap pinned at −2 during isolation; OLTC resumes in restored block |
 | Served Load & Slack Feed-in | 3.29 → 2.69 MW drop during isolation, recovery to 3.29 MW |
-| Dead-Bus Count | 0 → 10 → 0 pulse shape over the three blocks |
 | Restored Min-Voltage (stat) | ~0.997 pu (green threshold); scoped to the restored block only |
 | Phase / Event Marker | `pre_fault` → `faulted_isolated` → `restored` timeline |
 | Topology Event Table | Per-step ground truth: `faulted_line_id`, `tie_closed`, `tie_id`, `n_dead_buses` |

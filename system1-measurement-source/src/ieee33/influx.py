@@ -366,8 +366,12 @@ def write_fault_step(
 
     Extended schema vs write_state_step:
       measurement "bus"    adds tag energised ("1" for live, "0" for dead-zone)
+                           adds fields p_mw, q_mvar (net per-bus power from
+                           res_bus; positive = consumption/load) on top of the
+                           unchanged vm_pu / va_degree forward-contract fields
                            dead buses from dead_bus_ids are zero-filled
-                           (vm_pu=0.0, va_degree=0.0, energised="0")
+                           (vm_pu=0.0, va_degree=0.0, p_mw=0.0, q_mvar=0.0,
+                           energised="0")
       measurement "line"   adds tag energised ("1" / "0")
                            dead lines from dead_line_ids are zero-filled
                            (all 7 fields = 0.0, energised="0")
@@ -406,6 +410,11 @@ def write_fault_step(
     points = []
 
     # ---- bus measurement: energised buses (from res_bus) ----
+    # p_mw / q_mvar are net per-bus power (pandapower res_bus convention:
+    # positive = net consumption/load at the bus, negative = net injection).
+    # Additive vs write_state_step: vm_pu / va_degree field names are unchanged
+    # (System-2 voltage forward contract intact); p_mw / q_mvar extend the
+    # fault_event bus series so the per-bus load-shed-and-restore is visible.
     for idx, row in res_bus.iterrows():
         points.append(
             Point("bus")
@@ -413,6 +422,8 @@ def write_fault_step(
             .tag("energised", "1")
             .field("vm_pu",     float(row["vm_pu"]))
             .field("va_degree", float(row["va_degree"]))
+            .field("p_mw",      float(row["p_mw"]))
+            .field("q_mvar",    float(row["q_mvar"]))
             .time(timestamp)
         )
 
@@ -424,6 +435,8 @@ def write_fault_step(
             .tag("energised", "0")
             .field("vm_pu",     0.0)
             .field("va_degree", 0.0)
+            .field("p_mw",      0.0)
+            .field("q_mvar",    0.0)
             .time(timestamp)
         )
 
