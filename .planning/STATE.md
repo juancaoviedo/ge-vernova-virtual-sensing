@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: verifying
+status: milestone_complete
 stopped_at: Completed Phase 09 Plan 05 — observability+verification layer complete
 last_updated: "2026-06-25T07:41:13.485Z"
 last_activity: 2026-06-25
 progress:
   total_phases: 11
-  completed_phases: 10
+  completed_phases: 11
   total_plans: 37
   completed_plans: 37
   percent: 100
@@ -25,9 +25,9 @@ See: .planning/PROJECT.md (updated 2026-06-13)
 
 ## Current Position
 
-Phase: 9 (Measurement System (Observability Layer)) — EXECUTING
-Plan: 5 of 5
-Status: Phase complete — ready for verification
+Phase: 9
+Plan: Not started
+Status: Milestone complete
 Last activity: 2026-06-25
 
 Progress: [██████████] 100%
@@ -36,7 +36,7 @@ Progress: [██████████] 100%
 
 **Velocity:**
 
-- Total plans completed: 32
+- Total plans completed: 37
 - Average duration: — min
 - Total execution time: 0.0 hours
 
@@ -53,6 +53,7 @@ Progress: [██████████] 100%
 | 6 | 6 | - | - |
 | 08 | 5 | - | - |
 | 08.1 | 4 | - | - |
+| 9 | 5 | - | - |
 
 **Recent Trend:**
 
