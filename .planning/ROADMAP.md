@@ -208,7 +208,7 @@ Plans:
 
 **Out of scope:** System 2 (estimator), System 3 (self-healing loop), live streaming transport (NATS / MQTT / C37.118-over-UDP — optional later afterthought), any change to System 1's day or the fault scenario physics.
 
-**Plans:** 4/5 plans executed
+**Plans:** 5/5 plans complete
 
 Plans:
 **Wave 1**
@@ -222,4 +222,4 @@ Plans:
 - [x] 09-04-PLAN.md — measure.py transforms: 3 noise models, multirate cadence, topology re-publish, footprint report
 
 **Wave 4** *(blocked on Wave 3 completion)*
-- [ ] 09-05-PLAN.md — 2 Grafana dashboards + README runbook + determinism/cadence/gate tests
+- [x] 09-05-PLAN.md — 2 Grafana dashboards + README runbook + determinism/cadence/gate tests
