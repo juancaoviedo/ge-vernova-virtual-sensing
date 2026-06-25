@@ -208,7 +208,7 @@ Plans:
 
 **Out of scope:** System 2 (estimator), System 3 (self-healing loop), live streaming transport (NATS / MQTT / C37.118-over-UDP — optional later afterthought), any change to System 1's day or the fault scenario physics.
 
-**Plans:** 2/5 plans executed
+**Plans:** 3/5 plans executed
 
 Plans:
 **Wave 1**
@@ -216,7 +216,7 @@ Plans:
 - [x] 09-02-PLAN.md — influx.py additive Flux readers + meas/event writers (measurements bucket)
 
 **Wave 2** *(blocked on Wave 1 completion)*
-- [ ] 09-03-PLAN.md — measure.py data path: source switch, P_inj derivation, sensor selection, energised gate, snapshot writes
+- [x] 09-03-PLAN.md — measure.py data path: source switch, P_inj derivation, sensor selection, energised gate, snapshot writes
 
 **Wave 3** *(blocked on Wave 2 completion)*
 - [ ] 09-04-PLAN.md — measure.py transforms: 3 noise models, multirate cadence, topology re-publish, footprint report
