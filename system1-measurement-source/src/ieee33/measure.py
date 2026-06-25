@@ -686,8 +686,20 @@ def main() -> None:
     write_api = client.write_api(write_options=SYNCHRONOUS)
     issues: list[str] = []
 
-    # ---- accumulate per-class point counts for footprint report (Plan 04 expands) ----
+    # ---- accumulate per-class point counts for footprint report (D-15) ----
     class_counts: dict[str, int] = {cls: 0 for cls in real_classes + ["pseudo", "zero_inj"]}
+
+    # ---- accumulate per-snapshot n_energised for redundancy calculation (D-15) ----
+    # For source=day: always 33 buses energised (no energised tag in state bucket)
+    # For source=fault: varies by phase (pre_fault=33, faulted_isolated=23, restored=33)
+    n_energised_sum: int  = 0
+    n_energised_min: int  = 33
+    n_energised_max: int  = 33
+    n_snapshots:     int  = 0
+
+    # ---- observed / dead bus sets (for footprint report) ----
+    observed_buses:  set  = set()   # buses that produced at least one real meas
+    dead_buses_seen: set  = set()   # buses that were dead in at least one snapshot
 
     # ---- console table header (mirrors fault_sim.py lines 334-338) ----
     print(
@@ -719,6 +731,14 @@ def main() -> None:
             phase = None
 
         n_dead = len(dead_bus_ids)
+        n_energised_snap = len(live_bus_ids)
+
+        # Accumulate for post-loop footprint report
+        n_energised_sum += n_energised_snap
+        n_energised_min  = min(n_energised_min, n_energised_snap)
+        n_energised_max  = max(n_energised_max, n_energised_snap)
+        n_snapshots     += 1
+        dead_buses_seen.update(dead_bus_ids)
 
         # -- cadence mode is checked per class inside the sensor loop below (D-14) --
         # In multirate_async mode each class is gated by step_idx % CADENCE[experiment][cls] != 0.
@@ -782,6 +802,7 @@ def main() -> None:
                     )
                     n_live_real += 1
                     class_counts[cls] = class_counts.get(cls, 0) + 1
+                    observed_buses.add(bus_id)
 
         # -- pseudo class: load buses not covered by any real class --
         # D-14: pseudo cadence = 1 for both day and fault (always emit)
@@ -820,7 +841,36 @@ def main() -> None:
                 n_pseudo += 1
                 class_counts["pseudo"] = class_counts.get("pseudo", 0) + 1
 
-        # -- TODO(Plan 04): topology event re-publish (build_event_point + append to points) --
+        # -- D-07: topology event re-publish into measurements bucket --
+        # For source=fault: copy the five event fields from event_by_step at this snapshot.
+        # For source=day: record the fixed/known topology (no fault, all ties open).
+        if cfg["source"] == "fault" and event_by_step is not None:
+            ev = event_by_step[step_idx]
+            evt_point = influx.build_event_point(
+                scenario        = cfg["scenario"],
+                experiment      = experiment,
+                phase           = ev["phase"],
+                faulted_line_id = ev["faulted_line_id"],
+                tie_closed      = ev["tie_closed"],
+                tie_id          = ev["tie_id"],
+                n_dead_buses    = ev["n_dead_buses"],
+                dead_buses      = ev["dead_buses"],
+                ts              = ts,
+            )
+        else:
+            # source=day: D-07 steady_state — fixed topology, no fault, all ties open
+            evt_point = influx.build_event_point(
+                scenario        = cfg["scenario"],
+                experiment      = experiment,
+                phase           = "steady_state",
+                faulted_line_id = -1,
+                tie_closed      = 0,
+                tie_id          = -1,
+                n_dead_buses    = 0,
+                dead_buses      = "",
+                ts              = ts,
+            )
+        points.append(evt_point)
 
         # -- write all points for this snapshot --
         if points:
@@ -841,20 +891,71 @@ def main() -> None:
         client.close()
         sys.exit(1)
 
-    # ---- success summary ----
-    total_real   = sum(v for k, v in class_counts.items() if k != "pseudo")
+    # ---- D-15 per-run footprint report ----
+    total_real   = sum(v for k, v in class_counts.items() if k not in ("pseudo", "zero_inj"))
     total_pseudo = class_counts.get("pseudo", 0)
-    total_pts    = total_real + total_pseudo
+    total_pts    = total_real + total_pseudo + sum(
+        v for k, v in class_counts.items() if k == "zero_inj"
+    )
+
+    # Redundancy calculation (D-15 / RESEARCH Q2)
+    # Use average n_energised across snapshots as representative denominator.
+    # For fault: min during isolation is more conservative; report both.
+    avg_n_energised  = (n_energised_sum / n_snapshots) if n_snapshots > 0 else 33
+    rep_n_energised  = round(avg_n_energised)   # integer for n_states formula
+    n_states         = 2 * (rep_n_energised - 1)   # D-15: n_states = 2*(N_energised-1)
+    real_only_redundancy   = (total_real / n_states) if n_states > 0 else 0.0
+    with_pseudo_redundancy = ((total_real + total_pseudo) / n_states) if n_states > 0 else 0.0
+
+    print("\n" + "=" * 62)
+    print("Measurement Footprint Report")
+    print("============================")
+    print(f"Scenario : {cfg['scenario']}")
+    print(f"Source   : {cfg['source']}")
+    print(f"Sampling : {cfg['sampling']}")
+    print(f"Noise    : {cfg['noise']}")
+    print(f"Seed     : {cfg['seed']}")
+    print("---")
+    print(f"{'Class':<12} | {'Count':>6} | {'Buses':>5}")
+    print(f"{'---':<12}-+-{'------':>6}-+-{'-----':>5}")
+    for cls_k in real_classes:
+        cnt   = class_counts.get(cls_k, 0)
+        buses = len(scenario_def.get(cls_k, []))
+        print(f"{cls_k:<12} | {cnt:>6,} | {buses:>5}")
+    # pseudo and zero_inj rows
+    n_pseudo_buses = len(pseudo_bus_list)
+    print(f"{'pseudo':<12} | {total_pseudo:>6,} | {n_pseudo_buses:>5}")
+    print("---")
+    print(f"Total real measurements    : {total_real:,}")
+    print(f"Total pseudo measurements  : {total_pseudo:,}")
+    print(f"N_energised (avg)          : {avg_n_energised:.1f}")
+    if cfg["source"] == "fault" and n_energised_min != n_energised_max:
+        print(f"N_energised (min/max)      : {n_energised_min}/{n_energised_max}")
+    print(f"N_states                   : {n_states}")
+    print(f"Real-only redundancy       : {real_only_redundancy:.3f}")
+    print(f"With-pseudo redundancy     : {with_pseudo_redundancy:.3f}")
+    n_observed = len(observed_buses)
+    n_dead_total = len(dead_buses_seen)
+    print(f"Observed buses (real)      : {n_observed} / 33")
+    if n_dead_total > 0:
+        print(f"Dead buses (fault ISO)     : {n_dead_total} ({sorted(dead_buses_seen)})")
+
+    # D-15 soft invariant: wrong-direction redundancy for the active scenario
+    # (In snapshot mode only — multirate changes per-class counts significantly)
+    if cfg["sampling"] == "snapshot":
+        if cfg["scenario"] == "well_observed" and real_only_redundancy <= 1.0:
+            issues.append(
+                f"[SOFT] well_observed scenario has real_only_redundancy={real_only_redundancy:.3f} "
+                f"<= 1.0 (expected > 1.0 without pseudo) — check sensor placement in SCENARIOS"
+            )
+        elif cfg["scenario"] == "realistic_sparse" and real_only_redundancy >= 1.0:
+            issues.append(
+                f"[SOFT] realistic_sparse scenario has real_only_redundancy={real_only_redundancy:.3f} "
+                f">= 1.0 (expected < 1.0 real-only) — check sensor placement in SCENARIOS"
+            )
+
     print("\n" + "=" * 62)
     print(f"measure OK — {total_pts:,} points written to bucket '{mc.MEASUREMENTS_BUCKET}'")
-    print(f"  scenario={cfg['scenario']}  source={cfg['source']}  "
-          f"sampling={cfg['sampling']}  noise={cfg['noise']}  seed={cfg['seed']}")
-    print(f"  real measurements : {total_real:,}")
-    print(f"  pseudo measurements: {total_pseudo:,}")
-    print(
-        "\n  NOTE: footprint redundancy report, topology event re-publish, "
-        "and multirate cadence gate are added in Plan 04."
-    )
 
     client.close()
 
