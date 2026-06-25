@@ -1,7 +1,8 @@
 ---
 phase: 09-measurement-system-observability-layer-configurable-sensor-m
 verified: 2026-06-25T00:00:00Z
-status: human_needed
+status: passed
+human_verification_sealed: "2026-06-25 — all 3 visual Grafana items confirmed by Juan (see 09-HUMAN-UAT.md)"
 score: 21/21 must-haves verified
 overrides_applied: 0
 human_verification:
