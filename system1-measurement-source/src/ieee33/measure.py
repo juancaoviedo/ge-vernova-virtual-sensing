@@ -29,6 +29,7 @@ Effect:       Writes meas + event points to the InfluxDB 'measurements' bucket.
 
 import sys
 import argparse
+import hashlib
 from datetime import timezone
 
 import numpy as np
@@ -104,7 +105,13 @@ def _instrument_bias(sensor_key: str, seed: int) -> float:
     Returns:
         Float bias coefficient (D-13: drawn from N(0, INSTRUMENT_BIAS_SCALE)).
     """
-    bias_rng = np.random.default_rng(hash((sensor_key, seed)) & 0xFFFFFFFF)
+    # Python's built-in hash() is randomized per-process (PYTHONHASHSEED), which
+    # would make the "fixed" bias differ across runs and break determinism (R10).
+    # Use a stable hash (sha256) so the same (sensor_key, seed) always seeds the
+    # same bias regardless of process.
+    digest = hashlib.sha256(f"{sensor_key}|{seed}".encode()).digest()
+    bias_seed = int.from_bytes(digest[:4], "big")
+    bias_rng = np.random.default_rng(bias_seed)
     return bias_rng.normal(0.0, mc.INSTRUMENT_BIAS_SCALE)
 
 
@@ -777,10 +784,13 @@ def main() -> None:
                         issues.append(f"step {step_idx:02d}: {ve}")
                         continue
 
-                    # Compute true sigma (fraction of |value| except pmu va_degree = absolute)
+                    # Compute true sigma (fraction of |value| except pmu va_degree
+                    # and zero_inj, which are absolute). zero_inj true_val is 0.0 by
+                    # definition, so a fractional sigma would collapse to 0.0 and make
+                    # the estimator weight (1/σ²) infinite — use the absolute value.
                     base_sigma = mc.CLASS_SIGMA[cls][quantity]
-                    if cls == "pmu" and quantity == "va_degree":
-                        true_sigma = base_sigma   # absolute radians (D-11: GPS-disciplined)
+                    if (cls == "pmu" and quantity == "va_degree") or cls == "zero_inj":
+                        true_sigma = base_sigma   # absolute (pmu angle rad; zero_inj near-exact)
                     else:
                         true_sigma = base_sigma * abs(true_val)
 
