@@ -317,6 +317,19 @@ def test_multirate_cadence():
     from ieee33 import influx, measure_config as mc
     from ieee33.measure import main as measure_main
 
+    # Test isolation: multirate writes FEWER points than snapshot, and
+    # overwrite-in-place only replaces matching timestamps — so stale points
+    # from a prior snapshot-mode run (manual or earlier test) would survive and
+    # inflate the distinct-timestamp count. Delete this test's tag-scoped meas
+    # points up front so the counts reflect only this run's writes.
+    _cleanup_client = influx.get_client()
+    _cleanup_client.delete_api().delete(
+        "2000-01-01T00:00:00Z", "2100-01-01T00:00:00Z",
+        '_measurement="meas" AND experiment="day" AND scenario="realistic_sparse"',
+        bucket=mc.MEASUREMENTS_BUCKET, org=influx.config.INFLUXDB_ORG,
+    )
+    _cleanup_client.close()
+
     def run_measure(sampling: str):
         orig_argv = sys.argv[:]
         sys.argv = [
@@ -333,7 +346,11 @@ def test_multirate_cadence():
             sys.argv = orig_argv
 
     def count_distinct_times(cls: str) -> int:
-        """Count distinct _time values for the given class in the measurements bucket (day)."""
+        """Count distinct _time values for the given class in the measurements bucket (day).
+
+        Flux ``count()`` cannot aggregate a ``time``-typed column, so we fetch the raw
+        ``_time`` values for the class and count distinct timestamps in pandas instead.
+        """
         client = influx.get_client()
         flux = (
             'from(bucket: "measurements")\n'
@@ -343,14 +360,13 @@ def test_multirate_cadence():
             f'  |> filter(fn: (r) => r.class == "{cls}")\n'
             '  |> filter(fn: (r) => r.scenario == "realistic_sparse")\n'
             '  |> filter(fn: (r) => r.experiment == "day")\n'
-            '  |> distinct(column: "_time")\n'
-            '  |> count()'
+            '  |> keep(columns: ["_time"])'
         )
         df = client.query_api().query_data_frame(flux)
         client.close()
         if df is None or (hasattr(df, "__len__") and len(df) == 0):
             return 0
-        return int(df.iloc[0]["_value"])
+        return int(df["_time"].nunique())
 
     # --- multirate_async: AMI every 4 steps → 24 distinct timestamps ---
     run_measure("multirate_async")

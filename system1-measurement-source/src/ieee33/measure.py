@@ -904,8 +904,15 @@ def main() -> None:
     avg_n_energised  = (n_energised_sum / n_snapshots) if n_snapshots > 0 else 33
     rep_n_energised  = round(avg_n_energised)   # integer for n_states formula
     n_states         = 2 * (rep_n_energised - 1)   # D-15: n_states = 2*(N_energised-1)
-    real_only_redundancy   = (total_real / n_states) if n_states > 0 else 0.0
-    with_pseudo_redundancy = ((total_real + total_pseudo) / n_states) if n_states > 0 else 0.0
+    # Redundancy is a PER-SNAPSHOT property (a static-WLS estimate solves one snapshot
+    # at a time), so divide the run-total measurement counts by the number of snapshots
+    # before dividing by n_states. Pooling measurements across time would inflate the
+    # ratio ~n_snapshots-fold and erase the well_observed (>1) vs realistic_sparse (<1)
+    # distinction the SPEC acceptance criterion depends on.
+    real_per_snapshot   = (total_real / n_snapshots) if n_snapshots > 0 else 0.0
+    pseudo_per_snapshot = (total_pseudo / n_snapshots) if n_snapshots > 0 else 0.0
+    real_only_redundancy   = (real_per_snapshot / n_states) if n_states > 0 else 0.0
+    with_pseudo_redundancy = ((real_per_snapshot + pseudo_per_snapshot) / n_states) if n_states > 0 else 0.0
 
     print("\n" + "=" * 62)
     print("Measurement Footprint Report")
