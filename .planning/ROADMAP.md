@@ -211,8 +211,15 @@ Plans:
 **Plans:** 5 plans
 
 Plans:
+**Wave 1**
 - [ ] 09-01-PLAN.md — measure_config.py knobs (scenarios/σ/cadence/ACTIVE) + measure script entry
 - [ ] 09-02-PLAN.md — influx.py additive Flux readers + meas/event writers (measurements bucket)
+
+**Wave 2** *(blocked on Wave 1 completion)*
 - [ ] 09-03-PLAN.md — measure.py data path: source switch, P_inj derivation, sensor selection, energised gate, snapshot writes
+
+**Wave 3** *(blocked on Wave 2 completion)*
 - [ ] 09-04-PLAN.md — measure.py transforms: 3 noise models, multirate cadence, topology re-publish, footprint report
+
+**Wave 4** *(blocked on Wave 3 completion)*
 - [ ] 09-05-PLAN.md — 2 Grafana dashboards + README runbook + determinism/cadence/gate tests
