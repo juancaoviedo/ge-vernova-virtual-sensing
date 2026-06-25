@@ -190,7 +190,7 @@ Plans:
 **Goal:** Build the **measurement layer** between System 1 (ground-truth behaviour) and the future System 2 (state estimator). It reads System 1's full ground-truth state from InfluxDB, applies a **config-driven sensor model** (which buses/lines are instrumented, with what measurement class), corrupts it with **config-selectable noise**, samples it at the configured **cadence**, and writes the resulting measurement set (`z` + assumed σ + topology/switch metadata + phase tag) to a **new dedicated `measurements` InfluxDB bucket** tagged by experiment + scenario — plus provisioned Grafana dashboards of the observed states. Its job is to **destroy information realistically** (manufacture under-observability), not pass state through faithfully — that is what makes virtual sensing necessary. This is the "Measurement System" in Juan's multi-system design: System 1 (behaviour) → **Measurement System (P9)** → System 2 (estimator) → System 3 (self-healing). Interview tie: the AGMS perception edge — Inspector scouts streaming observations as POV frames.
 
 **Depends on:** Phase 8 (System 1 `state` bucket / 96-step day) **and Phase 8.1** (the `fault_event` bucket + its topology/event metadata schema — **must be frozen first; hard schema dependency**, schema still being finalized via /gsd-discuss-phase 8.1)
-**Requirements**: TBD (run /gsd-spec-phase 9)
+**Requirements**: 12 locked in 09-SPEC.md (R1-R12) + 16 implementation decisions (D-01..D-16) in 09-CONTEXT.md
 
 **Locked design decisions (from 2026-06-24 discussion):**
 - **State formulation = NODE-VOLTAGE** (V magnitude + angle); branch-current is awareness-only. Matches all study material + ORACS-covariance framing, handles PMU angles + topology change cleanly, and pandapower ground truth is already node-voltage.
@@ -208,7 +208,11 @@ Plans:
 
 **Out of scope:** System 2 (estimator), System 3 (self-healing loop), live streaming transport (NATS / MQTT / C37.118-over-UDP — optional later afterthought), any change to System 1's day or the fault scenario physics.
 
-**Plans:** 0 plans
+**Plans:** 5 plans
 
 Plans:
-- [ ] TBD (run /gsd-spec-phase 9, then /gsd-plan-phase 9 to break down)
+- [ ] 09-01-PLAN.md — measure_config.py knobs (scenarios/σ/cadence/ACTIVE) + measure script entry
+- [ ] 09-02-PLAN.md — influx.py additive Flux readers + meas/event writers (measurements bucket)
+- [ ] 09-03-PLAN.md — measure.py data path: source switch, P_inj derivation, sensor selection, energised gate, snapshot writes
+- [ ] 09-04-PLAN.md — measure.py transforms: 3 noise models, multirate cadence, topology re-publish, footprint report
+- [ ] 09-05-PLAN.md — 2 Grafana dashboards + README runbook + determinism/cadence/gate tests
