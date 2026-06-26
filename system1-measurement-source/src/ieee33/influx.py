@@ -899,3 +899,71 @@ def write_meas_points(write_api, points: list, bucket: str = "measurements") -> 
         org=config.INFLUXDB_ORG,
         record=points,
     )
+
+
+# ---------------------------------------------------------------------------
+# Phase 10 readers — measurements bucket (read by publish.py / estimate.py)
+# ---------------------------------------------------------------------------
+
+def read_measurements(client: InfluxDBClient, scenario: str, experiment: str):
+    """Read all meas points for (scenario, experiment) from the measurements bucket.
+
+    Mirror of read_fault_event pivot style (lines 709-746).  Returns a
+    DataFrame sorted by _time, class, location — the deterministic publish
+    order required by SPEC R2 / D-01.
+
+    CRITICAL — for experiment="fault", 'phase' is a TAG (not a field) on meas
+    points.  It MUST appear in rowKey so it surfaces as a string column.
+    Compare phase == 'pre_fault' etc. as strings.  (Pitfall 5 mirror.)
+
+    For experiment="day" 'phase' is absent from meas points (it is only
+    conditionally tagged by build_meas_point when phase is not None).  The
+    day rowKey therefore omits 'phase' to avoid row-multiplication on None.
+
+    Args:
+        client:     Active InfluxDBClient.
+        scenario:   Sensor-placement scenario ("well_observed" | "realistic_sparse").
+        experiment: Data source ("day" | "fault").
+
+    Returns:
+        pandas.DataFrame with at minimum columns:
+          _time, class, quantity, location, scenario, experiment, value, assumed_sigma
+          and (for fault) 'phase'.
+        Sorted by (_time, class, location).
+
+    Raises:
+        RuntimeError: If the measurements bucket is empty (run 'uv run measure' first).
+    """
+    from datetime import date as _date, timedelta as _td
+
+    start = f"{config.TARGET_DATE}T00:00:00Z"
+    next_day = (_date.fromisoformat(config.TARGET_DATE) + _td(days=1)).isoformat()
+    stop = f"{next_day}T00:00:00Z"
+
+    # For fault: include 'phase' in rowKey because it is a TAG on fault meas points.
+    # For day: 'phase' tag is absent → omit from rowKey to avoid Flux row-multiplication.
+    if experiment == "fault":
+        row_key = (
+            '"_time", "class", "quantity", "location", "scenario", "experiment", "phase"'
+        )
+    else:
+        row_key = '"_time", "class", "quantity", "location", "scenario", "experiment"'
+
+    flux = (
+        f'from(bucket: "{config.MEASUREMENTS_BUCKET}")\n'
+        f'  |> range(start: {start}, stop: {stop})\n'
+        f'  |> filter(fn: (r) => r._measurement == "meas")\n'
+        f'  |> filter(fn: (r) => r.scenario == "{scenario}")\n'
+        f'  |> filter(fn: (r) => r.experiment == "{experiment}")\n'
+        f'  |> pivot(rowKey: [{row_key}], '
+        f'columnKey: ["_field"], valueColumn: "_value")\n'
+        f'  |> sort(columns: ["_time", "class", "location"])'
+    )
+    df = client.query_api().query_data_frame(flux)
+    if df is None or (hasattr(df, "__len__") and len(df) == 0):
+        raise RuntimeError(
+            f"read_measurements: measurements bucket is empty for "
+            f"scenario='{scenario}', experiment='{experiment}'. "
+            "Run 'uv run measure' first to populate the measurements bucket."
+        )
+    return df

@@ -218,3 +218,5 @@ INFLUXDB_ORG     = os.getenv("INFLUXDB_ORG",   "ieee33")
 PROFILES_BUCKET  = "profiles"                   # one-time ingest of 96-step load/solar/wind (D-06)
 STATE_BUCKET     = "state"                      # per-run power-flow snapshots (D-06)
 FAULT_EVENT_BUCKET = "fault_event"             # 40-step fault/reconfiguration scenario (Phase 8.1, D-naming-locked)
+MEASUREMENTS_BUCKET = "measurements"           # Phase 9 sensor-model output bucket (D-06)
+ESTIMATES_BUCKET    = "estimates"              # NEW Phase 10 — System 2 state-estimator output bucket

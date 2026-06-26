@@ -11,6 +11,7 @@ dependencies = [
   "requests>=2.32",
   "python-dotenv>=1.0",
   "openpyxl>=3.1",
+  "paho-mqtt>=2.1.0",
 ]
 
 [project.scripts]
@@ -19,6 +20,9 @@ sim      = "ieee33.sim:main"
 validate = "ieee33.validate:main"
 fault-sim = "ieee33.fault_sim:main"
 measure   = "ieee33.measure:main"
+publish   = "ieee33.publish:main"    # NEW Phase 10 — MQTT replay publisher
+estimate  = "ieee33.estimate:main"   # NEW Phase 10 — streaming AC state estimator
+score     = "ieee33.score:main"      # NEW Phase 10 — oracle scoring harness
 
 [build-system]
 requires = ["hatchling"]

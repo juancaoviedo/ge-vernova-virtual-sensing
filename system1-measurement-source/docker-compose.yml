@@ -35,6 +35,15 @@ services:
       influxdb:
         condition: service_started
 
+  mosquitto:
+    image: eclipse-mosquitto:2.0
+    ports:
+      - "127.0.0.1:1883:1883"    # SECURITY: localhost only — mirror influxdb/grafana binding (T-10-01)
+    volumes:
+      - ./mosquitto/config/mosquitto.conf:/mosquitto/config/mosquitto.conf
+    restart: unless-stopped
+    # No depends_on needed: publish.py and estimate.py wait for broker explicitly
+
 volumes:
   influxdb-data:
   influxdb-config:
