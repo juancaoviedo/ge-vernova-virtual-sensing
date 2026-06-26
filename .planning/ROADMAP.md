@@ -272,12 +272,12 @@ Plans:
 5. Scoring harness: estimate-vs-oracle RMSE + worst-dark-node error + NEES/NIS calibration; per-run report (kept separate from estimator).
 6. Grafana dashboards (true-vs-estimated overlay, per-bus error heatmap, `trace(P)` = ORACS observability index, fault island-mode inflation) + README runbook + determinism/fault tests.
 
-**Plans:** 1/6 plans executed
+**Plans:** 2/6 plans executed
 
 Plans:
 **Wave 1**
 - [x] 10-01-PLAN.md — Mosquitto broker (localhost) + InfluxDB->MQTT replay publisher + retained versioned netmodel/current + estimate_config
-- [ ] 10-02-PLAN.md — AC measurement model: Ybus-from-topology (<1e-9) + h(x) per class + analytic Jacobian H (FD<1e-5) + FASE sensitivity S
+- [x] 10-02-PLAN.md — AC measurement model: Ybus-from-topology (<1e-9) + h(x) per class + analytic Jacobian H (FD<1e-5) + FASE sensitivity S
 
 **Wave 2** *(blocked on Wave 1 completion)*
 - [ ] 10-03-PLAN.md — Estimators behind one interface: AC-WLS (chi2/LNR + rank reporting) + EKF (Joseph) + sqrt-UKF + FASE predictor/persistence foil
