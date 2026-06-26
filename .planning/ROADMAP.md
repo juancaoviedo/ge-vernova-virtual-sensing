@@ -272,7 +272,7 @@ Plans:
 5. Scoring harness: estimate-vs-oracle RMSE + worst-dark-node error + NEES/NIS calibration; per-run report (kept separate from estimator).
 6. Grafana dashboards (true-vs-estimated overlay, per-bus error heatmap, `trace(P)` = ORACS observability index, fault island-mode inflation) + README runbook + determinism/fault tests.
 
-**Plans:** 4/6 plans executed
+**Plans:** 5/6 plans executed
 
 Plans:
 **Wave 1**
@@ -286,5 +286,5 @@ Plans:
 - [x] 10-04-PLAN.md — estimate runner: MQTT subscriber + snapshot assembler + version-aware Ybus rebuild + estimates bucket (oracle-separated)
 
 **Wave 4** *(blocked on Wave 3 completion)*
-- [ ] 10-05-PLAN.md — score harness: oracle join + RMSE + dark-node + baseline + NEES/NIS calibration + fault inflation (non-zero exit on FAIL)
+- [x] 10-05-PLAN.md — score harness: oracle join + RMSE + dark-node + baseline + NEES/NIS calibration + fault inflation (non-zero exit on FAIL)
 - [ ] 10-06-PLAN.md — two Grafana estimator dashboards (trace_P/P-inflation) + README runbook + determinism (1e-9) verification
