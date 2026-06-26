@@ -1076,3 +1076,115 @@ def write_estimate_step(
         org=config.INFLUXDB_ORG,
         record=points,
     )
+
+
+# ---------------------------------------------------------------------------
+# Phase 10 readers — estimates bucket (read by score.py ONLY)
+# ---------------------------------------------------------------------------
+
+def read_estimates(client: InfluxDBClient, scenario: str, experiment: str, estimator: str):
+    """Read per-bus estimate points from the estimates bucket.
+
+    Mirrors read_fault_bus pivot style (lines 627-667) — bus_id is a TAG and
+    MUST appear in rowKey so it surfaces as a string column after pivot.
+
+    This helper is intended for score.py ONLY.  The estimator modules (estimate.py,
+    estimators.py, fase_predict.py, ac_model.py) must NEVER call this function.
+
+    Args:
+        client:     Active InfluxDBClient.
+        scenario:   Sensor-placement scenario ("well_observed" | "realistic_sparse").
+        experiment: Data source tag ("day" | "fault").
+        estimator:  Estimator name ("wls" | "ekf" | "ukf").
+
+    Returns:
+        pandas.DataFrame with columns _time, bus_id, scenario, experiment,
+        estimator, vm_pu_est, va_degree_est, sigma_vm, sigma_va.
+        bus_id is a STRING column (it is an InfluxDB TAG).
+        Sorted by (_time, bus_id).
+
+    Raises:
+        RuntimeError: If no estimate rows are found (run 'uv run estimate' first).
+    """
+    from datetime import date as _date, timedelta as _td
+
+    start = f"{config.TARGET_DATE}T00:00:00Z"
+    next_day = (_date.fromisoformat(config.TARGET_DATE) + _td(days=1)).isoformat()
+    stop = f"{next_day}T00:00:00Z"
+
+    # bus_id, scenario, experiment, estimator are all TAGs → must be in rowKey
+    # so they surface as string columns after pivot (mirrors read_fault_bus Pitfall 5 guard).
+    flux = (
+        f'from(bucket: "{config.ESTIMATES_BUCKET}")\n'
+        f'  |> range(start: {start}, stop: {stop})\n'
+        f'  |> filter(fn: (r) => r._measurement == "estimate")\n'
+        f'  |> filter(fn: (r) => r.scenario == "{scenario}")\n'
+        f'  |> filter(fn: (r) => r.experiment == "{experiment}")\n'
+        f'  |> filter(fn: (r) => r.estimator == "{estimator}")\n'
+        f'  |> pivot(rowKey: ["_time", "bus_id", "scenario", "experiment", "estimator"], '
+        f'columnKey: ["_field"], valueColumn: "_value")\n'
+        f'  |> sort(columns: ["_time", "bus_id"])'
+    )
+    df = client.query_api().query_data_frame(flux)
+    if df is None or (hasattr(df, "__len__") and len(df) == 0):
+        raise RuntimeError(
+            f"read_estimates: no estimate rows found for "
+            f"scenario='{scenario}', experiment='{experiment}', estimator='{estimator}'. "
+            "Run 'uv run estimate' first to populate the estimates bucket."
+        )
+    return df
+
+
+def read_estimate_system(client: InfluxDBClient, scenario: str, experiment: str, estimator: str):
+    """Read per-step system-level estimate_system points from the estimates bucket.
+
+    Returns trace_P and (when present, recursive filters only) nis_k and m_k.
+    WLS runs have no nis_k/m_k fields — this function is robust to their absence
+    and returns NaN for those columns rather than raising.
+
+    This helper is intended for score.py ONLY.  The estimator modules must NEVER
+    call this function.
+
+    Args:
+        client:     Active InfluxDBClient.
+        scenario:   Sensor-placement scenario ("well_observed" | "realistic_sparse").
+        experiment: Data source tag ("day" | "fault").
+        estimator:  Estimator name ("wls" | "ekf" | "ukf").
+
+    Returns:
+        pandas.DataFrame with columns _time, scenario, experiment, estimator,
+        trace_P, and (for recursive filters) nis_k (float), m_k (float).
+        For WLS runs, nis_k and m_k columns will be absent or NaN.
+        Sorted by _time.
+
+    Raises:
+        RuntimeError: If no estimate_system rows are found (run 'uv run estimate' first).
+    """
+    from datetime import date as _date, timedelta as _td
+
+    start = f"{config.TARGET_DATE}T00:00:00Z"
+    next_day = (_date.fromisoformat(config.TARGET_DATE) + _td(days=1)).isoformat()
+    stop = f"{next_day}T00:00:00Z"
+
+    # scenario, experiment, estimator are TAGs → must be in rowKey.
+    # nis_k and m_k are FIELDS (present for ekf/ukf, absent for wls);
+    # they will appear as NaN columns in the returned DataFrame when absent.
+    flux = (
+        f'from(bucket: "{config.ESTIMATES_BUCKET}")\n'
+        f'  |> range(start: {start}, stop: {stop})\n'
+        f'  |> filter(fn: (r) => r._measurement == "estimate_system")\n'
+        f'  |> filter(fn: (r) => r.scenario == "{scenario}")\n'
+        f'  |> filter(fn: (r) => r.experiment == "{experiment}")\n'
+        f'  |> filter(fn: (r) => r.estimator == "{estimator}")\n'
+        f'  |> pivot(rowKey: ["_time", "scenario", "experiment", "estimator"], '
+        f'columnKey: ["_field"], valueColumn: "_value")\n'
+        f'  |> sort(columns: ["_time"])'
+    )
+    df = client.query_api().query_data_frame(flux)
+    if df is None or (hasattr(df, "__len__") and len(df) == 0):
+        raise RuntimeError(
+            f"read_estimate_system: no estimate_system rows found for "
+            f"scenario='{scenario}', experiment='{experiment}', estimator='{estimator}'. "
+            "Run 'uv run estimate' first to populate the estimates bucket."
+        )
+    return df
