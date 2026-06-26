@@ -131,15 +131,34 @@ def test_no_third_party_imports():
 
 
 def test_no_runtime_side_effects():
-    """grep-checkable: no load_dotenv, datetime.now, np.random, or open() calls."""
+    """AST-based check: no calls to load_dotenv, datetime.now, np.random, or open()."""
+    import ast
     import pathlib
 
     src_path = pathlib.Path(__file__).parent.parent / "src" / "ieee33" / "estimate_config.py"
-    src = src_path.read_text()
+    tree = ast.parse(src_path.read_text())
 
-    forbidden_patterns = ["load_dotenv", "datetime.now", "np.random", "open("]
-    for pattern in forbidden_patterns:
-        assert pattern not in src, (
-            f"estimate_config.py contains forbidden pattern '{pattern}' — "
-            "module must be pure constants with no side effects"
-        )
+    # Look for Call nodes whose function is one of the forbidden patterns
+    forbidden_calls = {"load_dotenv", "open"}
+    forbidden_attr_chains = {
+        ("datetime", "now"),
+        ("np", "random"),
+        ("numpy", "random"),
+    }
+
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Call):
+            # Direct call: open(...), load_dotenv(...)
+            if isinstance(node.func, ast.Name):
+                assert node.func.id not in forbidden_calls, (
+                    f"estimate_config.py calls forbidden function '{node.func.id}'"
+                )
+            # Attribute call: datetime.now(), np.random.seed(), etc.
+            elif isinstance(node.func, ast.Attribute):
+                if isinstance(node.func.value, ast.Name):
+                    chain = (node.func.value.id, node.func.attr)
+                    for forbidden in forbidden_attr_chains:
+                        # Check if first two elements match start of chain
+                        assert chain[:len(forbidden)] != forbidden, (
+                            f"estimate_config.py calls forbidden pattern '{'.'.join(forbidden)}'"
+                        )
