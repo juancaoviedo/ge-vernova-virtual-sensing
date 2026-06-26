@@ -967,3 +967,112 @@ def read_measurements(client: InfluxDBClient, scenario: str, experiment: str):
             "Run 'uv run measure' first to populate the measurements bucket."
         )
     return df
+
+
+# ---------------------------------------------------------------------------
+# Phase 10 write helper — estimates bucket (additive; mirrors write_state_step)
+# ---------------------------------------------------------------------------
+
+def write_estimate_step(
+    write_api,
+    timestamp,
+    x_hat,
+    P,
+    scenario: str,
+    experiment: str,
+    estimator: str,
+    energised_mask=None,
+    nis_k=None,
+    m_k=None,
+) -> None:
+    """Write per-bus state estimates + system-level trace_P to the estimates bucket.
+
+    Additive helper — DOES NOT modify any existing bucket or schema.  Writes to
+    config.ESTIMATES_BUCKET ("estimates") only.
+
+    Schema (SPEC R8 / RESEARCH.md §estimates bucket Point schema):
+      measurement "estimate"         tag bus_id/scenario/experiment/estimator
+                                     fields vm_pu_est, va_degree_est, sigma_vm, sigma_va
+      measurement "estimate_system"  tag scenario/experiment/estimator
+                                     fields trace_P
+                                     AND, for recursive filters (ekf/ukf only):
+                                       nis_k (float) — per-step innovation NIS scalar
+                                       m_k   (int)   — innovation dimension (for chi2 band)
+
+    R12 dead-bus masking: when energised_mask is provided, buses where
+    energised_mask[i] is False/0 are SKIPPED — no point emitted for dead buses.
+
+    R11 NIS: nis_k and m_k are the faithful per-step Mahalanobis innovation
+    statistics from EKF/UKF update().  WLS passes None (snapshot estimator has
+    no innovation sequence; NIS is not defined for a Gauss-Newton snapshot solve).
+    The fields are simply absent from estimate_system for WLS runs.
+
+    Tags-first pattern (mirrors build_meas_point lines 800-813).
+
+    Args:
+        write_api:      SYNCHRONOUS write_api from client.write_api(SYNCHRONOUS).
+        timestamp:      UTC-aware datetime or nanosecond integer for this step.
+        x_hat:          np.ndarray shape (n_state,)  interleaved [|V|_0, theta_0, ...].
+                        n_state = 2 * n_bus_est (e.g. 66 for buses 0..32).
+        P:              np.ndarray shape (n_state, n_state)  posterior covariance.
+        scenario:       Sensor-placement scenario string.
+        experiment:     Data source string ("day" | "fault").
+        estimator:      Estimator name ("wls" | "ekf" | "ukf").
+        energised_mask: Optional boolean/int array length n_bus_est; index i == False
+                        means bus i is de-energised → skip its point (R12).
+                        None means all buses are energised (no masking).
+        nis_k:          Optional float  per-step NIS scalar y_k^T S_k^{-1} y_k (R11).
+                        None for WLS (no innovation sequence).
+        m_k:            Optional int  innovation dimension len(y_k) at this step (R11).
+                        None for WLS.
+    """
+    import numpy as np
+
+    points = []
+    n_bus_est = len(x_hat) // 2   # number of estimation buses (e.g. 33 for buses 0..32)
+
+    for i in range(n_bus_est):
+        # R12: skip de-energised buses (no estimate emitted)
+        if energised_mask is not None and not energised_mask[i]:
+            continue
+
+        vm_pu_est  = float(x_hat[2 * i])
+        va_deg_est = float(x_hat[2 * i + 1] * 180.0 / np.pi)
+        sigma_vm   = float(np.sqrt(abs(P[2 * i, 2 * i])))
+        sigma_va   = float(np.sqrt(abs(P[2 * i + 1, 2 * i + 1])) * 180.0 / np.pi)
+
+        points.append(
+            Point("estimate")
+            .tag("bus_id",     str(i))
+            .tag("scenario",   scenario)
+            .tag("experiment", experiment)
+            .tag("estimator",  estimator)
+            .field("vm_pu_est",     vm_pu_est)
+            .field("va_degree_est", va_deg_est)
+            .field("sigma_vm",      sigma_vm)
+            .field("sigma_va",      sigma_va)
+            .time(timestamp)
+        )
+
+    # System-level point: trace_P + optional recursive-filter NIS statistics
+    sys_point = (
+        Point("estimate_system")
+        .tag("scenario",   scenario)
+        .tag("experiment", experiment)
+        .tag("estimator",  estimator)
+        .field("trace_P", float(np.trace(P)))
+        .time(timestamp)
+    )
+    # R11: persist nis_k and m_k only for recursive filters (ekf/ukf)
+    # WLS passes None — fields are absent from the point for snapshot runs
+    if nis_k is not None:
+        sys_point = sys_point.field("nis_k", float(nis_k))
+    if m_k is not None:
+        sys_point = sys_point.field("m_k", int(m_k))
+    points.append(sys_point)
+
+    write_api.write(
+        bucket=config.ESTIMATES_BUCKET,
+        org=config.INFLUXDB_ORG,
+        record=points,
+    )
