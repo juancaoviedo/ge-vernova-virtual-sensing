@@ -275,9 +275,16 @@ Plans:
 **Plans:** 6 plans
 
 Plans:
+**Wave 1**
 - [ ] 10-01-PLAN.md — Mosquitto broker (localhost) + InfluxDB->MQTT replay publisher + retained versioned netmodel/current + estimate_config
 - [ ] 10-02-PLAN.md — AC measurement model: Ybus-from-topology (<1e-9) + h(x) per class + analytic Jacobian H (FD<1e-5) + FASE sensitivity S
+
+**Wave 2** *(blocked on Wave 1 completion)*
 - [ ] 10-03-PLAN.md — Estimators behind one interface: AC-WLS (chi2/LNR + rank reporting) + EKF (Joseph) + sqrt-UKF + FASE predictor/persistence foil
+
+**Wave 3** *(blocked on Wave 2 completion)*
 - [ ] 10-04-PLAN.md — estimate runner: MQTT subscriber + snapshot assembler + version-aware Ybus rebuild + estimates bucket (oracle-separated)
+
+**Wave 4** *(blocked on Wave 3 completion)*
 - [ ] 10-05-PLAN.md — score harness: oracle join + RMSE + dark-node + baseline + NEES/NIS calibration + fault inflation (non-zero exit on FAIL)
 - [ ] 10-06-PLAN.md — two Grafana estimator dashboards (trace_P/P-inflation) + README runbook + determinism (1e-9) verification

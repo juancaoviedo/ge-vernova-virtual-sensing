@@ -782,22 +782,21 @@ Point("estimate_system")
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **FASE sensitivity matrix S: pseudoinverse vs power-flow Jacobian inverse**
+All three resolved during planning; the decisions are encoded in the PLAN.md files cited below.
+
+1. **FASE sensitivity matrix S: pseudoinverse vs power-flow Jacobian inverse** — **RESOLVED (Plan 10-02):** weighted pseudoinverse `S = (H_injᵀ W_inj H_inj)⁻¹ H_injᵀ W_inj`, with `W_inj` from injection-sensor measurement noise. Links FASE prior quality to measurement quality.
    - What we know: S = ∂x/∂p; H_inj contains ∂p/∂x so S = H_inj⁻¹ conceptually.
-   - What's unclear: With m_inj > n (over-determined injection block), should S = (H_inj^T W_inj H_inj)^{-1} H_inj^T W_inj (WLS-weighted) or S = pinv(H_inj) (unweighted)? The weighted form is more principled.
-   - Recommendation: Use weighted pseudoinverse with W_inj from the measurement noise at injection sensors. This links FASE prior quality to measurement quality.
+   - Why: With m_inj > n (over-determined injection block), the weighted form is more principled than `pinv(H_inj)`.
 
-2. **Q_floor magnitude**
-   - What we know: Q_floor ∈ (0, ∞) · I; too small = P collapses to zero at flat load (filter becomes overconfident); too large = P inflates even at steady state.
-   - What's unclear: The right scale for distribution DSSE where state changes per step are ~1% of |V|.
-   - Recommendation: Start with Q_floor = 1e-8 · I (on the order of σ_pmu²); expose as a knob in `estimate_config.py`. A diagnostic: trace_P should not collapse to < σ_pmu² after many steps.
+2. **Q_floor magnitude** — **RESOLVED (Plan 10-01):** default `q_floor_scale = 1e-8` (·I, order of σ_pmu²), exposed as a config-tunable knob in `estimate_config.py`.
+   - What we know: too small = P collapses at flat load (overconfident); too large = P inflates at steady state.
+   - Diagnostic: trace_P should not collapse to < σ_pmu² after many steps.
 
-3. **WLS initialization (flat start vs previous estimate warm start)**
-   - What we know: Gauss-Newton can diverge from a poor starting point. Flat start (|V|=1.0 pu, θ=0) is standard for distribution networks with mild voltage deviations.
-   - What's unclear: Whether the OLTC-regulated IEEE 33-bus topology with DER reverse power flow causes voltages far from 1.0 (e.g., bus 32 under high solar could be at 1.05 pu).
-   - Recommendation: Use flat start for WLS; use previous EKF/UKF estimate as warm start for convergence speed in production.
+3. **WLS initialization (flat start vs warm start)** — **RESOLVED (Plan 10-03):** flat start (`|V|=1.0 pu, θ=0`) for the WLS snapshot estimator; recursive EKF/UKF carry their own prior across steps.
+   - What we know: Gauss-Newton can diverge from a poor starting point; flat start is standard for distribution networks with mild voltage deviations.
+   - Note: OLTC-regulated + DER reverse flow keeps voltages near 1.0 pu (±0.05), so flat start is safe.
 
 ---
 
