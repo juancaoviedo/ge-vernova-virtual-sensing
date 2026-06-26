@@ -223,3 +223,61 @@ Plans:
 
 **Wave 4** *(blocked on Wave 3 completion)*
 - [x] 09-05-PLAN.md — 2 Grafana dashboards + README runbook + determinism/cadence/gate tests
+
+### Phase 10: System 2: Streaming Distribution State Estimator (MQTT + FASE)
+
+**Goal:** Build **System 2** — the distribution state estimator that *recreates the network state*. It consumes the noisy, sparse measurement stream produced by Phase 9 (System 1 → Measurement System) over an **MQTT transport**, and reconstructs the full nodal voltage state `x = {|V|, θ}` at all 33 buses (~64 states, slack as reference) **with calibrated posterior covariance `P`**. The deliverable is not just `x̂` but `(x̂, P)` — and `trace(P)` / per-bus σ_V IS the **ORACS Observability index** the AGMS architecture gates on. System 2 proves virtual sensing works under realistic under-observability: it must reconstruct the "dark" (pseudo-only) nodes from topology coupling + priors, and during the fault scenario it must keep producing estimates with honestly-inflating covariance when a zone goes dark (island-mode resilience). This is the third stage of Juan's multi-system design: System 1 (behaviour) → Measurement System (P9) → **System 2 (estimator, P10)** → System 3 (self-healing, later). Interview tie: the Inspector-scout `s_i` on a Field Agent Device running the recursive FASE filter, publishing posterior `(x̂, P)` to the ORACS cell; the covariance gates CaCSM voltage control and simulate-before-commit.
+
+**Depends on:** Phase 9 (the `measurements` bucket: `meas` points with `value` + `assumed_sigma` + class/quantity/location/scenario/experiment/phase tags, and `event` topology points) **and** Phase 8 / 8.1 (the `state` and `fault_event` oracle buckets, used ONLY by the scoring harness — never by the estimator). State formulation = **node-voltage** (locked in P9). Same repo / `uv` / Docker InfluxDB+Grafana stack; new code is additive.
+
+**Requirements**: TBD (to be locked in 10-SPEC.md). Indicative R-set below.
+
+---
+
+**Locked design decisions (from 2026-06-26 design discussion):**
+
+- **D1 — Two estimators, sequenced (the contrast IS the interview narrative):**
+  1. **AC-WLS snapshot baseline** — per-timestamp Gauss-Newton, reusing the χ²/LNR bad-data machinery from the existing `dc_powerflow_baddata_demo.py`. On `well_observed` it converges; on `realistic_sparse` real-only it is **singular until pseudo-padding** — demonstrating the DSSE-01 under-observability thesis executably (the gain matrix `G = HᵀWH` failing is shown, not asserted).
+  2. **Recursive FASE filter (EKF → UKF)** — the real System 2. Predict step driven by the temporal prior; update on measurement arrival. EKF first (pandapower hands us the Jacobian), then **UKF** as the robustness upgrade the appendix recommends for the low-observability regime (square-root UKF for numerical stability). Handles `multirate_async` natively.
+
+- **D2 — Physics model = full AC via `Ybus`.** The measurement function `h(x)` embeds the AC power-flow injection equations `P_i, Q_i = f(V, θ, Ybus)` plus direct identity pickoffs for μPMU `|V|`/`angle`. `Ybus` and topology are rebuilt from `build_enhanced_33bus()` (parameters/topology are legitimate side-information — DSSE-02 structural prior — NOT the true state). The power flow lives *inside* `h(x)`; this is one coupled network-wide estimator, NOT a per-signal filter bank in front of a power flow. (LinDistFlow linear-KF is awareness-only / optional later contrast, not primary.)
+
+- **D3 — Transport = MQTT (Juan's named strength; the AGMS POV-frame pattern made real).** A **replay publisher** reads the `measurements` bucket ordered by `_time` and publishes each measurement (and the per-snapshot topology `event`) to MQTT topics, optionally accelerated ×N to simulate the live stream. System 2 **subscribes** and runs predict/update on arrival. This turns Phase 9's at-rest dataset into a genuine asynchronous stream so the multi-rate "update on arrival" structure is exercised for real (not faked by loop iteration), and decouples producer/consumer (scout → broker → cell). Mosquitto (~10 MB single binary) added to the existing docker-compose stack.
+  - Indicative topic design: `ieee33/{experiment}/{scenario}/meas/{class}/{bus}` (payload `{value, assumed_sigma, quantity, ts}`) + `ieee33/{experiment}/{scenario}/event` (payload `{phase, faulted_line_id, tie_closed, tie_id, dead_buses}`). Exact schema is a plan-phase detail.
+  - Descope fallback (documented, not chosen): System 2 *could* read InfluxDB directly and skip the broker — but the MQTT layer earns its place for interview value (edge messaging) and FASE realism.
+
+- **D4 — FASE predict step = profile-as-noisy-forecast.** Reuse System 1's load/DER profile as the forecast **mean** for the transition model, but add honest forecast error + process noise `Q` so it is a real prior, NOT perfect foresight (the same profile generated the truth — feeding it back unmodified would be "cheating"). This realizes the FASE thesis "the forecast IS the transition model" honestly. (Random-walk predict is the trivial baseline behind the same predict interface; final choice can be revisited in planning.)
+
+- **D5 — Scoring oracle kept SEPARATE (mirrors P9 R9).** A standalone scoring harness joins System 2's estimates against the `state` / `fault_event` oracle buckets and computes: per-bus voltage/angle RMSE & worst-case error at dark/pseudo buses; the **error-vs-observability curve** (`well_observed` vs `realistic_sparse`); and **covariance calibration** (NEES / NIS consistency tests — is `P` honest or overconfident?). The estimator itself never reads the oracle; it only sees `z + assumed_sigma + topology`.
+
+- **D6 — Output contract.** System 2 writes `(x̂, P)` per step to a **new `estimates` InfluxDB bucket** (per-bus `vm_pu_est`, `va_degree_est`, `sigma_vm`, `sigma_va`; system-level `trace_P` = observability index), tagged by `scenario` / `experiment` / `estimator` (`wls` | `ekf` | `ukf`). `state` / `fault_event` / `measurements` buckets and all existing dashboards are untouched (additive only).
+
+**Two regimes to demonstrate:**
+- **Day (`state`/`day`, 96 steps):** the observability story — `well_observed` → tight `P`; `realistic_sparse` → error concentrates at pseudo/dark buses and `P` honestly reports it. The estimator must recover the midday reverse-power-flow / lateral voltage dip at buses without a sensor there.
+- **Fault (`fault_event`/`fault`, 40 steps):** the showcase — topology flips mid-run; estimator reads the published switch `event`, rebuilds `Ybus`; dead zone (buses 8–17) goes dark → no measurements → **`P` inflates instead of the filter crashing** = island-mode resilience falling out of the recursive structure.
+
+**Out of scope:**
+- **System 3 (self-healing / FLISR control loop, CaCSM dispatch, simulate-before-commit actuation)** — later phase.
+- **Three-phase unbalanced state** — ground truth is balanced positive-sequence; the 3-phase generalization is a talking point, not this build.
+- **Branch-current (BCSE) formulation** — node-voltage is locked; branch-current is awareness-only.
+- **Federated / multi-area DSSE with boundary-state exchange** — single-cell estimator here; federation is a talking point / possible later phase.
+- **Real C37.118 / NATS / 2030.5 transport** — MQTT only for this phase.
+- **Any modification to System 1 / 8.1 / Phase 9 buckets, physics, or dashboards** — strictly additive.
+
+**Indicative plan breakdown (5–6 plans; confirm in /gsd-plan-phase 10):**
+1. Mosquitto broker in docker-compose + InfluxDB→MQTT replay publisher (ordered by `_time`, accelerable, day + fault sources).
+2. AC measurement model: `Ybus` + `h(x)` rows per class + analytic Jacobian `H`, from `build_enhanced_33bus()`; MQTT subscriber skeleton assembling per-snapshot `z`, `R`, topology.
+3. AC-WLS snapshot baseline → `estimates` bucket; χ²/LNR bad-data on `gaussian_outliers`; show singular gain on `realistic_sparse` real-only vs solvable with pseudo.
+4. Recursive FASE filter (EKF then UKF): predict from profile prior + `Q`, update on arrival, multirate-aware, covariance propagation.
+5. Scoring harness: estimate-vs-oracle RMSE + worst-dark-node error + NEES/NIS calibration; per-run report (kept separate from estimator).
+6. Grafana dashboards (true-vs-estimated overlay, per-bus error heatmap, `trace(P)` = ORACS observability index, fault island-mode inflation) + README runbook + determinism/fault tests.
+
+**Plans:** 6 plans
+
+Plans:
+- [ ] 10-01-PLAN.md — Mosquitto broker (localhost) + InfluxDB->MQTT replay publisher + retained versioned netmodel/current + estimate_config
+- [ ] 10-02-PLAN.md — AC measurement model: Ybus-from-topology (<1e-9) + h(x) per class + analytic Jacobian H (FD<1e-5) + FASE sensitivity S
+- [ ] 10-03-PLAN.md — Estimators behind one interface: AC-WLS (chi2/LNR + rank reporting) + EKF (Joseph) + sqrt-UKF + FASE predictor/persistence foil
+- [ ] 10-04-PLAN.md — estimate runner: MQTT subscriber + snapshot assembler + version-aware Ybus rebuild + estimates bucket (oracle-separated)
+- [ ] 10-05-PLAN.md — score harness: oracle join + RMSE + dark-node + baseline + NEES/NIS calibration + fault inflation (non-zero exit on FAIL)
+- [ ] 10-06-PLAN.md — two Grafana estimator dashboards (trace_P/P-inflation) + README runbook + determinism (1e-9) verification
