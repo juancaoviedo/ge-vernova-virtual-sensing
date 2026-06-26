@@ -29,8 +29,8 @@ UKF Landmine (PATTERNS Landmine 8):
   Floating-point asymmetry can make a positive-definite P appear non-symmetric.
 
 Oracle separation:
-  grep check: grep -E "STATE_BUCKET|FAULT_EVENT_BUCKET|read_state|read_fault|\"state\"|\"fault_event\"" \\
-              src/ieee33/estimators.py → zero results
+  Zero references to oracle bucket names or oracle read helpers in this file.
+  Verified by grep (see PATTERNS.md oracle_separation_boundary).
 
 No I/O: no MQTT, no InfluxDB, no oracle access. Pure compute over in-memory arrays.
 Dependencies: numpy, scipy
