@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: milestone_complete
-stopped_at: Completed Phase 09 Plan 05 — observability+verification layer complete
-last_updated: "2026-06-25T07:41:13.485Z"
+status: completed
+stopped_at: Phase 10 context gathered
+last_updated: "2026-06-26T19:46:45.727Z"
 last_activity: 2026-06-25
 progress:
-  total_phases: 11
-  completed_phases: 11
+  total_phases: 12
+  completed_phases: 10
   total_plans: 37
   completed_plans: 37
   percent: 100
@@ -129,6 +129,7 @@ Recent decisions affecting current work:
 - Phase 7 added: Integrated HTML Study Site — consolidate all phase study notes + research HTML/diagram assets (AGMS architecture/patents, study notes, demo explanations and references) into one navigable HTML site for revision
 - Phase 8 added (2026-06-22): IEEE 33-Bus DER Measurement Source — first hands-on build phase (pivot from study notes). System 1 of a two-system design: recreate the IEEE 33-bus network with renewable DER in PandaPower (per `.planning/research/articles/ieee33.pdf` / `case33.xlsx`; cross-ref repo Chinmaya-J-Jena/der_load_flow_IEEE33bus), drive a 144-step (10-min) daily profile, persist every power-flow snapshot to a local InfluxDB via Docker Compose. Virtual-sensing module (System 2) deferred to a later phase.
 - Phase 08.1 inserted after Phase 8: System 1 fault & reconfiguration scenario: a separate short quasi-static (steady-state, NOT EMT) simulation reusing System 1 — fault -> isolate -> reconfigure (tie-line) -> restore on the IEEE 33-bus net, written to a dedicated InfluxDB bucket + Grafana dashboard, to stress-test the System 2 estimator. Scope is ONLY the System 1 failure scenario (measurement system, System 2 estimator, System 3 self-healing loop are later/out of scope). (URGENT)
+- Phase 10 added (2026-06-26): System 2 — Streaming Distribution State Estimator (MQTT + FASE). Consumes Phase 9's `measurements` stream over an MQTT replay transport (Mosquitto, additive to docker-compose), reconstructs node-voltage state `(x̂, P)` for all 33 buses via **AC-WLS snapshot baseline → recursive FASE EKF/UKF** (full AC `h(x)` via `Ybus` from `build_enhanced_33bus()`); predict step = profile-as-noisy-forecast (honest, not perfect foresight); writes `(x̂, P)` to a new `estimates` bucket; `trace(P)` = ORACS Observability index. Scoring harness (estimate-vs-oracle RMSE + NEES/NIS calibration) kept SEPARATE — estimator never reads `state`/`fault_event`. Two regimes: day (observability story) + fault (island-mode covariance inflation). Out of scope: System 3 self-healing, 3-phase, branch-current, federation, non-MQTT transport. Extensive design locked in ROADMAP Phase 10 (decisions D1-D6). Strictly additive to System 1/8.1/P9.
 - Phase 9 added (2026-06-24): Measurement System (Observability Layer) — config-driven sensor-model layer between System 1 and System 2. Reads System 1 ground truth from InfluxDB, applies sensor placement (`well_observed` / `realistic_sparse`) + noise (`gaussian` / `gaussian_outliers` / `instrument`) + sampling (`snapshot` / `multirate_async`) over both the static day (`state`) and the failure scenario (`fault_event`), writes to a dedicated `measurements` bucket + Grafana dashboards. State formulation = node-voltage. Scoring oracle kept separate. **Hard schema dependency on Phase 8.1's `fault_event` metadata (must freeze first).** Streaming out of scope. Locked decisions in ROADMAP Phase 9.
 
 ### Pending Todos
@@ -160,6 +161,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-06-25T07:41:13.468Z
-Stopped at: Completed Phase 09 Plan 05 — observability+verification layer complete
-Resume file: None
+Last session: 2026-06-26T19:46:45.700Z
+Stopped at: Phase 10 context gathered
+Resume file: .planning/phases/10-system-2-streaming-distribution-state-estimator-mqtt-fase/10-CONTEXT.md
