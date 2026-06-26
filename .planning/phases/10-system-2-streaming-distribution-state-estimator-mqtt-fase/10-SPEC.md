@@ -1,7 +1,7 @@
 # Phase 10: System 2 — Streaming Distribution State Estimator (MQTT + FASE) — Specification
 
 **Created:** 2026-06-26
-**Ambiguity score:** 0.12 (gate: ≤ 0.20)
+**Ambiguity score:** 0.11 (gate: ≤ 0.20)
 **Requirements:** 13 locked
 
 ## Goal
@@ -45,41 +45,59 @@ design: System 1 → Measurement System (P9) → **System 2 (estimator, P10)** �
    - Acceptance: `docker compose up -d` starts a reachable MQTT broker on a localhost port; a test
      client can publish and subscribe; the InfluxDB/Grafana services and ports are untouched
 
-2. **Replay publisher (InfluxDB → MQTT)**: A runner streams the stored measurements as MQTT messages.
-   - Current: measurements exist only at rest in the `measurements` bucket; nothing publishes them
+2. **Replay publisher (InfluxDB → MQTT), measurements + network config**: A runner streams the
+   stored measurements AND the network configuration as MQTT messages.
+   - Current: measurements exist only at rest in the `measurements` bucket; nothing publishes them;
+     there is no network-configuration channel
    - Target: a `publish` script reads the `meas` + `event` points for a chosen `(scenario, source)`
      from InfluxDB, **ordered deterministically** (by timestamp, then class, then bus id), and
-     publishes each as an MQTT message (JSON payload carrying `value, assumed_sigma, class, quantity,
-     location, experiment, scenario, phase, timestamp`) to a documented topic hierarchy; supports a
-     configurable **acceleration factor** (wall-clock playback compression) for both `day` (96) and
-     `fault` (40) sources
+     publishes each measurement as an MQTT message (JSON payload carrying `value, assumed_sigma,
+     class, quantity, location, experiment, scenario, phase, timestamp`) to a documented topic
+     hierarchy; supports a configurable **acceleration factor** (wall-clock playback compression) for
+     both `day` (96) and `fault` (40) sources. It ALSO publishes the **network configuration** to a
+     dedicated **retained, versioned** topic `ieee33/netmodel/current` — payload = the authoritative
+     topology/switch-state (in-service line set + tie states + dead-bus set + `phase`) plus a
+     monotonically increasing `config_version` and timestamp (NOT the raw `Ybus` — see R3/Constraints).
+     For `source=day` one config (version 0, all ties open) is published once and retained; for
+     `source=fault` a new config version is published whenever the topology changes
+     (pre_fault → faulted_isolated → restored)
    - Acceptance: running `publish` for `(realistic_sparse, day)` emits exactly the number of `meas`
      messages present in the bucket for that tag set across 96 timestamps, in the fixed order, plus
-     one `event` message per snapshot; switching `--source fault` streams the 40-step series
+     one `event` message per snapshot, plus ≥1 retained `netmodel/current` config; switching
+     `--source fault` streams the 40-step series and publishes a distinct `config_version` for each of
+     the three topology phases (a late-subscribing client immediately receives the current retained config)
 
-3. **AC measurement model (`h(x)`, `H`, `Ybus`)**: The estimator's measurement function embeds the
-   AC power flow.
-   - Current: no `Ybus` extraction and no measurement function exist
-   - Target: a module builds `Ybus` and topology from `build_enhanced_33bus()` (parameters/topology
-     are known side-information — no parameter estimation), and implements `h(x)` rows per class —
+3. **AC measurement model (`h(x)`, `H`, `Ybus`) — `Ybus` derived from the network-config topic**:
+   The estimator's measurement function embeds the AC power flow, parameterized by the streamed topology.
+   - Current: no `Ybus` extraction and no measurement function exist; no network-config channel
+   - Target: a module holds the **static** line/bus parameters (impedances) from
+     `build_enhanced_33bus()` (parameters are known side-information — no parameter estimation), and
+     **derives `Ybus` deterministically from the `ieee33/netmodel/current` topology message** (apply
+     in-service line set + tie states to the static parameters). It implements `h(x)` rows per class —
      `P_inj, Q_inj = f(V, θ, Ybus)` for scada/ami/der/pseudo/zero_inj; identity pickoffs for μPMU
-     `vm_pu`/`va_degree` — plus the analytic Jacobian `H`; for `source=fault` it rebuilds `Ybus`
-     from the published `event` topology (faulted line out, tie closed) per phase
-   - Acceptance: evaluating `h(x_true)` at the oracle state reproduces the per-class measured
-     quantities to within numerical tolerance (< 1e-6 for voltage pickoffs; injection residuals
-     consistent with the known measurement noise, not model error); the Jacobian matches a
-     finite-difference check to < 1e-5; a faulted-phase `Ybus` excludes the faulted line and
-     includes the closed tie
+     `vm_pu`/`va_degree` — plus the analytic Jacobian `H`. A new `config_version` on the topic triggers
+     a `Ybus` rebuild (faulted line removed, closed tie added). `Ybus` is NEVER transported as a matrix
+     — only topology+version is, and each consumer rebuilds it (single source of truth, determinism).
+   - Acceptance: the `Ybus` derived from a topology message equals the `Ybus` extracted directly from
+     the equivalent pandapower net to < 1e-9; evaluating `h(x_true)` at the oracle state reproduces the
+     per-class measured quantities to within numerical tolerance (< 1e-6 for voltage pickoffs; injection
+     residuals consistent with the known measurement noise, not model error); the Jacobian matches a
+     finite-difference check to < 1e-5; the `faulted_isolated` config version yields a `Ybus` that
+     excludes the faulted line and includes the closed tie
 
-4. **MQTT subscriber + snapshot assembler**: The estimator consumes the live stream.
+4. **MQTT subscriber + snapshot assembler (measurements + network config)**: The estimator consumes
+   the live stream and tracks the current network configuration.
    - Current: no subscriber exists
-   - Target: an `estimate` runner subscribes to the broker, assembles each arriving measurement into
-     the per-snapshot `z` vector, `R = diag(assumed_sigma²)`, and topology context (using the `event`
-     message), and drives the estimators on arrival; in `multirate_async` data it processes whatever
+   - Target: an `estimate` runner subscribes to the measurement topics AND `ieee33/netmodel/current`,
+     assembles each arriving measurement into the per-snapshot `z` vector, `R = diag(assumed_sigma²)`,
+     and tracks the latest topology config (version-aware: a version bump rebuilds `Ybus` per R3 and
+     marks the step as a known topology change so the post-change innovation jump is not mis-flagged as
+     bad data); drives the estimators on arrival; in `multirate_async` data it processes whatever
      classes arrived at each step (patchwork), not a frozen full set
    - Acceptance: with `publish` running, the `estimate` runner receives and processes every published
-     `meas`/`event` message (count matches), and produces a state estimate per snapshot for both
-     `snapshot` and `multirate_async` sampling
+     `meas` message (count matches) and applies each `netmodel/current` version; produces a state
+     estimate per snapshot for both `snapshot` and `multirate_async` sampling; on the fault source the
+     estimator's active `Ybus` changes exactly at the published `config_version` boundaries
 
 5. **AC-WLS snapshot baseline (with bad-data detection)**: A per-timestamp Gauss-Newton estimator.
    - Current: only a linear DC demo exists (`dc_powerflow_baddata_demo.py`)
@@ -149,9 +167,10 @@ design: System 1 → Measurement System (P9) → **System 2 (estimator, P10)** �
 
 12. **Two regimes incl. fault island-mode**: Both operating regimes are demonstrated.
     - Current: nothing consumes the fault scenario for estimation
-    - Target: all three estimators run on `source=fault`; the estimator reads the published `event`
-      topology, rebuilds `Ybus` per phase, emits **no state for de-energised buses** during
-      `faulted_isolated`, and the mean posterior σ_V over the surviving observable region **increases
+    - Target: all three estimators run on `source=fault`; the estimator applies the published
+      `netmodel/current` config versions, rebuilds `Ybus` per version, emits **no state for
+      de-energised buses** during `faulted_isolated`, and the mean posterior σ_V over the surviving
+      observable region **increases
       from `pre_fault` to `faulted_isolated`** (P inflates) and recovers in `restored`; the filter
       produces an estimate every step with no crash/gap
     - Acceptance: the `score`/report shows σ_V (or `trace_P`) higher in `faulted_isolated` than
@@ -177,8 +196,12 @@ design: System 1 → Measurement System (P9) → **System 2 (estimator, P10)** �
 **In scope:**
 - Mosquitto broker added to the docker-compose stack (localhost-bound, additive)
 - `publish` replay runner: `measurements` bucket → MQTT, deterministic order, accelerable, day+fault
-- AC measurement model (`Ybus`, `h(x)` per class, analytic Jacobian `H`) from `build_enhanced_33bus()`
-- `estimate` runner: MQTT subscriber + snapshot assembler driving the estimators on arrival
+- **Network-config topic** `ieee33/netmodel/current` (retained, versioned): authoritative
+  topology/switch-state published by `publish`; the seam System 3 will reuse for reconfiguration
+- AC measurement model (`h(x)` per class, analytic Jacobian `H`) with `Ybus` **derived from the
+  network-config topology** (static impedances from `build_enhanced_33bus()`; `Ybus` never transported)
+- `estimate` runner: MQTT subscriber (measurements + `netmodel/current`) + snapshot assembler driving
+  the estimators on arrival; version-aware `Ybus` rebuild on topology change
 - Three estimators: AC-WLS snapshot (χ²/LNR), recursive EKF, recursive UKF — all behind one interface
 - FASE predict step = profile-as-noisy-forecast (honest prior + `Q`), update-on-arrival, multirate-aware
 - `estimates` InfluxDB bucket: `(x̂, P)` per bus + `trace_P`, tagged scenario/experiment/estimator
@@ -189,7 +212,10 @@ design: System 1 → Measurement System (P9) → **System 2 (estimator, P10)** �
 
 **Out of scope:**
 - **System 3** (self-healing / FLISR loop, CaCSM volt/VAR dispatch, simulate-before-commit actuation)
-  — later phase; this phase only *senses* state, it does not *act* on it
+  — later phase; this phase only *senses* state, it does not *act* on it. Note: the
+  `netmodel/current` topic is deliberately designed as the seam System 3 will reuse, but the
+  System-3 half (a `netmodel/proposed` candidate channel, simulate-before-commit promotion, and any
+  reconfiguration *logic*) is NOT built here — Phase 10 only publishes/consumes the *current* config
 - **Three-phase unbalanced state** — ground truth is balanced positive-sequence; 3-phase is a talking
   point, not this build
 - **Branch-current (BCSE) formulation** — node-voltage is locked; branch-current is awareness-only
@@ -205,9 +231,15 @@ design: System 1 → Measurement System (P9) → **System 2 (estimator, P10)** �
 
 - **State formulation = node-voltage polar** (`|V|, θ`), bus 0 as slack reference (θ₀ = 0, |V₀| from
   SCADA/regulated); ~64 free states.
-- **Measurement model = full AC via `Ybus`** built from `build_enhanced_33bus()`; the power flow lives
-  **inside** `h(x)` (one coupled network-wide estimator, not a per-signal filter bank in front of a
-  power flow).
+- **Measurement model = full AC via `Ybus`**; static line/bus impedances come from
+  `build_enhanced_33bus()`, but `Ybus` is **derived from the streamed topology** on
+  `ieee33/netmodel/current`, NOT transported as a matrix and NOT hard-coded per phase. The power flow
+  lives **inside** `h(x)` (one coupled network-wide estimator, not a per-signal filter bank in front
+  of a power flow).
+- **Network model travels as topology, not `Ybus`**: the `netmodel/current` topic carries the
+  authoritative switch-state + monotonic `config_version` (retained); every consumer rebuilds `Ybus`
+  deterministically. This keeps a single source of truth and is the seam System 3 reuses
+  (it will later publish reconfigurations on the same channel — out of scope here).
 - **Estimators never read the oracle** (`state`/`fault_event`); they consume only `measurements` (via
   MQTT). The `score` harness is the only component that reads both.
 - **Determinism** is mandatory: seeded + deterministic publisher emission order → reproducible
@@ -224,9 +256,12 @@ design: System 1 → Measurement System (P9) → **System 2 (estimator, P10)** �
 - [ ] `docker compose up -d` starts a localhost-bound Mosquitto broker; InfluxDB/Grafana untouched
 - [ ] `publish` streams the exact `meas`+`event` message counts for a `(scenario, source)` in fixed
       deterministic order; supports an acceleration factor and both `day` (96) and `fault` (40)
+- [ ] `publish` emits a retained, versioned `ieee33/netmodel/current` topology config (1 for day; a
+      distinct `config_version` per fault phase); a late subscriber immediately gets the current config
+- [ ] `Ybus` derived from a `netmodel/current` topology message equals the pandapower-extracted `Ybus`
+      to < 1e-9; a `config_version` bump rebuilds `Ybus` (faulted line out, tie in)
 - [ ] AC measurement model: `h(x_true)` reproduces voltage pickoffs to < 1e-6 and the Jacobian
-      matches finite-difference to < 1e-5; faulted-phase `Ybus` excludes the faulted line, includes
-      the closed tie
+      matches finite-difference to < 1e-5
 - [ ] `estimate` runner consumes every published message (count matches) and produces a per-snapshot
       estimate for both `snapshot` and `multirate_async`
 - [ ] AC-WLS converges on `well_observed`; reports rank deficiency on `realistic_sparse` real-only and
@@ -253,9 +288,9 @@ design: System 1 → Measurement System (P9) → **System 2 (estimator, P10)** �
 |--------------------|-------|------|--------|-----------------------------------------------------------------------|
 | Goal Clarity       | 0.90  | 0.75 | ✓      | Recreate node-voltage (x̂,P) from MQTT; WLS+EKF+UKF; AC Ybus; numeric bar |
 | Boundary Clarity   | 0.92  | 0.70 | ✓      | System 3 / 3-phase / branch-current / federation / non-MQTT explicitly out |
-| Constraint Clarity | 0.82  | 0.65 | ✓      | Node-voltage; AC h(x); oracle separation; ordered determinism; reuse stack |
-| Acceptance Criteria| 0.85  | 0.70 | ✓      | Tiered RMSE + NEES/NIS calibration + all-3 estimators + live MQTT, falsifiable |
-| **Ambiguity**      | 0.12  | ≤0.20| ✓      |                                                                       |
+| Constraint Clarity | 0.86  | 0.65 | ✓      | Node-voltage; AC h(x) w/ Ybus from netmodel topic; oracle separation; ordered determinism |
+| Acceptance Criteria| 0.85  | 0.70 | ✓      | Tiered RMSE + NEES/NIS calibration + all-3 estimators + live MQTT + netmodel, falsifiable |
+| **Ambiguity**      | 0.11  | ≤0.20| ✓      |                                                                       |
 
 Status: ✓ = met minimum, ⚠ = below minimum (planner treats as assumption)
 
@@ -267,9 +302,10 @@ Status: ✓ = met minimum, ⚠ = below minimum (planner treats as assumption)
 | 1     | Researcher + Simplifier  | What numeric bar = "recreates the state"?         | **Tiered + calibration**: well_observed |V| RMSE < 0.005 pu; realistic_sparse dark-node < 0.02 pu & ≤ 50% of baseline; NEES/NIS in 95% χ² band |
 | 1     | Simplifier               | Which estimators are acceptance-required?         | **All three** (WLS + EKF + UKF) implemented and scored — full three-way comparison |
 | 1     | Boundary Keeper          | MQTT "done" bar + determinism under async?        | **Live replay** (estimator consumes MQTT, accelerable) + **ordered determinism** (fixed publish order + seed → reproducible) |
+| 2     | Researcher (user-led)    | How is `Ybus`/topology transferred; future self-healing loop? | **Dedicated retained, versioned `ieee33/netmodel/current` topic** carrying topology/switch-state (NOT raw `Ybus`); each consumer rebuilds `Ybus` locally & deterministically; topic designed as the seam System 3 reuses (proposed/promotion half out of scope) |
 
 ---
 
 *Phase: 10-system-2-streaming-distribution-state-estimator-mqtt-fase*
 *Spec created: 2026-06-26*
-*Next step: /gsd-discuss-phase 10 — implementation decisions (topic schema, Ybus extraction method, predict-step Q model, sigma-point params, dashboard panels, script layout)*
+*Next step: /gsd-discuss-phase 10 — implementation decisions (exact `netmodel/current` + measurement topic schemas, topology→Ybus rebuild method, predict-step Q model, sigma-point params, dashboard panels, script layout)*
