@@ -459,3 +459,208 @@ Integration tests (Docker-guarded — skip cleanly if InfluxDB is unreachable):
 - **Byte-identical runs** (`test_determinism`): same config → same meas values (SPEC R10)
 - **Multirate cadence** (`test_multirate_cadence`): AMI at 24 timestamps in multirate_async (D-14)
 - **Dead-bus gate** (`test_dead_bus_gate`): zero meas for bus 17 in faulted_isolated (D-03)
+
+---
+
+## System 2 — Streaming State Estimator (Phase 10)
+
+**System 2** is an AC Distribution State Estimator (AC-DSSE) that consumes the `measurements`
+bucket over an MQTT replay transport, reconstructs per-bus node-voltage state `(x̂, P)` for all
+33 buses via AC-WLS (snapshot baseline) or recursive FASE EKF/UKF (full AC `h(x)` via `Ybus`),
+and writes estimates to a dedicated `estimates` InfluxDB bucket.
+
+The **predict step** uses profile-as-noisy-forecast (D-05 — honest forecast, not oracle foresight).
+The **`trace(P)` = ORACS Observability index**: lower `trace_P` means the estimator is more
+certain about the full 33-bus state; during island-mode fault isolation `trace_P` rises as dead
+buses lose sensor coverage — the AGMS "covariance = observability" interview talking point.
+
+**Oracle separation (D-06):** the estimator (`estimate.py`, `estimators.py`, `fase_predict.py`,
+`ac_model.py`) **NEVER reads** the `state` or `fault_event` oracle buckets. Only measurements
+(via MQTT) + `netmodel/current` (retained MQTT) + `profiles` (InfluxDB side-information, not
+oracle) are consumed. `score.py` is the SOLE component permitted to read oracle buckets for the
+post-hoc scoring join.
+
+### Prerequisites for System 2
+
+All System 1 / 8.1 / 9 steps must be complete and their buckets populated:
+
+```bash
+docker compose up -d         # start InfluxDB + Grafana + Mosquitto broker
+uv run ingest                # one-time OPSD fetch (profiles bucket)
+uv run sim                   # populate state bucket (96-step day)
+uv run fault-sim             # populate fault_event bucket (40-step fault)
+uv run measure               # populate measurements bucket (sensor model)
+```
+
+### Running System 2
+
+Run the three System 2 runners in order (each in a separate terminal or with `&`):
+
+#### Step A — Stream measurements over MQTT
+
+```bash
+uv run publish --scenario realistic_sparse --source day [--acceleration 10]
+```
+
+Reads the `measurements` bucket and replays each snapshot as MQTT messages to
+`ieee33/meas/<experiment>/<scenario>/<timestamp>`. Publishes the retained network
+topology to `ieee33/netmodel/current` before streaming begins.
+
+`--acceleration N` speeds up the replay by factor N (e.g. `--acceleration 10` plays a 96-step
+day in ~10 s instead of ~16 min). Default: 1.0 (wall-time spacing between snapshots).
+
+Available options:
+- `--scenario {well_observed,realistic_sparse}` — sensor-placement scenario
+- `--source {day,fault}` — data source (96-step day or 40-step fault)
+- `--acceleration N` — replay speed multiplier (float; default 1.0)
+
+#### Step B — Consume stream and estimate state
+
+```bash
+uv run estimate --scenario realistic_sparse --source day --estimator ekf
+```
+
+Subscribes to the MQTT broker; waits for the retained `netmodel/current` before
+processing measurements. Assembles per-snapshot `z` vectors, drives the selected
+estimator, and writes `(x̂, P, trace_P)` to the `estimates` InfluxDB bucket.
+
+Recursive filters (EKF, UKF) also persist per-step innovation statistics:
+- `nis_k` (float) — Normalised Innovation Squared = `y_k^T S_k^{-1} y_k`
+- `m_k` (int) — innovation dimension (for chi2 band computation in `score.py`)
+
+These are real per-step time series visible in the NIS Calibration panel of the estimator
+dashboards. WLS has no innovation sequence — `nis_k`/`m_k` are absent for WLS runs.
+
+Available options:
+- `--estimator {wls,ekf,ukf}` — estimator to run (one per invocation, tagged in estimates bucket)
+- `--scenario {well_observed,realistic_sparse}` — sensor-placement scenario
+- `--source {day,fault}` — data source
+- `--seed N` — RNG seed for forecast-error determinism (default: `estimate_config.ACTIVE['seed']`)
+
+**ACTIVE block** — primary config switch (mirrors `measure_config.py`):
+
+```python
+# src/ieee33/estimate_config.py
+ACTIVE: dict = {
+    "scenario":  "realistic_sparse",
+    "source":    "day",
+    "estimator": "ekf",
+    "seed":      42,
+}
+```
+
+Edit `ACTIVE` to switch experiment knobs without touching runner arguments.
+
+#### Step C — Score estimates against oracle
+
+```bash
+uv run score --estimator all
+```
+
+Reads the `estimates` bucket and joins with the oracle (`state` or `fault_event` bucket) to
+compute a falsifiable PASS/FAIL report:
+
+1. Per-bus voltage |V| and angle RMSE (median over buses) — R10 gate.
+2. Dark-node (pseudo-only) bus voltage RMSE — R10 dark-node gate.
+3. Dark-node RMSE vs flat/pseudo-only baseline — R10 baseline gate.
+4. Time-averaged NEES vs 95% chi2 band — R11 NEES gate.
+5. Per-step NIS in-band fraction (from persisted `nis_k`/`m_k`) — R11 NIS gate.
+6. Fault covariance inflation (`sigma_V` / `trace_P` higher in `faulted_isolated`
+   than `pre_fault`) — R12 fault gate.
+7. Restored-block RMSE back within `well_observed` bar — R12 restore gate.
+
+`--estimator all` scores `wls`, `ekf`, and `ukf` and prints a comparison block.
+
+### Opening the Estimator Dashboards
+
+After `uv run estimate` populates the `estimates` bucket, open Grafana at
+**http://localhost:3000** and select either dashboard from the list:
+
+| Dashboard | What it shows |
+|-----------|---------------|
+| **IEEE33 Estimator Day** | True-vs-estimated voltage overlay (per-bus, selectable), per-bus error, `trace_P` ORACS observability index, live NIS calibration (`nis_k` series, EKF/UKF only), dark-node recovery |
+| **IEEE33 Estimator Fault** | Fault true-vs-estimated voltage, island-mode P-inflation (`trace_P` + mean `sigma_V` rising in `faulted_isolated`), phase-region markers (`pre_fault`/`faulted_isolated`/`restored`), fault NIS calibration, per-bus fault error |
+
+Both dashboards are auto-provisioned from `grafana/provisioning/dashboards/` — no manual import
+required. Template variables (`estimator`, `scenario`, `bus_id`) are available in each dashboard.
+
+All six dashboards (four existing + two new) are listed on the Grafana home screen.
+
+### Estimates Bucket Schema (D-08 forward contract)
+
+```
+measurement: "estimate"
+  tags:   bus_id (str, 0–32), scenario, experiment, estimator
+  fields: vm_pu_est (float), va_degree_est (float), sigma_vm (float), sigma_va (float)
+
+measurement: "estimate_system"
+  tags:   scenario, experiment, estimator
+  fields: trace_P (float)
+          nis_k   (float, EKF/UKF only — absent for WLS)
+          m_k     (int,   EKF/UKF only — absent for WLS)
+```
+
+`experiment` = source name (`day` or `fault`).
+
+### Determinism Verification (R13)
+
+System 2 is deterministic: two same-config `estimate` runs produce identical estimates
+(within floating-point round-trip, i.e., within 1e-9 for IEEE 754 double arithmetic).
+
+**Structural grep verification (feasible without a live Docker run):**
+
+```bash
+# 1. Confirm no legacy/unseeded RNG calls in System 2 paths
+#    (a match in a prohibition COMMENT is expected and harmless; zero code-level matches)
+grep -rnE "np\.random\.seed|random\.seed\(|np\.random\.randn|np\.random\.rand\b" \
+  src/ieee33/publish.py src/ieee33/estimate.py src/ieee33/estimators.py \
+  src/ieee33/fase_predict.py src/ieee33/ac_model.py src/ieee33/score.py
+
+# 2. Confirm no wall-clock reads in the estimation/scoring paths
+#    (publish.py's time.sleep for acceleration pacing is intentionally excluded)
+grep -rnE "datetime\.now|time\.time\(\)" \
+  src/ieee33/estimate.py src/ieee33/estimators.py \
+  src/ieee33/fase_predict.py src/ieee33/ac_model.py src/ieee33/score.py
+```
+
+Expected result: both greps return zero code-level matches. Any match in `fase_predict.py`
+line 27 is a prohibition comment in the docstring (not executable code) and is expected.
+
+**Live two-run comparison (requires Docker + populated buckets):**
+
+```bash
+# Run estimate twice with the same seed, tagging different experiment IDs
+uv run estimate --scenario realistic_sparse --source day --estimator ekf --seed 42
+# (rename or note the written data, then run again — InfluxDB overwrites same timestamps)
+uv run estimate --scenario realistic_sparse --source day --estimator ekf --seed 42
+```
+
+Both runs write to the same `estimates` bucket, same tags, same timestamps — InfluxDB
+overwrites produce identical point values. The `score.py` RMSE report will be numerically
+identical across both runs. The design guarantee: all randomness passes through a single
+`np.random.default_rng(seed)` instance created before the estimation loop; no `np.random.seed()`,
+`random.seed()`, `hash()`, or wall-clock reads appear in `estimate.py`, `estimators.py`,
+`fase_predict.py`, or `ac_model.py`.
+
+**RNG norm:** All randomness uses `np.random.default_rng(seed)` (PCG64, new-style Generator
+API). `np.random.randn()` / `np.random.seed()` (legacy) are prohibited project-wide (CLAUDE.md
+seeded-determinism norm). Per-entity seed derivation uses `hashlib.sha256` (not Python `hash()`
+which is PYTHONHASHSEED-randomized).
+
+### Shortcut — Full System 2 pipeline
+
+```bash
+# Terminal 1: start infrastructure (if not already up)
+docker compose up -d
+
+# Terminal 2: start publisher (--acceleration 20 for fast replay)
+uv run publish --scenario realistic_sparse --source day --acceleration 20
+
+# Terminal 3 (simultaneously): start estimator
+uv run estimate --scenario realistic_sparse --source day --estimator ekf
+
+# After both complete:
+uv run score --estimator all
+
+# Open http://localhost:3000 → select "IEEE33 Estimator Day"
+```
