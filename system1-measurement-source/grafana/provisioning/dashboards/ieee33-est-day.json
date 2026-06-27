@@ -1,0 +1,351 @@
+{
+  "__inputs": [],
+  "__requires": [
+    {
+      "type": "grafana",
+      "id": "grafana",
+      "name": "Grafana",
+      "version": "11.0.0"
+    },
+    {
+      "type": "datasource",
+      "id": "influxdb",
+      "name": "InfluxDB",
+      "version": "1.0.0"
+    },
+    {
+      "type": "panel",
+      "id": "timeseries",
+      "name": "Time series",
+      "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "stat",
+      "name": "Stat",
+      "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "heatmap",
+      "name": "Heatmap",
+      "version": ""
+    }
+  ],
+  "annotations": {
+    "list": []
+  },
+  "description": "IEEE 33-Bus State Estimates — Day: per-bus vm_pu_est vs true vm_pu overlay, per-bus error heatmap, trace_P (ORACS observability index) timeseries, NEES/NIS calibration panel (live nis_k series from estimate_system), dark-node recovery panel. Oracle-separation: dashboard reads state bucket for overlay (visualisation is exempt — estimator code never reads oracle). Two new panels additive to the four existing measurement dashboards.",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "ieee33-influxdb"
+      },
+      "description": "Estimated bus voltage magnitudes (vm_pu_est) from the estimates bucket vs. true ground-truth vm_pu from the state bucket. Target A = estimated values (solid); Target B = true state (dashed — oracle join allowed here: estimator code never reads state, only the dashboard does). The gap between the series is the estimation error. Select bus via the bus_id template variable; select estimator and scenario in the panel dropdowns. WLS shows a snapshot-only (no smoothing) trace; EKF/UKF show the recursive-filter smoothed trace.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 5,
+            "showPoints": "never",
+            "spanNulls": false
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red",   "value": null },
+              { "color": "green", "value": 0.95 },
+              { "color": "red",   "value": 1.05 }
+            ]
+          },
+          "unit": "short",
+          "decimals": 4,
+          "min": 0.88,
+          "max": 1.10
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 0 },
+      "id": 1,
+      "options": {
+        "legend": { "calcs": ["min", "max", "mean"], "displayMode": "table", "placement": "bottom" },
+        "tooltip": { "mode": "multi", "sort": "none" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "influxdb", "uid": "ieee33-influxdb" },
+          "query": "from(bucket: \"estimates\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"estimate\")\n  |> filter(fn: (r) => r._field == \"vm_pu_est\")\n  |> filter(fn: (r) => r.estimator == \"${estimator}\")\n  |> filter(fn: (r) => r.scenario  == \"${scenario}\")\n  |> filter(fn: (r) => r.bus_id    == \"${bus_id}\")\n  |> sort(columns: [\"_time\"])",
+          "refId": "A"
+        },
+        {
+          "datasource": { "type": "influxdb", "uid": "ieee33-influxdb" },
+          "query": "from(bucket: \"state\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"bus\")\n  |> filter(fn: (r) => r._field == \"vm_pu\")\n  |> filter(fn: (r) => r.bus_id == \"${bus_id}\")\n  |> sort(columns: [\"_time\"])",
+          "refId": "B"
+        }
+      ],
+      "title": "True vs Estimated Bus Voltage (pu) — Bus ${bus_id}",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "ieee33-influxdb"
+      },
+      "description": "Per-bus estimation error: absolute difference |vm_pu_est - vm_pu| for each bus over the full day run. Shows which buses have the highest uncertainty — typically dark buses (realistic_sparse: buses not covered by scada/pmu/ami/der are pseudo-only and may have higher error). Dark buses (pseudo-only in realistic_sparse) are highlighted by their higher error band. Each line = one bus_id. Estimator and scenario selected via template variables.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 0,
+            "showPoints": "never",
+            "spanNulls": false
+          },
+          "unit": "short",
+          "decimals": 4,
+          "min": 0
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 9, "w": 12, "x": 12, "y": 0 },
+      "id": 2,
+      "options": {
+        "legend": { "calcs": ["max", "mean"], "displayMode": "table", "placement": "bottom" },
+        "tooltip": { "mode": "multi", "sort": "none" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "influxdb", "uid": "ieee33-influxdb" },
+          "query": "import \"math\"\n\nest = from(bucket: \"estimates\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"estimate\")\n  |> filter(fn: (r) => r._field == \"vm_pu_est\")\n  |> filter(fn: (r) => r.estimator == \"${estimator}\")\n  |> filter(fn: (r) => r.scenario  == \"${scenario}\")\n  |> rename(columns: {_value: \"vm_pu_est\"})\n\ntrue_v = from(bucket: \"state\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"bus\")\n  |> filter(fn: (r) => r._field == \"vm_pu\")\n  |> rename(columns: {_value: \"vm_pu\"})\n\njoin(tables: {est: est, true_v: true_v}, on: [\"_time\", \"bus_id\"])\n  |> map(fn: (r) => ({ r with _value: math.abs(x: r.vm_pu_est - r.vm_pu) }))\n  |> group(columns: [\"bus_id\"])\n  |> sort(columns: [\"_time\"])",
+          "refId": "A"
+        }
+      ],
+      "title": "Per-Bus Estimation Error |vm_pu_est - vm_pu| — All Buses",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "ieee33-influxdb"
+      },
+      "description": "trace(P) timeseries — the ORACS Observability index. trace(P) = sum of all diagonal posterior covariance elements; a lower value means the estimator is more certain about the full 33-bus state vector. In realistic_sparse, trace(P) is higher because pseudo-measurements contribute little information. In well_observed, trace(P) is lower because real sensors constrain more buses. For EKF/UKF the value decreases as the recursive filter accumulates evidence; for WLS it is the per-snapshot normal-equations covariance (no temporal smoothing). The ORACS framing: this value is the quantitative observability index — it maps directly to the AGMS 'covariance = observability' interview talking point.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "blue"
+          },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "spanNulls": false
+          },
+          "unit": "short",
+          "decimals": 4,
+          "min": 0
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 9 },
+      "id": 3,
+      "options": {
+        "legend": { "calcs": ["min", "max", "mean", "last"], "displayMode": "table", "placement": "bottom" },
+        "tooltip": { "mode": "single", "sort": "none" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "influxdb", "uid": "ieee33-influxdb" },
+          "query": "from(bucket: \"estimates\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"estimate_system\")\n  |> filter(fn: (r) => r._field == \"trace_P\")\n  |> filter(fn: (r) => r.estimator == \"${estimator}\")\n  |> filter(fn: (r) => r.scenario  == \"${scenario}\")\n  |> sort(columns: [\"_time\"])",
+          "refId": "A"
+        }
+      ],
+      "title": "trace(P) — ORACS Observability Index",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "ieee33-influxdb"
+      },
+      "description": "Per-step NIS calibration panel. Queries the live nis_k time series persisted by the recursive filters (EKF/UKF) into the estimate_system measurement. NIS (Normalised Innovation Squared) = y_k^T S_k^{-1} y_k where y_k is the innovation and S_k is the innovation covariance. For a well-calibrated filter, nis_k / m_k should follow a chi2(1) distribution (mean 1.0). The score.py harness computes the in-band fraction against the 95% chi2(m_k) threshold; the band itself is plotted here as a horizontal reference (chi2(m_k, p=0.95) ~ m_k + sqrt(2*m_k)*1.645 approx). For WLS runs this series is EMPTY — NIS is a recursive-filter metric only (D-02). This is a REAL per-step time series — not a static annotation.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 0,
+            "showPoints": "auto",
+            "pointSize": 4,
+            "spanNulls": false
+          },
+          "unit": "short",
+          "decimals": 3,
+          "min": 0
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "nis_k" },
+            "properties": [
+              { "id": "color", "value": { "mode": "fixed", "fixedColor": "orange" } },
+              { "id": "custom.lineWidth", "value": 2 }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "m_k" },
+            "properties": [
+              { "id": "color", "value": { "mode": "fixed", "fixedColor": "green" } },
+              { "id": "custom.lineWidth", "value": 1 },
+              { "id": "custom.lineStyle", "value": { "fill": "dash", "dash": [4, 4] } }
+            ]
+          }
+        ]
+      },
+      "gridPos": { "h": 9, "w": 12, "x": 12, "y": 9 },
+      "id": 4,
+      "options": {
+        "legend": { "calcs": ["min", "max", "mean", "last"], "displayMode": "table", "placement": "bottom" },
+        "tooltip": { "mode": "multi", "sort": "none" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "influxdb", "uid": "ieee33-influxdb" },
+          "query": "from(bucket: \"estimates\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"estimate_system\")\n  |> filter(fn: (r) => r._field == \"nis_k\")\n  |> filter(fn: (r) => r.estimator == \"${estimator}\")\n  |> filter(fn: (r) => r.scenario  == \"${scenario}\")\n  |> sort(columns: [\"_time\"])",
+          "refId": "nis_k"
+        },
+        {
+          "datasource": { "type": "influxdb", "uid": "ieee33-influxdb" },
+          "query": "from(bucket: \"estimates\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"estimate_system\")\n  |> filter(fn: (r) => r._field == \"m_k\")\n  |> filter(fn: (r) => r.estimator == \"${estimator}\")\n  |> filter(fn: (r) => r.scenario  == \"${scenario}\")\n  |> sort(columns: [\"_time\"])",
+          "refId": "m_k"
+        }
+      ],
+      "title": "NIS Calibration — per-step nis_k (live series, EKF/UKF only; empty for WLS)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "ieee33-influxdb"
+      },
+      "description": "Dark-node recovery panel: estimated |V| (vm_pu_est) vs. true (vm_pu) for pseudo-only (dark) buses in the realistic_sparse scenario. Dark buses are those without real-sensor coverage — in realistic_sparse these are all buses except 0 (SCADA), 17/24/30 (μPMU), 17/21/24/32 (DER). Bus 17 is the key dark-node under fault isolation. This panel focuses on a representative subset (buses 1, 5, 10, 15, 20, 25) to show how well the state estimator reconstructs unobserved buses via Kirchhoff coupling through the Ybus. The gap between estimated and true traces is the dark-node virtual-sensing error.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 0,
+            "showPoints": "never",
+            "spanNulls": false
+          },
+          "unit": "short",
+          "decimals": 4,
+          "min": 0.88,
+          "max": 1.10
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 9, "w": 24, "x": 0, "y": 18 },
+      "id": 5,
+      "options": {
+        "legend": { "calcs": ["mean", "last"], "displayMode": "table", "placement": "bottom" },
+        "tooltip": { "mode": "multi", "sort": "none" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "influxdb", "uid": "ieee33-influxdb" },
+          "query": "from(bucket: \"estimates\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"estimate\")\n  |> filter(fn: (r) => r._field == \"vm_pu_est\")\n  |> filter(fn: (r) => r.estimator == \"${estimator}\")\n  |> filter(fn: (r) => r.scenario  == \"realistic_sparse\")\n  |> filter(fn: (r) => r.bus_id == \"1\" or r.bus_id == \"5\" or r.bus_id == \"10\" or r.bus_id == \"15\" or r.bus_id == \"20\" or r.bus_id == \"25\")\n  |> map(fn: (r) => ({ r with _field: \"est_bus\" + r.bus_id }))\n  |> sort(columns: [\"_time\"])",
+          "refId": "A"
+        },
+        {
+          "datasource": { "type": "influxdb", "uid": "ieee33-influxdb" },
+          "query": "from(bucket: \"state\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"bus\")\n  |> filter(fn: (r) => r._field == \"vm_pu\")\n  |> filter(fn: (r) => r.bus_id == \"1\" or r.bus_id == \"5\" or r.bus_id == \"10\" or r.bus_id == \"15\" or r.bus_id == \"20\" or r.bus_id == \"25\")\n  |> map(fn: (r) => ({ r with _field: \"true_bus\" + r.bus_id }))\n  |> sort(columns: [\"_time\"])",
+          "refId": "B"
+        }
+      ],
+      "title": "Dark-Node Recovery — Estimated vs True for Pseudo-Only Buses (realistic_sparse)",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "tags": ["estimates", "ieee33", "state-estimation", "observability", "oracs"],
+  "templating": {
+    "list": [
+      {
+        "current": { "selected": false, "text": "ekf", "value": "ekf" },
+        "hide": 0,
+        "includeAll": false,
+        "multi": false,
+        "name": "estimator",
+        "options": [
+          { "selected": false, "text": "wls", "value": "wls" },
+          { "selected": true,  "text": "ekf", "value": "ekf" },
+          { "selected": false, "text": "ukf", "value": "ukf" }
+        ],
+        "query": "wls,ekf,ukf",
+        "type": "custom",
+        "label": "Estimator"
+      },
+      {
+        "current": { "selected": false, "text": "realistic_sparse", "value": "realistic_sparse" },
+        "hide": 0,
+        "includeAll": false,
+        "multi": false,
+        "name": "scenario",
+        "options": [
+          { "selected": true,  "text": "realistic_sparse", "value": "realistic_sparse" },
+          { "selected": false, "text": "well_observed",    "value": "well_observed" }
+        ],
+        "query": "realistic_sparse,well_observed",
+        "type": "custom",
+        "label": "Scenario"
+      },
+      {
+        "current": { "selected": false, "text": "17", "value": "17" },
+        "hide": 0,
+        "includeAll": false,
+        "multi": false,
+        "name": "bus_id",
+        "options": [
+          { "selected": false, "text": "0",  "value": "0"  },
+          { "selected": false, "text": "1",  "value": "1"  },
+          { "selected": false, "text": "4",  "value": "4"  },
+          { "selected": false, "text": "8",  "value": "8"  },
+          { "selected": false, "text": "12", "value": "12" },
+          { "selected": true,  "text": "17", "value": "17" },
+          { "selected": false, "text": "21", "value": "21" },
+          { "selected": false, "text": "24", "value": "24" },
+          { "selected": false, "text": "30", "value": "30" },
+          { "selected": false, "text": "32", "value": "32" }
+        ],
+        "query": "0,1,4,8,12,17,21,24,30,32",
+        "type": "custom",
+        "label": "Bus ID"
+      }
+    ]
+  },
+  "time": {
+    "from": "2017-06-07T00:00:00.000Z",
+    "to": "2017-06-07T23:59:59.000Z"
+  },
+  "timepicker": {},
+  "timezone": "utc",
+  "title": "IEEE33 Estimator Day",
+  "uid": "ieee33-est-day",
+  "version": 1
+}

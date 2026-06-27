@@ -1,0 +1,400 @@
+{
+  "__inputs": [],
+  "__requires": [
+    {
+      "type": "grafana",
+      "id": "grafana",
+      "name": "Grafana",
+      "version": "11.0.0"
+    },
+    {
+      "type": "datasource",
+      "id": "influxdb",
+      "name": "InfluxDB",
+      "version": "1.0.0"
+    },
+    {
+      "type": "panel",
+      "id": "timeseries",
+      "name": "Time series",
+      "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "stat",
+      "name": "Stat",
+      "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "heatmap",
+      "name": "Heatmap",
+      "version": ""
+    }
+  ],
+  "annotations": {
+    "list": []
+  },
+  "description": "IEEE 33-Bus State Estimates — Fault: 40-step fault/reconfiguration scenario estimator view. Panels: estimated vs. true bus voltage overlay during fault, per-bus error during fault, trace_P (ORACS observability index — expected to RISE during faulted_isolated as island-mode covariance inflates), NIS calibration (nis_k live series, EKF/UKF only), island-mode P-inflation (sigma_V / trace_P higher in faulted_isolated than pre_fault), and pre_fault/faulted_isolated/restored phase-region markers. The P-inflation panel is the ORACS island-resilience showpiece.",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "ieee33-influxdb"
+      },
+      "description": "Estimated bus voltage magnitudes (vm_pu_est) from the estimates bucket vs. true ground-truth vm_pu from the fault_event bucket across the 40-step fault scenario. Target A = estimated values; Target B = true state (oracle join allowed in dashboard — estimator code never reads fault_event). Key observation: bus 17 (μPMU) goes dark during faulted_isolated; the estimator must reconstruct it via Kirchhoff coupling through Ybus. The sigma_vm (1-sigma band) is visible when plotting bus 17 — covariance inflation in the dead zone is the island-mode resilience signal.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 0,
+            "showPoints": "never",
+            "spanNulls": false,
+            "drawStyle": "line"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red",   "value": null },
+              { "color": "green", "value": 0.95 },
+              { "color": "red",   "value": 1.05 }
+            ]
+          },
+          "unit": "short",
+          "decimals": 4,
+          "min": 0.88,
+          "max": 1.10
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 0 },
+      "id": 1,
+      "options": {
+        "legend": { "calcs": ["min", "max", "mean"], "displayMode": "table", "placement": "bottom" },
+        "tooltip": { "mode": "multi", "sort": "none" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "influxdb", "uid": "ieee33-influxdb" },
+          "query": "from(bucket: \"estimates\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"estimate\")\n  |> filter(fn: (r) => r._field == \"vm_pu_est\")\n  |> filter(fn: (r) => r.estimator == \"${estimator}\")\n  |> filter(fn: (r) => r.scenario  == \"${scenario}\")\n  |> filter(fn: (r) => r.experiment == \"fault\")\n  |> filter(fn: (r) => r.bus_id    == \"${bus_id}\")\n  |> sort(columns: [\"_time\"])",
+          "refId": "A"
+        },
+        {
+          "datasource": { "type": "influxdb", "uid": "ieee33-influxdb" },
+          "query": "from(bucket: \"fault_event\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"bus\")\n  |> filter(fn: (r) => r._field == \"vm_pu\")\n  |> filter(fn: (r) => r.bus_id == \"${bus_id}\")\n  |> sort(columns: [\"_time\"])",
+          "refId": "B"
+        }
+      ],
+      "title": "True vs Estimated Bus Voltage (pu) — Fault Scenario, Bus ${bus_id}",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "ieee33-influxdb"
+      },
+      "description": "Island-mode P-inflation: trace(P) and mean sigma_V across the 40-step fault scenario. This is the ORACS island-resilience showpiece. During faulted_isolated, dead buses 8-17 have no real-sensor coverage, so the posterior covariance P inflates — trace(P) rises. During restored, tie-34 brings back topology coverage and trace(P) decreases toward the pre_fault level. The sigma_V = mean(sigma_vm) over all energised buses is plotted alongside trace_P as a per-bus uncertainty metric. The ratio trace_P(faulted_isolated) / trace_P(pre_fault) quantifies the ORACS observability degradation during island isolation. This connects directly to the AGMS 'covariance = observability index' talking point.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "spanNulls": false
+          },
+          "unit": "short",
+          "decimals": 4,
+          "min": 0
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 9, "w": 12, "x": 12, "y": 0 },
+      "id": 2,
+      "options": {
+        "legend": { "calcs": ["min", "max", "mean", "last"], "displayMode": "table", "placement": "bottom" },
+        "tooltip": { "mode": "multi", "sort": "none" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "influxdb", "uid": "ieee33-influxdb" },
+          "query": "from(bucket: \"estimates\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"estimate_system\")\n  |> filter(fn: (r) => r._field == \"trace_P\")\n  |> filter(fn: (r) => r.estimator  == \"${estimator}\")\n  |> filter(fn: (r) => r.scenario   == \"${scenario}\")\n  |> filter(fn: (r) => r.experiment == \"fault\")\n  |> sort(columns: [\"_time\"])",
+          "refId": "trace_P"
+        },
+        {
+          "datasource": { "type": "influxdb", "uid": "ieee33-influxdb" },
+          "query": "from(bucket: \"estimates\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"estimate\")\n  |> filter(fn: (r) => r._field == \"sigma_vm\")\n  |> filter(fn: (r) => r.estimator  == \"${estimator}\")\n  |> filter(fn: (r) => r.scenario   == \"${scenario}\")\n  |> filter(fn: (r) => r.experiment == \"fault\")\n  |> group(columns: [\"_time\"])\n  |> mean()\n  |> group()\n  |> sort(columns: [\"_time\"])",
+          "refId": "sigma_V"
+        }
+      ],
+      "title": "Island-Mode P-Inflation: trace(P) and mean sigma_V (faulted_isolated rises)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "ieee33-influxdb"
+      },
+      "description": "Phase-region marker: shows the current fault-scenario phase (pre_fault / faulted_isolated / restored) from the re-published event measurement in the measurements bucket. The n_dead_buses field follows the 0→10→0 pattern: 0 in pre_fault (13 steps), 10 during faulted_isolated (7 steps, buses 8-17 de-energised), 0 again in restored (20 steps). Colour mapping: 0 = green (normal), ≥1 = red (isolated/fault). This is the measurement-layer view of the event — three-block structure confirms phase transitions for the trace_P P-inflation panel above.",
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green",  "value": null },
+              { "color": "red",    "value": 1 },
+              { "color": "green",  "value": 0 }
+            ]
+          },
+          "unit": "short",
+          "decimals": 0,
+          "mappings": [
+            { "type": "value", "options": { "0": { "text": "pre_fault / restored", "color": "green" } } },
+            { "type": "range", "options": { "from": 1, "to": 20, "result": { "text": "faulted_isolated", "color": "red" } } }
+          ]
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 6, "x": 0, "y": 9 },
+      "id": 3,
+      "options": {
+        "reduceOptions": {
+          "calcs": ["max"],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": { "type": "influxdb", "uid": "ieee33-influxdb" },
+          "query": "from(bucket: \"measurements\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"event\")\n  |> filter(fn: (r) => r._field == \"n_dead_buses\")\n  |> filter(fn: (r) => r.experiment == \"fault\")\n  |> sort(columns: [\"_time\"])",
+          "refId": "A"
+        }
+      ],
+      "title": "Phase Marker — Peak Dead-Bus Count (0=normal, 10=isolated)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "ieee33-influxdb"
+      },
+      "description": "Phase-region timeseries showing n_dead_buses over all 40 steps, from the measurements bucket event measurement. Shows the three-block event structure: pre_fault block (n_dead=0, 13 steps), faulted_isolated block (n_dead=10, 7 steps), restored block (n_dead=0, 20 steps). Compare this block structure to the trace_P panel above to confirm that covariance inflation aligns with the isolation window. The estimator's trace_P should track this block structure: rising in the faulted_isolated window and recovering in restored.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "red"
+          },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 15,
+            "showPoints": "always",
+            "pointSize": 4,
+            "spanNulls": false
+          },
+          "unit": "short",
+          "decimals": 0,
+          "min": 0
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 18, "x": 6, "y": 9 },
+      "id": 4,
+      "options": {
+        "legend": { "calcs": ["min", "max", "last"], "displayMode": "table", "placement": "bottom" },
+        "tooltip": { "mode": "single", "sort": "none" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "influxdb", "uid": "ieee33-influxdb" },
+          "query": "from(bucket: \"measurements\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"event\")\n  |> filter(fn: (r) => r._field == \"n_dead_buses\")\n  |> filter(fn: (r) => r.experiment == \"fault\")\n  |> sort(columns: [\"_time\"])",
+          "refId": "A"
+        }
+      ],
+      "title": "n_dead_buses Over Time — pre_fault / faulted_isolated / restored Blocks",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "ieee33-influxdb"
+      },
+      "description": "NIS calibration panel for the fault scenario — the live nis_k time series persisted by the recursive filters (EKF/UKF) into the estimate_system measurement. During faulted_isolated, the innovation statistics change because measurements from dead buses vanish — m_k drops and nis_k may spike if the filter's prediction uncertainty is mis-calibrated for the island topology. During restored, m_k recovers as measurements resume. For WLS runs this series is EMPTY — NIS is a recursive-filter metric only.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 0,
+            "showPoints": "auto",
+            "pointSize": 4,
+            "spanNulls": false
+          },
+          "unit": "short",
+          "decimals": 3,
+          "min": 0
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "nis_k" },
+            "properties": [
+              { "id": "color", "value": { "mode": "fixed", "fixedColor": "orange" } },
+              { "id": "custom.lineWidth", "value": 2 }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "m_k" },
+            "properties": [
+              { "id": "color", "value": { "mode": "fixed", "fixedColor": "green" } },
+              { "id": "custom.lineWidth", "value": 1 },
+              { "id": "custom.lineStyle", "value": { "fill": "dash", "dash": [4, 4] } }
+            ]
+          }
+        ]
+      },
+      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 17 },
+      "id": 5,
+      "options": {
+        "legend": { "calcs": ["min", "max", "mean", "last"], "displayMode": "table", "placement": "bottom" },
+        "tooltip": { "mode": "multi", "sort": "none" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "influxdb", "uid": "ieee33-influxdb" },
+          "query": "from(bucket: \"estimates\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"estimate_system\")\n  |> filter(fn: (r) => r._field == \"nis_k\")\n  |> filter(fn: (r) => r.estimator  == \"${estimator}\")\n  |> filter(fn: (r) => r.scenario   == \"${scenario}\")\n  |> filter(fn: (r) => r.experiment == \"fault\")\n  |> sort(columns: [\"_time\"])",
+          "refId": "nis_k"
+        },
+        {
+          "datasource": { "type": "influxdb", "uid": "ieee33-influxdb" },
+          "query": "from(bucket: \"estimates\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"estimate_system\")\n  |> filter(fn: (r) => r._field == \"m_k\")\n  |> filter(fn: (r) => r.estimator  == \"${estimator}\")\n  |> filter(fn: (r) => r.scenario   == \"${scenario}\")\n  |> filter(fn: (r) => r.experiment == \"fault\")\n  |> sort(columns: [\"_time\"])",
+          "refId": "m_k"
+        }
+      ],
+      "title": "NIS Calibration — Fault Scenario (nis_k live series, EKF/UKF only; empty for WLS)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "ieee33-influxdb"
+      },
+      "description": "Per-bus estimation error |vm_pu_est - vm_pu| during the fault scenario. During faulted_isolated, buses 8-17 are in the dead zone — their error typically spikes as the estimator's prediction (FASE predict step) must carry the state without sensor updates. During restored, the error recovers. The σ_V uncertainty of buses 8-17 should be noticeably higher during isolation. This panel joins the estimates and fault_event buckets for error computation — a dashboard-level oracle join only.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 0,
+            "showPoints": "never",
+            "spanNulls": false
+          },
+          "unit": "short",
+          "decimals": 4,
+          "min": 0
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 9, "w": 12, "x": 12, "y": 17 },
+      "id": 6,
+      "options": {
+        "legend": { "calcs": ["max", "mean"], "displayMode": "table", "placement": "bottom" },
+        "tooltip": { "mode": "multi", "sort": "none" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "influxdb", "uid": "ieee33-influxdb" },
+          "query": "import \"math\"\n\nest = from(bucket: \"estimates\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"estimate\")\n  |> filter(fn: (r) => r._field == \"vm_pu_est\")\n  |> filter(fn: (r) => r.estimator  == \"${estimator}\")\n  |> filter(fn: (r) => r.scenario   == \"${scenario}\")\n  |> filter(fn: (r) => r.experiment == \"fault\")\n  |> rename(columns: {_value: \"vm_pu_est\"})\n\ntrue_v = from(bucket: \"fault_event\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"bus\")\n  |> filter(fn: (r) => r._field == \"vm_pu\")\n  |> rename(columns: {_value: \"vm_pu\"})\n\njoin(tables: {est: est, true_v: true_v}, on: [\"_time\", \"bus_id\"])\n  |> map(fn: (r) => ({ r with _value: math.abs(x: r.vm_pu_est - r.vm_pu) }))\n  |> group(columns: [\"bus_id\"])\n  |> sort(columns: [\"_time\"])",
+          "refId": "A"
+        }
+      ],
+      "title": "Per-Bus Estimation Error |vm_pu_est - vm_pu| — Fault (dead-zone buses spike during isolation)",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "tags": ["estimates", "ieee33", "fault", "state-estimation", "oracs", "island-mode"],
+  "templating": {
+    "list": [
+      {
+        "current": { "selected": false, "text": "ekf", "value": "ekf" },
+        "hide": 0,
+        "includeAll": false,
+        "multi": false,
+        "name": "estimator",
+        "options": [
+          { "selected": false, "text": "wls", "value": "wls" },
+          { "selected": true,  "text": "ekf", "value": "ekf" },
+          { "selected": false, "text": "ukf", "value": "ukf" }
+        ],
+        "query": "wls,ekf,ukf",
+        "type": "custom",
+        "label": "Estimator"
+      },
+      {
+        "current": { "selected": false, "text": "realistic_sparse", "value": "realistic_sparse" },
+        "hide": 0,
+        "includeAll": false,
+        "multi": false,
+        "name": "scenario",
+        "options": [
+          { "selected": true,  "text": "realistic_sparse", "value": "realistic_sparse" },
+          { "selected": false, "text": "well_observed",    "value": "well_observed" }
+        ],
+        "query": "realistic_sparse,well_observed",
+        "type": "custom",
+        "label": "Scenario"
+      },
+      {
+        "current": { "selected": false, "text": "17", "value": "17" },
+        "hide": 0,
+        "includeAll": false,
+        "multi": false,
+        "name": "bus_id",
+        "options": [
+          { "selected": false, "text": "0",  "value": "0"  },
+          { "selected": false, "text": "8",  "value": "8"  },
+          { "selected": false, "text": "9",  "value": "9"  },
+          { "selected": false, "text": "12", "value": "12" },
+          { "selected": true,  "text": "17", "value": "17" },
+          { "selected": false, "text": "21", "value": "21" },
+          { "selected": false, "text": "24", "value": "24" },
+          { "selected": false, "text": "30", "value": "30" },
+          { "selected": false, "text": "32", "value": "32" }
+        ],
+        "query": "0,8,9,12,17,21,24,30,32",
+        "type": "custom",
+        "label": "Bus ID"
+      }
+    ]
+  },
+  "time": {
+    "from": "2017-06-07T17:59:00.000Z",
+    "to": "2017-06-07T18:03:00.000Z"
+  },
+  "timepicker": {},
+  "timezone": "utc",
+  "title": "IEEE33 Estimator Fault",
+  "uid": "ieee33-est-fault",
+  "version": 1
+}
