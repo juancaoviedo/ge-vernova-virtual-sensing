@@ -21,6 +21,7 @@ validate = "ieee33.validate:main"
 fault-sim = "ieee33.fault_sim:main"
 measure   = "ieee33.measure:main"
 publish   = "ieee33.publish:main"    # NEW Phase 10 — MQTT replay publisher
+forecast  = "ieee33.forecast:main"   # NEW Phase 10 Plan 09 — external per-bus forecast over MQTT (D-09)
 estimate  = "ieee33.estimate:main"   # NEW Phase 10 — streaming AC state estimator
 score     = "ieee33.score:main"      # NEW Phase 10 — oracle scoring harness
 

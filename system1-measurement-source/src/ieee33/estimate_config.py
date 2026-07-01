@@ -23,9 +23,12 @@ ACTIVE: dict = {
     "estimator":    "ukf",                # "wls" | "ekf" | "ukf"  (D-02: one per run)
     "seed":         42,                   # RNG seed for forecast-error determinism
     "acceleration": 1.0,                  # wall-clock playback compression (publish only)
-    # FASE predict knobs (D-07):
-    "forecast_sigma_frac": 0.05,          # per-bus σ ≈ 5% of scheduled load
-    "forecast_ar1_rho":    0.3,           # AR(1) correlation coefficient ρ
+    # FASE predict knobs (D-07 / D-09):
+    "forecast_sigma_frac":     0.05,      # legacy per-bus σ (kept for backward reference); D-09 splits load/DER
+    "forecast_ar1_rho":        0.3,       # AR(1) correlation coefficient ρ for load error (D-09)
+    "forecast_load_sigma_frac": 0.04,     # D-09: load AR(1) marginal σ ≈ 4% of scheduled load (band: 3–5%)
+    "forecast_der_sigma_frac":  0.22,     # D-09: DER σ ≈ 22% of DER contribution (band: 15–30%)
+    "forecast_der_skew":        3.0,      # D-09: skewnorm shape parameter for DER error (right-skewed, larger)
     "q_floor_scale":       1e-8,          # Q_floor = q_floor_scale * I (Open Q2 default: σ_pmu² ~ 1e-6; 1e-8 conservative)
     "predict_mode":        "fase",        # "fase" | "persistence" (D-04 A/B foil)
 }
@@ -34,6 +37,20 @@ ACTIVE: dict = {
 # Output bucket name (additive to config.py — estimator output target)
 # ---------------------------------------------------------------------------
 ESTIMATES_BUCKET: str = "estimates"   # SPEC R8: vm_pu_est, va_degree_est, sigma_vm, sigma_va, trace_P
+
+# ---------------------------------------------------------------------------
+# Forecast-over-MQTT topic + DER power-factor knob (D-09)
+#
+# FORECAST_TOPIC_TMPL: the external forecast publisher (forecast.py) publishes
+#   per-bus injection forecasts here; the estimator subscribes in 10-10.
+#   Format: ieee33/{experiment}/{scenario}/forecast  (e.g. ieee33/day/well_observed/forecast)
+#
+# FORECAST_DER_POWER_FACTOR: unity pf = DER exports only active power (q_mvar=0),
+#   matching network.py sgen q_mvar=0.0 at all four DER buses.  Set < 1.0 to
+#   model DER reactive support (future extension); at 1.0 q_fcst for DER buses = 0.
+# ---------------------------------------------------------------------------
+FORECAST_TOPIC_TMPL:       str   = "ieee33/{experiment}/{scenario}/forecast"   # D-09 topic contract
+FORECAST_DER_POWER_FACTOR: float = 1.0    # D-09: unity pf (DER q=0); < 1.0 for reactive support
 
 # ---------------------------------------------------------------------------
 # UKF sigma-point parameters (RESEARCH.md Pattern 7 / Van der Merwe & Wan 2001)
