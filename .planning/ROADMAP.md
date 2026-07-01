@@ -288,3 +288,9 @@ Plans:
 **Wave 4** *(blocked on Wave 3 completion)*
 - [x] 10-05-PLAN.md — score harness: oracle join + RMSE + dark-node + baseline + NEES/NIS calibration + fault inflation (non-zero exit on FAIL)
 - [x] 10-06-PLAN.md — two Grafana estimator dashboards (trace_P/P-inflation) + README runbook + determinism (1e-9) verification
+
+**Gap closure** *(live-UAT defects #2/#3 — supersedes D-05/D-06 predict path via D-09/D-10/D-11)*
+- [ ] 10-07-PLAN.md — D-11 foundational: state = 64 = 2×32 (buses 1..32, bus 0 fixed reference); full-rank WLS G on well_observed (closes bug #3)
+- [ ] 10-08-PLAN.md — D-10: ac_model.injection_sensitivity (S=∂x/∂p over bus injections) + FASEPredictor.predict rewrite consuming Δp/Cov(ε) (closes bug #2)
+- [ ] 10-09-PLAN.md — D-09: external `forecast` MQTT publisher (schedule from static net × profiles, seeded per-class noise, retained-latest)
+- [ ] 10-10-PLAN.md — consumer wiring: estimate.py subscribes forecast + injection_sensitivity predict; live end-to-end re-verification (R5/R6/R7/R10/R11/R12)
