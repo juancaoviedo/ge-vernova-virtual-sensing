@@ -1012,8 +1012,9 @@ def write_estimate_step(
     Args:
         write_api:      SYNCHRONOUS write_api from client.write_api(SYNCHRONOUS).
         timestamp:      UTC-aware datetime or nanosecond integer for this step.
-        x_hat:          np.ndarray shape (n_state,)  interleaved [|V|_0, theta_0, ...].
-                        n_state = 2 * n_bus_est (e.g. 66 for buses 0..32).
+        x_hat:          np.ndarray shape (64,)  interleaved [|V|_1, theta_1, ..., |V|_32, theta_32].
+                        D-11: 64 entries for buses 1..32; state index i (0-based) -> bus (i//2 + 1).
+                        bus_id tag = i + 1 to match the score oracle range (buses 1..32).
         P:              np.ndarray shape (n_state, n_state)  posterior covariance.
         scenario:       Sensor-placement scenario string.
         experiment:     Data source string ("day" | "fault").
@@ -1029,7 +1030,9 @@ def write_estimate_step(
     import numpy as np
 
     points = []
-    n_bus_est = len(x_hat) // 2   # number of estimation buses (e.g. 33 for buses 0..32)
+    # D-11: x_hat is 64 entries for buses 1..32; state index i (0-based) -> bus (i//2 + 1).
+    # bus_id tag = i + 1 to match score oracle range (buses 1..32).
+    n_bus_est = len(x_hat) // 2   # number of estimated buses = 32 (buses 1..32)
 
     for i in range(n_bus_est):
         # R12: skip de-energised buses (no estimate emitted)
@@ -1043,7 +1046,7 @@ def write_estimate_step(
 
         points.append(
             Point("estimate")
-            .tag("bus_id",     str(i))
+            .tag("bus_id",     str(i + 1))   # bus_id 1..32 matches score oracle (D-11)
             .tag("scenario",   scenario)
             .tag("experiment", experiment)
             .tag("estimator",  estimator)

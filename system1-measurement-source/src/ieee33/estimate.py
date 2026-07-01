@@ -386,9 +386,8 @@ def main():
     params, base_z_ohm, ppci = ac_model.extract_static_line_params(net)
     Y_trafo_fixed = ac_model.compute_trafo_fixed(params, base_z_ohm, ppci)
     all_line_ids = set(net.line.index)
-    n_bus_est = ec.N_FREE_STATES // 2 + 1   # 33: buses 0..32 (66 state entries)
-    # N_FREE_STATES = 64 = 2*(33-1) ... state vector is 66 entries (2*33 buses)
-    n_state = ec.N_FREE_STATES + 2   # 66: interleaved [|V|_0, theta_0, ..., |V|_32, theta_32]
+    n_bus_est = ec.N_FREE_STATES // 2   # 32: estimated buses 1..32 (D-11: bus 0 is fixed reference)
+    n_state = ec.N_FREE_STATES          # 64: interleaved [|V|_1, theta_1, ..., |V|_32, theta_32]
 
     # ---- InfluxDB setup ----
     print(f"\nConnecting to InfluxDB at {config.INFLUXDB_URL} ...")
@@ -496,11 +495,13 @@ def main():
                 continue
 
             # ---- dead-bus mask (R12) ----
+            # D-11: mask indexes estimated buses 1..32; mask[i] = False means bus (i+1) is dead.
+            # Bus 0 is the reference and cannot be dead; guard 1 <= db <= 32 before masking.
             dead_buses = set(assembler.dead_buses)
             energised_mask = np.ones(n_bus_est, dtype=bool)
             for db in dead_buses:
-                if 0 <= db < n_bus_est:
-                    energised_mask[db] = False
+                if 1 <= db <= 32:
+                    energised_mask[db - 1] = False
 
             # ---- build meas_list, z, R ----
             meas_list, z, R = _build_meas_list_and_vectors(snap_msgs)
