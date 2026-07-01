@@ -534,8 +534,157 @@ def verify_jacobian(h_fn, H_fn, x, tol=1e-5):
 
 
 # ---------------------------------------------------------------------------
-# Part 4: FASE sensitivity S (weighted pseudoinverse of injection rows)
+# Part 4: FASE sensitivity S
 # ---------------------------------------------------------------------------
+
+def injection_sensitivity(x, Ybus, ref_vm=_REF_VM_PU):
+    """Compute FASE sensitivity S = ∂x/∂p over BUS INJECTIONS (D-10).
+
+    Builds the power-flow injection Jacobian J_p = ∂[P;Q]/∂[θ;|V|] over the
+    32 non-slack estimated buses (1..32), then inverts it to obtain
+    S = J_p⁻¹ reordered from [θ;|V|]/[P;Q] block layout into the interleaved
+    state/injection layout.
+
+    Column order (contract for Δp assembly in 10-10):
+        Δp = [ΔP₁, ΔP₂, ..., ΔP₃₂, ΔQ₁, ΔQ₂, ..., ΔQ₃₂]   (stacked, NOT interleaved)
+        Length 64 = 2 × 32 non-slack buses.
+
+    Row order of returned S matches the interleaved state layout:
+        x = [|V|₁, θ₁, |V|₂, θ₂, ..., |V|₃₂, θ₃₂]   (64 entries, D-11 convention).
+
+    The measurement count NEVER enters this computation (bug #2 fix, D-10).
+    Columns are BUS INJECTIONS over non-slack buses, independent of the measurement set.
+
+    Parameters
+    ----------
+    x      : np.ndarray  shape (64,)  current state estimate [|V|_1,θ_1,...,|V|_32,θ_32]
+    Ybus   : np.ndarray  shape (34,34) complex  full admittance matrix
+    ref_vm : float  regulated reference voltage at bus 0 (default 1.0)
+
+    Returns
+    -------
+    S : np.ndarray  shape (64, 64) = (n_state, 2*n_nonslack)
+        Sensitivity ∂x/∂p where p = [ΔP₁..ΔP₃₂, ΔQ₁..ΔQ₃₂] (stacked injection vector).
+
+    Raises
+    ------
+    AssertionError if S.shape != (64, 64) or S is not finite.
+    """
+    n_ns = _N_EST_BUS   # 32 non-slack (non-reference) estimated buses (1..32)
+    n_inj = 2 * n_ns    # 64 injection columns [ΔP₁..ΔP₃₂, ΔQ₁..ΔQ₃₂]
+    n_state = _N_FREE   # 64 state entries
+
+    V_est = x[0::2]   # shape (32,)  |V| at buses 1..32
+    T_est = x[1::2]   # shape (32,)  theta at buses 1..32 (radians)
+    G = Ybus.real
+    B = Ybus.imag
+
+    # ---- Build J_p = ∂[P;Q]/∂[θ;|V|] in BLOCK layout ----
+    # Rows: [P₁..P₃₂, Q₁..Q₃₂]  (stacked)
+    # Cols: [θ₁..θ₃₂, |V|₁..|V|₃₂]  (stacked)
+    # Partitions (each is n_ns × n_ns = 32 × 32):
+    #   J_pp = ∂P/∂θ,   J_pv = ∂P/∂|V|
+    #   J_qp = ∂Q/∂θ,   J_qv = ∂Q/∂|V|
+    J_pp = np.zeros((n_ns, n_ns))
+    J_pv = np.zeros((n_ns, n_ns))
+    J_qp = np.zeros((n_ns, n_ns))
+    J_qv = np.zeros((n_ns, n_ns))
+
+    for i_est in range(n_ns):
+        bus_i = i_est + 1   # pandapower bus index (1..32)
+        V_i = V_est[i_est]
+        T_i = T_est[i_est]
+
+        P_i = _p_inj(bus_i, V_est, T_est, G, B, ref_vm)
+        Q_i = _q_inj(bus_i, V_est, T_est, G, B, ref_vm)
+
+        for j_est in range(n_ns):
+            j = j_est + 1   # pandapower bus index
+            V_j = V_est[j_est]
+            T_j = T_est[j_est]
+            t_ij = T_i - T_j
+            G_ij = G[bus_i, j]
+            B_ij = B[bus_i, j]
+
+            if j != bus_i:
+                # Off-diagonal: dP_i/dθ_j
+                J_pp[i_est, j_est] = V_i * V_j * (G_ij * np.sin(t_ij) - B_ij * np.cos(t_ij))
+                # Off-diagonal: dP_i/d|V_j|
+                J_pv[i_est, j_est] = V_i * (G_ij * np.cos(t_ij) + B_ij * np.sin(t_ij))
+                # Off-diagonal: dQ_i/dθ_j
+                J_qp[i_est, j_est] = V_i * V_j * (-G_ij * np.cos(t_ij) + B_ij * np.sin(t_ij))
+                # Off-diagonal: dQ_i/d|V_j|
+                J_qv[i_est, j_est] = V_i * (G_ij * np.sin(t_ij) - B_ij * np.cos(t_ij))
+            else:
+                # Diagonal: dP_i/dθ_i = -Q_i - |V_i|² B_ii
+                J_pp[i_est, j_est] = -Q_i - V_i ** 2 * B[bus_i, bus_i]
+                # Diagonal: dP_i/d|V_i| = sum over ALL buses (including fixed 0 and 33) + V_i G_ii
+                s_pv = 0.0
+                for k_est in range(n_ns):
+                    k = k_est + 1
+                    t_ik = T_i - T_est[k_est]
+                    s_pv += V_est[k_est] * (G[bus_i, k] * np.cos(t_ik) + B[bus_i, k] * np.sin(t_ik))
+                # bus 0 contribution
+                s_pv += ref_vm * (G[bus_i, _REF_BUS] * np.cos(T_i) + B[bus_i, _REF_BUS] * np.sin(T_i))
+                # bus 33 contribution
+                s_pv += 1.0 * (G[bus_i, _SLACK_BUS] * np.cos(T_i) + B[bus_i, _SLACK_BUS] * np.sin(T_i))
+                J_pv[i_est, j_est] = s_pv + V_i * G[bus_i, bus_i]
+
+                # Diagonal: dQ_i/dθ_i = P_i - |V_i|² G_ii
+                J_qp[i_est, j_est] = P_i - V_i ** 2 * G[bus_i, bus_i]
+                # Diagonal: dQ_i/d|V_i|
+                s_qv = 0.0
+                for k_est in range(n_ns):
+                    k = k_est + 1
+                    t_ik = T_i - T_est[k_est]
+                    s_qv += V_est[k_est] * (G[bus_i, k] * np.sin(t_ik) - B[bus_i, k] * np.cos(t_ik))
+                # bus 0 contribution
+                s_qv += ref_vm * (G[bus_i, _REF_BUS] * np.sin(T_i) - B[bus_i, _REF_BUS] * np.cos(T_i))
+                # bus 33 contribution
+                s_qv += 1.0 * (G[bus_i, _SLACK_BUS] * np.sin(T_i) - B[bus_i, _SLACK_BUS] * np.cos(T_i))
+                J_qv[i_est, j_est] = s_qv - V_i * B[bus_i, bus_i]
+
+    # Assemble block Jacobian: rows = [P;Q] (stacked), cols = [θ;|V|] (stacked)
+    # Shape: (64, 64)
+    J_p = np.block([[J_pp, J_pv],
+                    [J_qp, J_qv]])
+
+    # Invert J_p: S_block = J_p⁻¹
+    # Shape of S_block: (64, 64)  cols = [P;Q] space (injection),  rows = [θ;|V|] space (state-block)
+    try:
+        S_block = np.linalg.inv(J_p)
+    except np.linalg.LinAlgError:
+        # Fallback to pseudoinverse (should not occur for a connected radial network)
+        S_block = np.linalg.pinv(J_p)
+
+    # ---- Reorder S_block from block layout to interleaved layout ----
+    # S_block rows are in block state order: [θ₁..θ₃₂, |V|₁..|V|₃₂]
+    #   rows 0..31  -> θ_i  for i=1..32 (i_est = i-1)
+    #   rows 32..63 -> |V|_i for i=1..32 (i_est = i-1)
+    # S_block cols are in block injection order: [P₁..P₃₂, Q₁..Q₃₂]
+    #   cols 0..31  -> ΔP_i for i=1..32
+    #   cols 32..63 -> ΔQ_i for i=1..32
+    #
+    # Target S rows: interleaved state = [|V|₁,θ₁, |V|₂,θ₂, ..., |V|₃₂,θ₃₂]
+    #   s_row = 2*i_est     -> |V|_{i_est+1}  (was S_block row 32+i_est)
+    #   s_row = 2*i_est + 1 -> θ_{i_est+1}   (was S_block row i_est)
+    # Target S cols: [ΔP₁..ΔP₃₂, ΔQ₁..ΔQ₃₂]  — ALREADY the block order (no column reorder needed)
+
+    S = np.zeros((n_state, n_inj))
+    for i_est in range(n_ns):
+        # |V|_i row  (interleaved index 2*i_est)  <-  S_block row 32+i_est
+        S[2 * i_est, :]     = S_block[n_ns + i_est, :]
+        # θ_i row    (interleaved index 2*i_est+1) <-  S_block row i_est
+        S[2 * i_est + 1, :] = S_block[i_est, :]
+
+    assert S.shape == (n_state, n_inj), (
+        f"injection_sensitivity: unexpected shape {S.shape}, expected ({n_state}, {n_inj})"
+    )
+    assert np.all(np.isfinite(S)), (
+        "injection_sensitivity: S contains non-finite values — check operating point or Ybus"
+    )
+    return S
+
 
 def fase_sensitivity(x, Ybus, inj_meas_list, W_inj=None):
     """Compute FASE sensitivity S = (H_inj^T W_inj H_inj)^{-1} H_inj^T W_inj.
