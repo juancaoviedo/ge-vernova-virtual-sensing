@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: verifying
-stopped_at: Completed Phase 10 Plan 06 — estimator dashboards + README runbook
-last_updated: "2026-07-01T08:41:13.119Z"
+stopped_at: "Completed Phase 10 Plan 08 — gap closure: injection_sensitivity + FASEPredictor rewrite"
+last_updated: "2026-07-01T08:49:28.486Z"
 last_activity: 2026-07-01
 progress:
   total_phases: 12
   completed_phases: 10
   total_plans: 47
-  completed_plans: 44
+  completed_plans: 45
   percent: 83
 ---
 
@@ -30,7 +30,7 @@ Plan: 6 of 6
 Status: Phase complete — ready for verification
 Last activity: 2026-07-01
 
-Progress: [█████████░] 94%
+Progress: [██████████] 96%
 
 ## Performance Metrics
 
@@ -89,6 +89,7 @@ Progress: [█████████░] 94%
 | Phase 10 P05 | 7 | 2 tasks | 2 files |
 | Phase 10 P06 | 18 | 2 tasks | 3 files |
 | Phase 10 P07 | 35 | 2 tasks | 3 files |
+| Phase 10 P08 | 30 | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -131,6 +132,7 @@ Recent decisions affecting current work:
 - [Phase ?]: D-16 honored: four distinct Grafana dashboard uids — uid-collision threat T-09-13 mitigated
 - [Phase ?]: Per-snapshot redundancy fix: realistic_sparse real-only 0.578 (<1.0), with-pseudo 1.172 (>=1.0) — SPEC R3 confirmed by programmatic verification
 - [Phase ?]: D-08 honored: two separate estimator dashboards (day vs fault narratives) — NIS panel reads live nis_k series (real per-step timeseries, not annotation); oracle join in dashboard (not estimator) for true-vs-est overlay
+- [Phase ?]: D-10 injection_sensitivity: column contract is Δp=[ΔP₁..ΔP₃₂,ΔQ₁..ΔQ₃₂] stacked (length 64); FASEPredictor.predict consumes Δp/Cov(ε) from caller with dimension guard
 
 ### Roadmap Evolution
 
@@ -169,6 +171,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-07-01T08:41:13.103Z
-Stopped at: Completed Phase 10 Plan 06 — estimator dashboards + README runbook
+Last session: 2026-07-01T08:49:28.470Z
+Stopped at: Completed Phase 10 Plan 08 — gap closure: injection_sensitivity + FASEPredictor rewrite
 Resume file: None
