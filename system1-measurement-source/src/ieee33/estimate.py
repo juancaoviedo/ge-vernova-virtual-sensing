@@ -412,8 +412,8 @@ def main():
     else:
         estimator = UKFEstimator(n=n_state)
 
-    # ---- FASE predictor (uses profiles) ----
-    fase_predictor = FASEPredictor(prof_df, cfg, rng, n_bus_est)
+    # ---- FASE predictor (D-10: consumes Δp/Cov(ε) from forecast stream; 10-10 wires caller) ----
+    fase_predictor = FASEPredictor(cfg, rng, n_bus_est)
 
     # ---- MQTT subscriber + snapshot assembler ----
     assembler = MQTTSnapshotAssembler()
@@ -526,32 +526,28 @@ def main():
                 x_prev = estimator.x.copy()
 
             if estimator_name in ("ekf", "ukf"):
-                # Build injection-only meas subset for FASE sensitivity
-                inj_ml = _injection_meas_list(meas_list)
-                if inj_ml:
-                    # Weight matrix for injection meas (diagonal 1/sigma^2)
-                    sigma_inj = np.array([
-                        float(snap_msgs[(cls, str(bus))].get("assumed_sigma", 1.0))
-                        for cls, _, bus in inj_ml
-                        if (cls, str(bus)) in snap_msgs
-                    ])
-                    # Fallback: use uniform weights if sigma extraction fails shape-wise
-                    if len(sigma_inj) != len(inj_ml):
-                        sigma_inj = np.ones(len(inj_ml))
-                    W_inj = np.diag(1.0 / sigma_inj ** 2)
-                    S = ac_model.fase_sensitivity(x_prev, _Ybus_snap, inj_ml, W_inj)
-                else:
-                    S = np.zeros((n_state, 0))
+                # Build injection-space sensitivity S = ∂x/∂p (D-10: injection_sensitivity)
+                # Shape: (64, 64) — independent of measurement set (bug #2 fix)
+                S = ac_model.injection_sensitivity(x_prev, _Ybus_snap)
+
+                # delta_p and cov_eps are supplied by the external forecast publisher (10-09/10-10).
+                # TODO(10-10): replace zero delta_p with the MQTT forecast Δp when wired in.
+                # Until 10-10 wires the forecast stream, use Δp=0 (persistence-equivalent prior)
+                # with a diagonal cov_eps representing default forecast uncertainty.
+                _q_floor_scale = float(cfg.get("q_floor_scale", 1e-8))
+                _sigma_frac = float(cfg.get("forecast_sigma_frac", 0.05))
+                delta_p = np.zeros(n_state)           # n_state = 64 = 2 * n_nonslack
+                cov_eps = np.eye(n_state) * (_sigma_frac ** 2)
 
                 x_minus, Q = fase_predictor.predict(
-                    step_k=step_idx,
                     x_prev=x_prev,
                     S=S,
+                    delta_p=delta_p,
+                    cov_eps=cov_eps,
                 )
                 # Inject FASE-computed prior (x_minus, Q) directly into estimator.
-                # FASEPredictor encapsulates the AR(1) logic and returns the full
-                # (x_minus, Q) pair — we set the estimator's internal prior directly
-                # rather than re-decomposing Q back into (delta_p, S, Cov_eps) form.
+                # FASEPredictor encapsulates the sensitivity propagation and returns the full
+                # (x_minus, Q) pair — we set the estimator's internal prior directly.
                 _apply_prior_to_estimator(estimator, estimator_name, x_minus, Q)
 
             # ---- update (fuse measurements) ----

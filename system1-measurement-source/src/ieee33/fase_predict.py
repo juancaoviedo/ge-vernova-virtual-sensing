@@ -4,37 +4,37 @@ fase_predict.py
 FASE predict step for the IEEE 33-bus System 2 state estimator.
 
 Provides:
-  - FASEPredictor : profile-as-noisy-forecast predictor with AR(1) seeded error + Q assembly
+  - FASEPredictor : forecast-driven sensitivity predictor with Q assembly
 
 **Oracle separation (D-06):**
-  This module reads ONLY the injected `prof_df` (profiles DataFrame) — it NEVER imports,
-  reads, or references the 'state' bucket, the 'fault_event' bucket, or any oracle data.
-  Verified by grep: zero references to oracle bucket names or oracle read helpers.
+  This module reads NO external data — it NEVER imports, reads, or references the
+  'state' bucket, the 'fault_event' bucket, the profiles DataFrame, or any oracle data.
+  Forecast Δp and Cov(ε) arrive from the caller (the external forecast stream,
+  wired in 10-09/10-10), not from any internal read.
+  Verified by grep: zero executable references to oracle bucket names or oracle read helpers.
 
-Forecast recipe (D-05):
-  1. Read nodal load injection at step k from prof_df (p_sched).
-  2. Degrade with a seeded AR(1) forecast-error process ε (σ ≈ 5% of scheduled load, ρ ≈ 0.3).
-  3. Compute Δp = p_fcst(k) - p_fcst(k-1)  (zeros on first step).
-  4. x̂ₖ⁻ = x̂ₖ₋₁ + S·Δp_fcst
-  5. Qₖ  = S·Cov(ε)·Sᵀ + Q_floor
+Predict recipe (D-10, supersedes D-05):
+  External forecast publisher (10-09) supplies, per step k:
+    delta_p  : Δp = [ΔP₁..ΔP₃₂, ΔQ₁..ΔQ₃₂]  shape (64,)  per-bus injection change
+    cov_eps  : Cov(ε)  shape (64,64)  forecast error covariance
+
+  FASEPredictor.predict(x_prev, S, delta_p, cov_eps) computes:
+    x⁻ = x_prev + S @ delta_p          (FASE mean propagation)
+    Q  = S @ cov_eps @ S.T + Q_floor   (FASE process noise)
 
 Persistence foil (D-04):
-  mode == "persistence": x̂ₖ⁻ = x̂ₖ₋₁ (no forecast Δ), Q = Q_floor * RW_SCALE.
+  mode == "persistence": delta_p := 0 → x⁻ = x_prev; Q = Q_floor * RW_SCALE.
   Both FASE and persistence sit behind the same .predict() interface.
 
 Determinism guarantee:
-  All randomness passes through the single `rng` object (np.random.Generator) passed at
-  construction. NO bare np.random, NO random.seed(), NO hash(), NO wall-clock reads.
-  Two FASEPredictor instances built with the same seed/cfg produce identical sequences.
+  All randomness (if any) passes through the single `rng` object
+  (np.random.Generator) passed at construction. NO bare np.random, NO
+  random.seed(), NO hash(), NO wall-clock reads. The rng parameter is retained
+  for API parity and future use; it is NOT used internally to fabricate a
+  forecast (the forecast Δp arrives externally from the forecast publisher).
 
-AR(1) process (mirror of measure.py InstrumentState.ar1_term):
-  white   = rng.normal(0, sigma_frac * sqrt(1 - rho^2), n_bus)
-  ar1_prev = rho * ar1_prev + white      ← stationary, marginal std ≈ sigma_frac
-  p_fcst  = p_sched * (1 + ar1_prev)    ← per-bus degraded forecast
-
-No I/O: no MQTT, no InfluxDB reads. The caller (estimate.py) provides the pre-fetched prof_df.
-
-Dependencies: numpy, pandas
+No I/O: no MQTT, no InfluxDB reads, no profiles DataFrame reads.
+Dependencies: numpy
 """
 
 import numpy as np
@@ -47,67 +47,81 @@ _RW_SCALE: float = 100.0  # persistence foil Q = Q_floor * RW_SCALE (honestly wi
 
 
 class FASEPredictor:
-    """Profile-as-noisy-forecast predict step + persistence foil.
+    """Forecast-driven FASE predict step + persistence foil.
 
     Both modes implement the same interface:
-        predict(step_k, x_prev, S) -> (x_minus, Q)
+        predict(x_prev, S, delta_p, cov_eps) -> (x_minus, Q)
 
     Parameters
     ----------
-    prof_df  : pd.DataFrame  shape (n_steps, *)  must have column 'load_pu'
     cfg      : dict  must contain:
-                 forecast_sigma_frac (float, default 0.05)
-                 forecast_ar1_rho    (float, default 0.3)
-                 q_floor_scale       (float, default 1e-8)
-                 predict_mode        (str, "fase" | "persistence")
-    rng      : np.random.Generator  single seeded instance (default_rng(seed)); NEVER create here
-    n_bus    : int  number of distribution buses (state dim = n_bus * 2)
+                 q_floor_scale  (float, default 1e-8)
+                 predict_mode   (str, "fase" | "persistence")
+    rng      : np.random.Generator  single seeded instance (default_rng(seed)); NEVER create here.
+                 Retained for API parity / future use; not currently used internally.
+    n_bus    : int  number of estimated buses (32 for IEEE 33-bus D-11: buses 1..32)
 
     Oracle separation:
-        This class NEVER reads 'state', 'fault_event', or any oracle bucket.
-        Only prof_df (profiles) is read, and only at predict() time (not I/O).
+        This class NEVER reads 'state', 'fault_event', the profiles DataFrame, or any oracle bucket.
+        Forecast Δp and Cov(ε) arrive from the caller (external forecast publisher).
     """
 
-    def __init__(self, prof_df, cfg: dict, rng, n_bus: int):
-        self.prof_df = prof_df
-        self.sigma_frac: float = float(cfg.get("forecast_sigma_frac", 0.05))
-        self.rho: float = float(cfg.get("forecast_ar1_rho", 0.3))
+    def __init__(self, cfg: dict, rng, n_bus: int):
         q_floor_scale: float = float(cfg.get("q_floor_scale", 1e-8))
         self.mode: str = str(cfg.get("predict_mode", "fase"))
-        self.rng = rng
+        self.rng = rng           # retained for API parity; not used internally
         self.n_bus = n_bus
-        self.n_state = n_bus * 2  # interleaved polar: |V|_0, theta_0, ..., |V|_{n-1}, theta_{n-1}
+        self.n_state = n_bus * 2  # interleaved polar: |V|_1, theta_1, ..., |V|_32, theta_32
 
         # Process noise floor (diagonal, shared between fase and persistence)
         self.q_floor = np.eye(self.n_state) * q_floor_scale
 
-        # AR(1) persistent state: per-bus
-        self._ar1_prev = np.zeros(n_bus)
-
-        # Previous forecast value (for computing Δp = p_fcst(k) - p_fcst(k-1))
-        self._p_fcst_prev: np.ndarray | None = None
-
-    def predict(self, step_k: int, x_prev: np.ndarray, S: np.ndarray):
-        """Return (x_hat_minus, Q) for step k.
+    def predict(self, x_prev: np.ndarray, S: np.ndarray,
+                delta_p: np.ndarray, cov_eps: np.ndarray):
+        """Return (x_hat_minus, Q) for the current step.
 
         Parameters
         ----------
-        step_k : int  current step index (0-based, indexes into prof_df)
-        x_prev : np.ndarray  shape (n_state,)  x̂_{k-1} (previous posterior estimate)
-        S      : np.ndarray  shape (n_state, n_inj)  sensitivity matrix ∂x/∂p
+        x_prev   : np.ndarray  shape (n_state,)     x̂_{k-1} (previous posterior estimate)
+        S        : np.ndarray  shape (n_state, n_inj)  sensitivity matrix ∂x/∂p
+                               from injection_sensitivity(x_prev, Ybus).
+                               For this 32-bus model: n_inj = 64; S.shape == (64, 64).
+        delta_p  : np.ndarray  shape (n_inj,)  per-bus injection change
+                               Δp = [ΔP₁..ΔP₃₂, ΔQ₁..ΔQ₃₂] (stacked, NOT interleaved).
+                               Supplied by the external forecast publisher (10-09).
+        cov_eps  : np.ndarray  shape (n_inj, n_inj)  forecast error covariance.
+                               Supplied by the external forecast publisher (10-09).
 
         Returns
         -------
-        x_minus : np.ndarray  shape (n_state,)  predicted state prior x̂ₖ⁻
+        x_minus : np.ndarray  shape (n_state,)   predicted state prior x̂ₖ⁻
         Q       : np.ndarray  shape (n_state, n_state)  process noise covariance
 
+        Dimension guard:
+            Asserts delta_p.shape[0] == S.shape[1] and cov_eps.shape == (S.shape[1], S.shape[1]).
+            This is the structural guardrail that makes bug #2 (S.cols=26 vs delta_p.len=33)
+            impossible — a mismatch raises AssertionError immediately.
+
         Oracle separation:
-            Reads ONLY prof_df['load_pu'] at step_k.
-            NEVER reads 'state', 'fault_event', or any external oracle source.
+            Reads ONLY the arguments supplied by the caller.
+            NEVER reads 'state', 'fault_event', the profiles DataFrame, or any external source.
         """
+        # Dimension consistency guard — the exact check that would have caught bug #2
+        n_inj = S.shape[1]
+        assert delta_p.shape[0] == n_inj, (
+            f"FASEPredictor.predict: dimension mismatch — "
+            f"delta_p.shape[0]={delta_p.shape[0]} != S.shape[1]={n_inj}. "
+            f"Δp must be in the INJECTION space (n_inj={n_inj}), not in measurement space. "
+            f"(Bug #2 guard, D-10)"
+        )
+        assert cov_eps.shape == (n_inj, n_inj), (
+            f"FASEPredictor.predict: cov_eps.shape={cov_eps.shape} != ({n_inj}, {n_inj}). "
+            f"cov_eps must be square and match the injection space dimension."
+        )
+
         if self.mode == "persistence":
             return self._predict_persistence(x_prev)
-        return self._predict_fase(step_k, x_prev, S)
+        return self._predict_fase(x_prev, S, delta_p, cov_eps)
 
     def _predict_persistence(self, x_prev: np.ndarray):
         """Persistence foil (D-04): x_minus = x_prev, Q = Q_floor * RW_SCALE.
@@ -119,47 +133,19 @@ class FASEPredictor:
         Q = self.q_floor * _RW_SCALE
         return x_minus, Q
 
-    def _predict_fase(self, step_k: int, x_prev: np.ndarray, S: np.ndarray):
-        """FASE primary path (D-05):
-            1. Read p_sched from prof_df at step_k.
-            2. Apply seeded AR(1) forecast error.
-            3. Compute Δp = p_fcst(k) - p_fcst(k-1).
-            4. x_minus = x_prev + S @ Δp.
-            5. Q = S @ Cov(ε) @ S.T + Q_floor.
+    def _predict_fase(self, x_prev: np.ndarray, S: np.ndarray,
+                      delta_p: np.ndarray, cov_eps: np.ndarray):
+        """FASE primary path (D-10):
+            x_minus = x_prev + S @ delta_p
+            Q = S @ cov_eps @ S.T + Q_floor
 
-        AR(1) process (mirrors measure.py InstrumentState.ar1_term):
-            white = rng.normal(0, sigma_frac * sqrt(1 - rho^2), n_bus)
-            ar1_prev = rho * ar1_prev + white   (stationary; marginal std ≈ sigma_frac)
-            p_fcst = p_sched * (1 + ar1_prev)
+        delta_p and cov_eps are supplied externally by the forecast publisher (10-09).
+        This method performs ONLY the sensitivity propagation — no forecast generation.
         """
-        # Read scheduled load at step_k
-        p_sched = float(self.prof_df.iloc[step_k]["load_pu"])
-
-        # AR(1) forecast error — mirrors InstrumentState.ar1_term in measure.py
-        # white noise scaled so marginal std of the AR(1) process ≈ sigma_frac
-        white = self.rng.normal(
-            0.0,
-            self.sigma_frac * (1.0 - self.rho ** 2) ** 0.5,
-            size=self.n_bus,
-        )
-        self._ar1_prev = self.rho * self._ar1_prev + white
-
-        # Per-bus degraded forecast: p_sched * (1 + AR(1) error)
-        p_fcst = p_sched * (1.0 + self._ar1_prev)
-
-        # Δp = p_fcst(k) - p_fcst(k-1); zero-vector on the first step
-        if self._p_fcst_prev is None:
-            delta_p = np.zeros(self.n_bus)
-        else:
-            delta_p = p_fcst - self._p_fcst_prev
-        self._p_fcst_prev = p_fcst
-
-        # x_minus = x_prev + S @ delta_p  (FASE mean propagation)
+        # FASE mean propagation
         x_minus = x_prev + S @ delta_p
 
-        # Q = S @ Cov(ε) @ S.T + Q_floor
-        # Cov(ε) = diag((sigma_frac * |p_fcst|)^2)  (per-bus forecast error variance)
-        cov_eps = np.diag((self.sigma_frac * np.abs(p_fcst)) ** 2)
+        # FASE process noise
         Q = S @ cov_eps @ S.T + self.q_floor
 
         return x_minus, Q
