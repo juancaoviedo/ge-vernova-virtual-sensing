@@ -143,8 +143,8 @@ These decisions replace the predict/forecast wiring. The "forecast IS the schedu
 stays separate" principle (D-06) is preserved. The measurement→state reconstruction (26 meas → 64
 state) is unchanged and correct — it lives in the UPDATE step; these decisions only touch PREDICT.
 
-- **D-09: The forecast is an external MQTT stream from a new `forecast` publisher (supersedes the
-  in-estimator scalar read of `profiles`).** New `forecast.py` (sibling of `publish.py`; new
+- **D-09:** The forecast is an external MQTT stream from a new `forecast` publisher (supersedes the
+  in-estimator scalar read of `profiles`). New `forecast.py` (sibling of `publish.py`; new
   `[project.scripts]` `forecast`) reconstructs the SCHEDULED per-bus injections from legal
   side-information ONLY — static per-bus nominal `(P_nom, Q_nom)` + `sgen`/DER placements from
   `build_enhanced_33bus()`, scaled by the `profiles` multipliers `load_pu`/`solar_pu`/`wind_pu` —
@@ -154,7 +154,7 @@ state) is unchanged and correct — it lives in the UPDATE step; these decisions
   `{timestamp, step_k, p_fcst{bus}, q_fcst{bus}, sigma_p{bus}, sigma_q{bus}}`, QoS1, republished
   RETAINED as "latest" for late subscribers (mirrors `netmodel/current`). MUST be built from the
   SCHEDULE, NEVER the realized `state`/`fault_event` oracle — oracle separation stays grep-checkable.
-- **D-10: Correct FASE sensitivity `S = ∂x/∂p` over BUS INJECTIONS (fixes bug #2).** New
+- **D-10:** Correct FASE sensitivity `S = ∂x/∂p` over BUS INJECTIONS (fixes bug #2). New
   `ac_model.injection_sensitivity(x, Ybus)` builds `S` from the power-flow injection Jacobian
   `J_p = ∂[P;Q]/∂[θ;|V|]` over non-slack buses, `S = J_p⁻¹` reordered to the state layout — shape
   `(n_state × 2·n_nonslack)`, columns = bus injections, INDEPENDENT of the measurement set (the
@@ -162,8 +162,8 @@ state) is unchanged and correct — it lives in the UPDATE step; these decisions
   is NO LONGER used for predict. `FASEPredictor.predict` consumes `Δp=[ΔP;ΔQ]` and `Cov(ε)` from the
   forecast stream (no longer reads `prof_df` / broadcasts a scalar): `x⁻ = x_prev + S·Δp`;
   `Q = S·Cov(ε)·Sᵀ + Q_floor`. Persistence foil (D-04) = `Δp:=0` behind the same interface.
-- **D-11: State vector is 64 = 2×32, slack bus 0 EXCLUDED (fixes bug #3), applied consistently in
-  `ac_model` / `estimators` / `estimate`.** Removes the two unobservable slack states (`|V|₀,θ₀`)
+- **D-11:** State vector is 64 = 2×32, slack bus 0 EXCLUDED (fixes bug #3), applied consistently in
+  `ac_model` / `estimators` / `estimate`. Removes the two unobservable slack states (`|V|₀,θ₀`)
   that made WLS's `G=HᵀWH` rank-deficient on `well_observed`; `x`, `S`, `Δp` share the 64/32
   definition. Also re-audit the snapshot→`z`/`H` assembly so the full `well_observed` measurement
   set reaches `H` and `G` is full-rank WITHOUT pseudo (R5 real-only-observable expectation).

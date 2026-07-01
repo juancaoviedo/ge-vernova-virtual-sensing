@@ -67,14 +67,15 @@ GAUSS_NEWTON_TOL:      float = 1e-6  # convergence tolerance on ||dx||_2
 #
 # NEES_CONFIDENCE = 0.95 → 95% chi2 acceptance band.
 # For N=96, n=64: expected band ≈ [61.76, 66.28] (RESEARCH.md Pattern 8).
-# N_FREE_STATES = 64: from 34-bus network (RESEARCH.md Pitfall 1 + Landmine 1)
-#   Buses 0..33 (34 total); distribution buses 0..32 (33 buses) contribute
-#   2 states each = 66 entries; minus 2 for slack (θ₃₃=0 fixed, |V|₃₃ known)
-#   = 64 free states. State vector: x = [|V|₀,θ₀,...,|V|₃₂,θ₃₂] (64 entries).
+# N_FREE_STATES = 64: D-11 convention — buses 1..32 (32 non-reference buses × 2
+#   = 64 free states). Bus 0 = electrical feeder-head reference (regulated |V|₀,
+#   θ₀ = 0, FIXED — NOT an estimated state). Bus 33 = numerical slack fixed
+#   inside Ybus (HV ext_grid). State vector: x = [|V|₁,θ₁,...,|V|₃₂,θ₃₂]
+#   (64 entries; state index s ↔ pandapower bus s+1).
 # N_BUS_TOTAL = 34: build_enhanced_33bus() inserts HV ext_grid bus at index 33
 #   → Ybus from _pd2ppc is 34×34 (not 33×33). Any code initializing at 33 will
 #   fail the Ybus shape assertion. This constant encodes that landmine explicitly.
 # ---------------------------------------------------------------------------
 NEES_CONFIDENCE: float = 0.95   # chi2 band confidence level for NEES/NIS scoring
-N_FREE_STATES:   int   = 64     # free state dimension = 2×32 (buses 0..32 minus slack bus 33)
+N_FREE_STATES:   int   = 64     # free state dim = 2×32 (buses 1..32; bus 0 fixed reference, bus 33 slack in Ybus)
 N_BUS_TOTAL:     int   = 34     # total buses in enhanced net (33 distribution + 1 HV ext_grid)
